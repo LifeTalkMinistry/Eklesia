@@ -16,6 +16,21 @@ Eklesia is a devotional monitoring app for churches. It helps members build a co
 - At least one curated reflection entry from every canonical Protestant Bible book
 - “Read full chapter” navigation with automatic verse highlighting
 - GitHub Pages-compatible static Bible data under `/Eklesia/`
+- Frontend accountability ecosystem code prototype
+
+## Accountability Ecosystem Prototype
+
+Members can enter an ecosystem code, review the accountability circle and its privacy boundaries, and confirm joining before the circle overview appears. The current implementation uses local prototype data rather than live church records.
+
+Joined state is saved only on the current device through `localStorage`. Real member accounts, secure code validation, subscription enforcement, multi-user activity, and cross-device synchronization require the future Eklesia backend and database.
+
+The circle interface displays only healthy progress signals. Private reflections, personal prayers, journal entries, and the contents of a member’s devotion are not displayed.
+
+Prototype code: `LIFETALK30`
+
+### Future backend requirements
+
+A connected release will require ecosystem records, owner accounts, unique rotating codes, personal member accounts, ecosystem memberships, subscription-plan member limits, member activity signals, role-based permissions, secure server-side code validation, and cross-device synchronization.
 
 ## Bible Source
 
