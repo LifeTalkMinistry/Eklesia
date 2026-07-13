@@ -15,7 +15,7 @@ export default function TodayDevotionCard({ dailyVerse, completed, loading, erro
           <h3>{completed ? 'You showed up today.' : dailyVerse.title}</h3>
           <p>{completed ? 'Your reflection has been saved privately. Keep carrying today’s truth with you.' : `${dailyVerse.theme} — ${dailyVerse.prompt}`}</p>
           <button className="card-button" type="button" onClick={onStart}>
-            {completed ? 'View today’s reflection' : 'Start today’s devotion'}
+            {completed ? 'View today’s reflection' : 'Choose today’s devotion'}
             <span aria-hidden="true">→</span>
           </button>
         </>
