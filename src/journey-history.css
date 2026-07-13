@@ -48,102 +48,191 @@
   text-align: center;
 }
 
-.journey-history-section {
-  margin-top: 24px;
+.journey-archive-page {
+  padding-bottom: 24px;
 }
 
-.journey-history-heading {
+.journey-archive-header {
+  max-width: 650px;
+}
+
+.devotion-archive {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.archive-year-drawer {
+  overflow: hidden;
+  border: 1px solid rgba(232, 217, 170, 0.13);
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(24, 49, 34, 0.76), rgba(13, 29, 20, 0.82));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.archive-year-drawer.is-expanded {
+  border-color: rgba(232, 217, 170, 0.2);
+}
+
+.archive-drawer-heading {
+  margin: 0;
+}
+
+.archive-drawer-button {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-}
-
-.journey-history-heading h3 {
-  margin: 5px 0 0;
-  color: #fffdf5;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.55rem;
-}
-
-.journey-history-heading > span {
-  display: grid;
-  min-width: 34px;
-  height: 34px;
-  padding-inline: 9px;
-  place-items: center;
-  border: 1px solid rgba(232, 217, 170, 0.18);
-  border-radius: 999px;
-  color: #e8d9aa;
-  background: rgba(232, 217, 170, 0.08);
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.devotion-history-list {
-  display: grid;
-  gap: 10px;
-}
-
-.devotion-history-card {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
   width: 100%;
-  padding: 17px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  min-height: 58px;
   color: inherit;
-  background: rgba(255, 255, 255, 0.035);
+  background: transparent;
   text-align: left;
   cursor: pointer;
 }
 
-.devotion-history-card:hover {
+.archive-year-button {
+  padding: 18px 20px;
+}
+
+.archive-drawer-button:hover {
+  background: rgba(184, 215, 190, 0.045);
+}
+
+.archive-drawer-title {
+  min-width: 0;
+  color: #fffdf5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.archive-year-button .archive-drawer-title {
+  font-size: 1.45rem;
+}
+
+.archive-drawer-meta {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  color: rgba(244, 245, 239, 0.55);
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.archive-chevron {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  color: #e8d9aa;
+  font-size: 1.05rem;
+  line-height: 1;
+  transition: transform 180ms ease;
+}
+
+.archive-year-drawer.is-expanded > .archive-drawer-heading .archive-chevron,
+.archive-month-drawer.is-expanded > .archive-drawer-heading .archive-chevron {
+  transform: rotate(180deg);
+}
+
+.archive-year-content[hidden],
+.archive-month-content[hidden] {
+  display: none;
+}
+
+.archive-year-content {
+  display: grid;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+
+.archive-month-drawer {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 19px;
+  background: rgba(5, 14, 9, 0.3);
+}
+
+.archive-month-drawer.is-expanded {
+  border-color: rgba(184, 215, 190, 0.15);
+  background: rgba(5, 14, 9, 0.4);
+}
+
+.archive-month-button {
+  min-height: 54px;
+  padding: 14px 16px;
+}
+
+.archive-month-button .archive-drawer-title {
+  font-size: 1.08rem;
+}
+
+.archive-month-content {
+  display: grid;
+  gap: 8px;
+  padding: 0 9px 9px;
+}
+
+.devotion-archive-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 84px;
+  padding: 15px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.032);
+  text-align: left;
+  cursor: pointer;
+}
+
+.devotion-archive-entry:hover {
   border-color: rgba(184, 215, 190, 0.2);
   background: rgba(184, 215, 190, 0.06);
 }
 
-.history-check {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border-radius: 999px;
-  color: #0c1911;
-  background: #b8d7be;
-  font-weight: 900;
-}
-
-.history-card-copy {
+.archive-entry-copy {
   display: grid;
   min-width: 0;
   gap: 4px;
 }
 
-.history-card-copy small,
-.history-card-copy > span {
-  color: rgba(244, 245, 239, 0.48);
-  font-size: 0.72rem;
+.archive-entry-copy strong {
+  color: #fffdf5;
+  font-size: 0.9rem;
+  line-height: 1.35;
 }
 
-.history-card-copy strong {
-  overflow: hidden;
-  color: #fffdf5;
+.archive-entry-reference {
+  overflow-wrap: anywhere;
+  color: #e8d9aa;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.08rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 1.04rem;
+  line-height: 1.35;
+}
+
+.archive-entry-copy small {
+  color: rgba(184, 216, 196, 0.64);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
 .history-arrow {
+  flex: 0 0 auto;
   color: #e8d9aa;
   font-size: 1.1rem;
 }
 
 .journey-history-empty {
+  margin-top: 28px;
   padding: 34px 22px;
   border: 1px dashed rgba(255, 255, 255, 0.1);
   border-radius: 22px;
@@ -165,6 +254,8 @@
 .journey-history-empty h3 {
   margin: 0;
   color: #fffdf5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
 }
 
 .journey-history-empty p {
@@ -253,21 +344,38 @@
     grid-template-columns: 1fr;
   }
 
+  .archive-year-drawer,
   .history-review-card,
-  .devotion-history-card,
   .journey-history-empty {
     border-radius: 20px;
   }
 }
 
 @media (max-width: 390px) {
-  .devotion-history-card {
-    gap: 10px;
-    padding: 15px;
+  .devotion-archive {
+    gap: 11px;
   }
 
-  .history-check {
-    width: 32px;
-    height: 32px;
+  .archive-year-button {
+    padding-inline: 16px;
+  }
+
+  .archive-year-content {
+    padding-inline: 8px;
+    padding-bottom: 8px;
+  }
+
+  .archive-month-button {
+    padding-inline: 13px;
+  }
+
+  .archive-drawer-meta {
+    gap: 6px;
+    font-size: 0.69rem;
+  }
+
+  .devotion-archive-entry {
+    min-height: 80px;
+    padding: 14px;
   }
 }
