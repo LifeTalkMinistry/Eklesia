@@ -24,7 +24,17 @@ const WGAP_FIELDS = [
   },
 ];
 
-export default function Devotion({ devotion, wgap, setWgap, completed, onComplete, onBack, onReadChapter }) {
+export default function Devotion({
+  devotion,
+  wgap,
+  setWgap,
+  completed,
+  onComplete,
+  onViewSaved,
+  onReturnHome,
+  onBack,
+  onReadChapter,
+}) {
   const [message, setMessage] = useState('');
 
   function updateField(field, value) {
@@ -91,7 +101,16 @@ export default function Devotion({ devotion, wgap, setWgap, completed, onComplet
           {message && <p className="form-message error-message" role="alert">{message}</p>}
 
           {completed ? (
-            <div className="review-result"><span aria-hidden="true">✓</span><div><strong>Today&apos;s WGAP devotion is complete</strong><p>Your personal entries have been kept private.</p></div></div>
+            <section className="devotion-complete-card" aria-live="polite">
+              <div className="devotion-complete-message">
+                <span aria-hidden="true">✓</span>
+                <div><strong>Today&apos;s WGAP devotion is saved</strong><p>You can review it anytime from Journey.</p></div>
+              </div>
+              <div className="devotion-complete-actions">
+                <button className="primary-button" type="button" onClick={onViewSaved}>View saved devotion</button>
+                <button className="secondary-button" type="button" onClick={onReturnHome}>Return to Home</button>
+              </div>
+            </section>
           ) : (
             <button className="primary-button submit-button" type="submit">Complete today’s devotion</button>
           )}
