@@ -13,9 +13,9 @@ export default function TodayDevotionCard({ dailyVerse, completed, loading, erro
         <>
           <p className="verse-reference">{dailyVerse.reference} · BSB</p>
           <h3>{completed ? 'You showed up today.' : dailyVerse.title}</h3>
-          <p>{completed ? 'Your reflection has been saved privately. Keep carrying today’s truth with you.' : `${dailyVerse.theme} — ${dailyVerse.prompt}`}</p>
+          <p>{completed ? 'Your WGAP devotion is saved. Revisit what God showed you and carry it through your day.' : `${dailyVerse.theme} — ${dailyVerse.prompt}`}</p>
           <button className="card-button" type="button" onClick={onStart}>
-            {completed ? 'View today’s reflection' : 'Choose today’s devotion'}
+            {completed ? 'Review today’s devotion' : 'Choose today’s devotion'}
             <span aria-hidden="true">→</span>
           </button>
         </>
