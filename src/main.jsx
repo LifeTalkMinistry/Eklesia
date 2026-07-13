@@ -7,6 +7,7 @@ import './bible-return.css';
 import './wgap.css';
 import './journey-history.css';
 import './devotion-complete.css';
+import './rhythm-sync.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
