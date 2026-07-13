@@ -5,6 +5,7 @@ import './index.css';
 import './devotion-choice.css';
 import './bible-return.css';
 import './wgap.css';
+import './journey-history.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
