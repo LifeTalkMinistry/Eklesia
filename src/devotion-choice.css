@@ -157,10 +157,21 @@
   margin-right: 7px;
 }
 
-.chapter-verse-button.selected-verse {
-  border-color: rgba(232, 217, 170, 0.3);
-  background: rgba(232, 217, 170, 0.1);
+.chapter-verse-button.selected-range {
+  border-color: rgba(232, 217, 170, 0.18);
+  background: rgba(232, 217, 170, 0.075);
+}
+
+.chapter-verse-button.range-start {
+  border-color: rgba(232, 217, 170, 0.34);
+  background: rgba(232, 217, 170, 0.12);
   box-shadow: inset 4px 0 0 #e8d9aa;
+}
+
+.chapter-verse-button.range-end {
+  border-color: rgba(232, 217, 170, 0.34);
+  background: rgba(232, 217, 170, 0.12);
+  box-shadow: inset -4px 0 0 #e8d9aa;
 }
 
 .chapter-verse-button .highlight-label {
