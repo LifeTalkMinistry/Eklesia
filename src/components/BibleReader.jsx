@@ -151,6 +151,10 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
     ? `${selectedPassage.bookName} ${selectedPassage.chapter}:${selectedPassage.startVerse}${selectedPassage.endVerse === selectedPassage.startVerse ? '' : `–${selectedPassage.endVerse}`}`
     : '';
 
+  let selectionInstruction = 'Tap once for one verse, or tap another verse to set the ending.';
+  if (selectedRange?.end === null) selectionInstruction = 'Tap another verse for the ending, or continue with this verse only.';
+  if (selectedRange?.end !== null && selectedRange) selectionInstruction = 'Tap any new verse to begin a different selection.';
+
   return (
     <section className="bible-reader" aria-busy={loading}>
       <div className="bible-title-row">
@@ -163,7 +167,7 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
         {!selectionMode && onReturn && <button className="secondary-button compact-button" type="button" onClick={onReturn}>Return to devotion</button>}
       </div>
 
-      {selectionMode && <div className="selection-instructions" aria-live="polite"><strong>{selectedRange ? (selectedRange.end === null ? 'Starting verse selected' : 'Passage selected') : 'Select your starting verse'}</strong><p>{selectedRange?.end === null ? 'Tap another verse for the ending, or continue with this verse only.' : 'Tap any new verse to begin a different selection.'}</p></div>}
+      {selectionMode && <div className="selection-instructions" aria-live="polite"><strong>{selectedRange ? (selectedRange.end === null ? 'Starting verse selected' : 'Passage selected') : 'Select your starting verse'}</strong><p>{selectionInstruction}</p></div>}
 
       <div className="testament-filter" aria-label="Filter Bible books by testament">
         {[["all", "All"], ["old", "Old Testament"], ["new", "New Testament"]].map(([value, label]) => <button key={value} className={testament === value ? 'active' : ''} type="button" onClick={() => changeTestament(value)}>{label}</button>)}
