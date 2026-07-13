@@ -1,0 +1,42 @@
+.chapter-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.chapter-heading-row h3 {
+  margin: 0;
+}
+
+.passage-return-button {
+  flex: 0 0 auto;
+  padding: 8px 11px;
+  border-radius: 12px;
+  font-size: 0.74rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.passage-return-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 12px 4px 20px;
+}
+
+.verse-return-anchor {
+  display: contents;
+}
+
+@media (max-width: 390px) {
+  .chapter-heading-row {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .passage-return-button {
+    padding: 8px 9px;
+    font-size: 0.7rem;
+  }
+}
