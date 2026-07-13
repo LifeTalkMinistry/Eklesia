@@ -1,0 +1,81 @@
+.today-card-complete {
+  padding: 26px;
+  border-color: rgba(184, 215, 190, 0.28);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(184, 215, 190, 0.2), transparent 38%),
+    linear-gradient(145deg, rgba(22, 55, 37, 0.98), rgba(11, 29, 19, 0.98));
+}
+
+.completion-status-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.completion-check {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 999px;
+  color: #0b1711;
+  background: #d9ead3;
+  box-shadow: 0 8px 22px rgba(119, 180, 137, 0.2);
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.completion-badge {
+  display: inline-flex;
+  padding: 8px 12px;
+  border: 1px solid rgba(184, 215, 190, 0.23);
+  border-radius: 999px;
+  color: #dcebdc;
+  background: rgba(184, 215, 190, 0.09);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.completion-copy {
+  position: relative;
+  z-index: 1;
+  margin-top: 24px;
+}
+
+.completion-copy .verse-reference {
+  margin: 0 0 8px;
+}
+
+.today-card-complete .completion-copy h3 {
+  font-size: clamp(2rem, 7vw, 3.15rem);
+}
+
+.today-card-complete .completion-copy > p:last-child {
+  max-width: 520px;
+  margin: 14px 0 0;
+  color: rgba(244, 245, 239, 0.7);
+  line-height: 1.6;
+}
+
+.completion-review-button {
+  margin-top: 24px;
+}
+
+@media (max-width: 600px) {
+  .today-card-complete {
+    padding: 22px;
+  }
+
+  .completion-check {
+    width: 38px;
+    height: 38px;
+  }
+
+  .completion-copy {
+    margin-top: 20px;
+  }
+}
