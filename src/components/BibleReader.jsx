@@ -7,6 +7,8 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
   const [bookSlug, setBookSlug] = useState(target?.bookSlug || 'genesis');
   const [chapterNumber, setChapterNumber] = useState(target?.chapter || 1);
   const [highlightVerse, setHighlightVerse] = useState(target?.verse || null);
+  const [highlightEndVerse, setHighlightEndVerse] = useState(target?.endVerse || target?.verse || null);
+  const [highlightLabel, setHighlightLabel] = useState(target?.label || 'Today’s verse');
   const [selectedRange, setSelectedRange] = useState(null);
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,10 +36,12 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
     setBookSlug(target.bookSlug);
     setChapterNumber(target.chapter || 1);
     setHighlightVerse(target.verse || null);
+    setHighlightEndVerse(target.endVerse || target.verse || null);
+    setHighlightLabel(target.label || 'Today’s verse');
     setSelectedRange(null);
     const matchingBook = manifest.find((item) => item.slug === target.bookSlug);
     if (matchingBook) setTestament(matchingBook.testament);
-  }, [target?.bookSlug, target?.chapter, target?.verse, manifest]);
+  }, [target?.bookSlug, target?.chapter, target?.verse, target?.endVerse, target?.label, manifest]);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,6 +79,7 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
       verse: startVerse,
       startVerse,
       endVerse,
+      firstVerseText: verses[0].text,
       text: verses.map((verse) => verse.text).join(' '),
     };
   }, [selectedRange, book, chapter, bookSlug]);
@@ -96,6 +101,12 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
     setSelectedRange(null);
   }
 
+  function clearHighlight() {
+    setHighlightVerse(null);
+    setHighlightEndVerse(null);
+    setHighlightLabel('');
+  }
+
   function changeTestament(nextTestament) {
     setTestament(nextTestament);
     clearSelection();
@@ -103,14 +114,14 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
     if (first && !manifest.find((item) => item.slug === bookSlug && (nextTestament === 'all' || item.testament === nextTestament))) {
       setBookSlug(first.slug);
       setChapterNumber(1);
-      setHighlightVerse(null);
+      clearHighlight();
     }
   }
 
   function openChapter(nextBookSlug, nextChapter) {
     setBookSlug(nextBookSlug);
     setChapterNumber(nextChapter);
-    setHighlightVerse(null);
+    clearHighlight();
     clearSelection();
   }
 
@@ -174,8 +185,8 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
       </div>
 
       <div className="bible-controls">
-        <label htmlFor="bible-book">Book<select id="bible-book" value={bookSlug} onChange={(event) => { setBookSlug(event.target.value); setChapterNumber(1); setHighlightVerse(null); clearSelection(); }}>{visibleBooks.map((item) => <option key={item.id} value={item.slug}>{item.name}</option>)}</select></label>
-        <label htmlFor="bible-chapter">Chapter<select id="bible-chapter" value={chapterNumber} disabled={!book} onChange={(event) => { setChapterNumber(Number(event.target.value)); setHighlightVerse(null); clearSelection(); }}>{book?.chapters.map((item) => <option key={item.number} value={item.number}>{item.number}</option>)}</select></label>
+        <label htmlFor="bible-book">Book<select id="bible-book" value={bookSlug} onChange={(event) => { setBookSlug(event.target.value); setChapterNumber(1); clearHighlight(); clearSelection(); }}>{visibleBooks.map((item) => <option key={item.id} value={item.slug}>{item.name}</option>)}</select></label>
+        <label htmlFor="bible-chapter">Chapter<select id="bible-chapter" value={chapterNumber} disabled={!book} onChange={(event) => { setChapterNumber(Number(event.target.value)); clearHighlight(); clearSelection(); }}>{book?.chapters.map((item) => <option key={item.number} value={item.number}>{item.number}</option>)}</select></label>
       </div>
 
       <div className="chapter-nav">
@@ -190,12 +201,14 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
         <article className={`chapter-text ${selectionMode ? 'selecting-verses' : ''}`} aria-label={`${book.name} chapter ${chapter.number}`}>
           <h3>{book.name} {chapter.number}</h3>
           {chapter.verses.map((verse) => {
-            const highlighted = verse.number === highlightVerse;
             const selectedEnd = selectedRange?.end ?? selectedRange?.start;
             const inSelectedRange = selectedRange && verse.number >= selectedRange.start && verse.number <= selectedEnd;
             const isStart = selectedRange?.start === verse.number;
             const isEnd = selectedRange?.end !== null && selectedRange?.end === verse.number;
             const selectionLabel = isStart && selectedRange?.end === null ? 'Start' : isStart ? 'Start' : isEnd ? 'End' : '';
+            const effectiveHighlightEnd = highlightEndVerse ?? highlightVerse;
+            const inHighlightRange = highlightVerse && verse.number >= highlightVerse && verse.number <= effectiveHighlightEnd;
+            const isHighlightStart = highlightVerse === verse.number;
 
             if (selectionMode) {
               return (
@@ -213,7 +226,7 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
               );
             }
 
-            return <p id={`bible-verse-${bookSlug}-${chapterNumber}-${verse.number}`} key={verse.number} className={highlighted ? 'highlighted-verse' : ''} tabIndex={highlighted ? -1 : undefined}><sup>{verse.number}</sup>{verse.text}{highlighted && <span className="highlight-label">Today&apos;s verse</span>}</p>;
+            return <p id={`bible-verse-${bookSlug}-${chapterNumber}-${verse.number}`} key={verse.number} className={inHighlightRange ? 'highlighted-verse' : ''} tabIndex={isHighlightStart ? -1 : undefined}><sup>{verse.number}</sup>{verse.text}{isHighlightStart && highlightLabel && <span className="highlight-label">{highlightLabel}</span>}</p>;
           })}
         </article>
       )}
