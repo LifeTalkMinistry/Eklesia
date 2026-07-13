@@ -19,6 +19,8 @@ export default function Devotion({ devotion, reflection, setReflection, complete
   }
 
   const devotionLabel = devotion.devotionType === 'personal' ? 'My chosen devotion' : 'Today’s suggested devotion';
+  const isSelectedPassage = devotion.devotionType === 'personal' && devotion.endVerse > devotion.startVerse;
+  const scripturePreview = devotion.previewText || devotion.text;
 
   return (
     <main className="devotion-shell">
@@ -26,8 +28,8 @@ export default function Devotion({ devotion, reflection, setReflection, complete
         <header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>{devotionLabel}</p><strong>{devotion.title}</strong></div><span className="soft-badge">5 min</span></header>
         <article className="scripture-card">
           <p className="dashboard-eyebrow">{devotion.reference} · BSB</p>
-          <blockquote>“{devotion.text}”</blockquote>
-          <button className="secondary-button" type="button" onClick={onReadChapter}>Read full chapter</button>
+          <blockquote>“{scripturePreview}”</blockquote>
+          <button className="secondary-button" type="button" onClick={onReadChapter}>{isSelectedPassage ? 'Read selected passage' : 'Read full chapter'}</button>
         </article>
         <section className="devotion-reading">
           <p><b>Theme:</b> {devotion.theme}</p>
