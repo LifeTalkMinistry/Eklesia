@@ -1,4 +1,4 @@
-import { formatDevotionHistoryDate, getRecentCompletionCount } from '../lib/devotionHistory.js';
+import { formatDevotionHistoryDate, getDevotionMetrics } from '../lib/devotionHistory.js';
 
 const REVIEW_FIELDS = [
   ['G', 'Gets Ko', 'getsKo'],
@@ -43,8 +43,7 @@ export default function Journey({ history, selectedEntryId, onSelectEntry, onClo
   const selectedEntry = history.find((entry) => entry.id === selectedEntryId);
   if (selectedEntry) return <JourneyReview entry={selectedEntry} onBack={onCloseEntry} />;
 
-  const weeklyCount = getRecentCompletionCount(history);
-  const weeklyPercentage = Math.round((weeklyCount / 7) * 100);
+  const rhythm = getDevotionMetrics(history);
 
   return (
     <section className="panel-page">
@@ -55,15 +54,15 @@ export default function Journey({ history, selectedEntryId, onSelectEntry, onClo
       <div className="journey-progress-card">
         <div
           className="progress-ring"
-          aria-label={`${weeklyPercentage} percent weekly consistency`}
-          style={{ background: `radial-gradient(circle,#0d1913 56%,transparent 57%), conic-gradient(#b8d7be 0 ${weeklyPercentage}%,rgba(255,255,255,.07) ${weeklyPercentage}% 100%)` }}
+          aria-label={`${rhythm.weeklyPercentage} percent weekly consistency`}
+          style={{ background: `radial-gradient(circle,#0d1913 56%,transparent 57%), conic-gradient(#b8d7be 0 ${rhythm.weeklyPercentage}%,rgba(255,255,255,.07) ${rhythm.weeklyPercentage}% 100%)` }}
         >
-          <span>{weeklyPercentage}%</span>
+          <span>{rhythm.weeklyPercentage}%</span>
         </div>
         <div>
           <p className="dashboard-eyebrow">Weekly consistency</p>
-          <h3>{weeklyCount ? 'Keep building the rhythm' : 'Your next step starts today'}</h3>
-          <p>{weeklyCount} of the last 7 days have a saved WGAP devotion.</p>
+          <h3>{rhythm.growthSignal}</h3>
+          <p>{rhythm.weeklyCount} of 7 days completed this week · {rhythm.currentStreak} day rhythm.</p>
         </div>
       </div>
 
@@ -73,7 +72,7 @@ export default function Journey({ history, selectedEntryId, onSelectEntry, onClo
             <p className="dashboard-eyebrow">Devotion journal</p>
             <h3>Your Devotion History</h3>
           </div>
-          <span>{history.length}</span>
+          <span>{rhythm.savedCount}</span>
         </div>
 
         {history.length ? (
