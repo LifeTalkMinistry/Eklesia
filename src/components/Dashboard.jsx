@@ -5,14 +5,11 @@ import TodayDevotionCard from './TodayDevotionCard.jsx';
 import Together from './Together.jsx';
 import WhyEklesia from './WhyEklesia.jsx';
 import { formatManilaDate, getManilaGreeting } from '../lib/dailyVerse.js';
+import { getDevotionMetrics } from '../lib/devotionHistory.js';
 
-const week = [
-  { day: 'M', complete: true }, { day: 'T', complete: true }, { day: 'W', complete: true },
-  { day: 'T', complete: true }, { day: 'F', complete: true }, { day: 'S', complete: false },
-  { day: 'S', complete: false },
-];
+function HomeDashboard({ dailyVerse, dailyLoading, dailyError, completed, onStartDevotion, devotionHistory }) {
+  const rhythm = getDevotionMetrics(devotionHistory);
 
-function HomeDashboard({ dailyVerse, dailyLoading, dailyError, completed, onStartDevotion, devotionCount }) {
   return (
     <>
       <section className="greeting-block">
@@ -22,15 +19,29 @@ function HomeDashboard({ dailyVerse, dailyLoading, dailyError, completed, onStar
       </section>
       <TodayDevotionCard dailyVerse={dailyVerse} completed={completed} loading={dailyLoading} error={dailyError} onStart={onStartDevotion} />
       <section className="section-block">
-        <div className="section-heading"><div><p className="dashboard-eyebrow">Your rhythm</p><h3>This week</h3></div><span className="week-score">5 of 7 days</span></div>
-        <div className="week-row" aria-label="Weekly devotional consistency">
-          {week.map((item, index) => <div className="day-item" key={`${item.day}-${index}`}><span className={`day-circle ${item.complete ? 'is-complete' : ''}`}>{item.complete ? '✓' : item.day}</span><small>{item.day}</small></div>)}
+        <div className="section-heading">
+          <div><p className="dashboard-eyebrow">Your rhythm</p><h3>This week</h3></div>
+          <span className="week-score">{rhythm.weeklyCount} of 7 days</span>
+        </div>
+        <div className="week-row" aria-label={`${rhythm.weeklyCount} of 7 devotional days completed this week`}>
+          {rhythm.week.map((item) => (
+            <div className="day-item" key={item.dateKey}>
+              <span
+                className={`day-circle ${item.complete ? 'is-complete' : ''} ${item.isToday ? 'is-today' : ''} ${item.isFuture ? 'is-future' : ''}`}
+                aria-label={`${item.dateKey}: ${item.complete ? 'devotion completed' : 'not completed'}`}
+                aria-current={item.isToday ? 'date' : undefined}
+              >
+                {item.complete ? '✓' : item.label}
+              </span>
+              <small>{item.label}</small>
+            </div>
+          ))}
         </div>
       </section>
       <section className="stats-grid">
-        <article className="stat-card"><span className="stat-icon" aria-hidden="true">🔥</span><strong>12</strong><p>day rhythm</p></article>
-        <article className="stat-card"><span className="stat-icon" aria-hidden="true">✦</span><strong>{devotionCount}</strong><p>saved devotions</p></article>
-        <article className="stat-card"><span className="stat-icon" aria-hidden="true">♡</span><strong>Steady</strong><p>growth signal</p></article>
+        <article className="stat-card"><span className="stat-icon" aria-hidden="true">🔥</span><strong>{rhythm.currentStreak}</strong><p>day rhythm</p></article>
+        <article className="stat-card"><span className="stat-icon" aria-hidden="true">✦</span><strong>{rhythm.savedCount}</strong><p>saved devotions</p></article>
+        <article className="stat-card"><span className="stat-icon" aria-hidden="true">♡</span><strong>{rhythm.growthSignal}</strong><p>growth signal</p></article>
       </section>
       <section className="encouragement-card"><span className="quote-mark" aria-hidden="true">“</span><p>Consistency is not about proving your faith. It is about making room to hear God again and again.</p><small>Eklesia reminder</small></section>
     </>
@@ -65,7 +76,7 @@ export default function Dashboard({
   const closeWhyEklesia = useCallback(() => setShowWhyEklesia(false), []);
 
   const content = {
-    home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} completed={completed} onStartDevotion={onStartDevotion} devotionCount={devotionHistory.length} />,
+    home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} completed={completed} onStartDevotion={onStartDevotion} devotionHistory={devotionHistory} />,
     journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
     community: <Together />,
