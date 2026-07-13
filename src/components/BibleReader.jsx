@@ -175,7 +175,6 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
           <p className="panel-intro">{selectionMode ? 'Select one verse or a verse range.' : 'Berean Standard Bible'}</p>
         </div>
         {selectionMode && <button className="secondary-button compact-button" type="button" onClick={onCancelSelection}>Back to choices</button>}
-        {!selectionMode && onReturn && <button className="secondary-button compact-button" type="button" onClick={onReturn}>Return to devotion</button>}
       </div>
 
       {selectionMode && <div className="selection-instructions" aria-live="polite"><strong>{selectedRange ? (selectedRange.end === null ? 'Starting verse selected' : 'Passage selected') : 'Select your starting verse'}</strong><p>{selectionInstruction}</p></div>}
@@ -199,7 +198,10 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
       {error && <p className="page-error" role="alert">{error}</p>}
       {!loading && !error && chapter && (
         <article className={`chapter-text ${selectionMode ? 'selecting-verses' : ''}`} aria-label={`${book.name} chapter ${chapter.number}`}>
-          <h3>{book.name} {chapter.number}</h3>
+          <div className="chapter-heading-row">
+            <h3>{book.name} {chapter.number}</h3>
+            {!selectionMode && onReturn && <button className="secondary-button passage-return-button" type="button" onClick={onReturn}>← Back to devotion</button>}
+          </div>
           {chapter.verses.map((verse) => {
             const selectedEnd = selectedRange?.end ?? selectedRange?.start;
             const inSelectedRange = selectedRange && verse.number >= selectedRange.start && verse.number <= selectedEnd;
@@ -209,6 +211,7 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
             const effectiveHighlightEnd = highlightEndVerse ?? highlightVerse;
             const inHighlightRange = highlightVerse && verse.number >= highlightVerse && verse.number <= effectiveHighlightEnd;
             const isHighlightStart = highlightVerse === verse.number;
+            const isHighlightEnd = effectiveHighlightEnd === verse.number;
 
             if (selectionMode) {
               return (
@@ -223,6 +226,15 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
                   <span><sup>{verse.number}</sup>{verse.text}</span>
                   {selectionLabel && <span className="highlight-label">{selectionLabel}</span>}
                 </button>
+              );
+            }
+
+            if (onReturn && isHighlightEnd) {
+              return (
+                <div className="verse-return-anchor" key={verse.number}>
+                  <p id={`bible-verse-${bookSlug}-${chapterNumber}-${verse.number}`} className={inHighlightRange ? 'highlighted-verse' : ''} tabIndex={isHighlightStart ? -1 : undefined}><sup>{verse.number}</sup>{verse.text}{isHighlightStart && highlightLabel && <span className="highlight-label">{highlightLabel}</span>}</p>
+                  <div className="passage-return-row"><button className="secondary-button passage-return-button" type="button" onClick={onReturn}>← Back to devotion</button></div>
+                </div>
               );
             }
 
