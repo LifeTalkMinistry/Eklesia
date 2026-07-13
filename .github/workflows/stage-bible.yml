@@ -1,0 +1,50 @@
+name: Stage built-in BSB data
+
+on:
+  push:
+    branches:
+      - agent/eklesia-bible-stage
+    paths:
+      - scripts/import-bsb.mjs
+      - scripts/validate-bible.mjs
+      - src/**
+      - package.json
+      - .github/workflows/stage-bible.yml
+
+permissions:
+  contents: write
+
+jobs:
+  generate-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out staging branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Import official Berean Standard Bible
+        run: npm run import:bible
+
+      - name: Validate Bible and build production app
+        run: npm run build
+
+      - name: Commit generated Bible data
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/bible/bsb package-lock.json
+          if git diff --cached --quiet; then
+            echo "Generated data is already current."
+            exit 0
+          fi
+          git commit -m "Add generated BSB Bible data"
+          git push

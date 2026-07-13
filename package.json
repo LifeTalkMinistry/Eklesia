@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "import:bible": "node scripts/import-bsb.mjs",
+    "validate:bible": "node scripts/validate-bible.mjs",
+    "build": "npm run validate:bible && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
