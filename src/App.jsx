@@ -3,6 +3,11 @@ import Dashboard from './components/Dashboard.jsx';
 import Devotion from './components/Devotion.jsx';
 import DevotionChoice from './components/DevotionChoice.jsx';
 import { getDailyVerseForDate, getManilaDateKey } from './lib/dailyVerse.js';
+import {
+  createDevotionHistoryRecord,
+  loadDevotionHistory,
+  saveDevotionHistory,
+} from './lib/devotionHistory.js';
 
 function Welcome({ onBegin }) {
   return <main className="app-shell welcome-shell"><section className="welcome-card"><p className="eyebrow">A healthier way to grow together</p><h1>Eklesia</h1><p className="tagline">Track the habit. Protect the heart.</p><p className="description">Build a consistent devotional life while keeping personal reflections private and helping church leaders know when encouragement may be needed.</p><button className="primary-button" type="button" onClick={onBegin}>Begin your journey</button></section></main>;
@@ -44,15 +49,24 @@ export default function App() {
   const [screen, setScreen] = useState('welcome');
   const [activeTab, setActiveTab] = useState('home');
   const [wgap, setWgap] = useState(createEmptyWgap);
-  const [completed, setCompleted] = useState(false);
-  const [completedDevotion, setCompletedDevotion] = useState(null);
   const [activeDevotion, setActiveDevotion] = useState(null);
+  const [activeSavedEntryId, setActiveSavedEntryId] = useState(null);
+  const [devotionHistory, setDevotionHistory] = useState(loadDevotionHistory);
+  const [selectedHistoryId, setSelectedHistoryId] = useState(null);
   const [dailyVerse, setDailyVerse] = useState(null);
   const [dailyLoading, setDailyLoading] = useState(true);
   const [dailyError, setDailyError] = useState('');
   const [bibleTarget, setBibleTarget] = useState(null);
   const [returnFromBible, setReturnFromBible] = useState(false);
   const [bibleSelectionMode, setBibleSelectionMode] = useState(false);
+
+  const todayRecord = devotionHistory.find((entry) => entry.dateKey === getManilaDateKey()) || null;
+  const completedToday = Boolean(todayRecord);
+  const activeEntryCompleted = Boolean(activeSavedEntryId);
+
+  useEffect(() => {
+    saveDevotionHistory(devotionHistory);
+  }, [devotionHistory]);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +86,7 @@ export default function App() {
     if (!dailyVerse) return;
     setWgap(createEmptyWgap());
     setActiveDevotion(dailyVerse);
+    setActiveSavedEntryId(null);
     setBibleSelectionMode(false);
     setScreen('devotion');
   }
@@ -87,18 +102,47 @@ export default function App() {
   function openPersonalDevotion(selection) {
     setWgap(createEmptyWgap());
     setActiveDevotion(createPersonalDevotion(selection));
+    setActiveSavedEntryId(null);
     setBibleSelectionMode(false);
     setReturnFromBible(false);
     setScreen('devotion');
   }
 
   function openDevotionChoice() {
-    if (completed && completedDevotion) {
-      setActiveDevotion(completedDevotion);
+    if (todayRecord) {
+      setActiveDevotion(todayRecord.devotion);
+      setWgap(todayRecord.wgap);
+      setActiveSavedEntryId(todayRecord.id);
       setScreen('devotion');
       return;
     }
     setScreen('devotion-choice');
+  }
+
+  function completeDevotion() {
+    if (!activeDevotion) return;
+    const record = createDevotionHistoryRecord(activeDevotion, wgap);
+
+    setDevotionHistory((current) => [
+      record,
+      ...current.filter((entry) => entry.id !== record.id),
+    ].sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()));
+    setActiveSavedEntryId(record.id);
+    setSelectedHistoryId(record.id);
+  }
+
+  function viewSavedDevotion() {
+    const entryId = activeSavedEntryId || todayRecord?.id;
+    if (!entryId) return;
+    setSelectedHistoryId(entryId);
+    setActiveTab('journey');
+    setScreen('dashboard');
+  }
+
+  function returnHome() {
+    setSelectedHistoryId(null);
+    setActiveTab('home');
+    setScreen('dashboard');
   }
 
   if (screen === 'welcome') return <Welcome onBegin={() => setScreen('dashboard')} />;
@@ -122,12 +166,11 @@ export default function App() {
         devotion={activeDevotion}
         wgap={wgap}
         setWgap={setWgap}
-        completed={completed}
-        onComplete={() => {
-          setCompleted(true);
-          setCompletedDevotion(activeDevotion);
-        }}
-        onBack={() => { setScreen('dashboard'); setActiveTab('home'); }}
+        completed={activeEntryCompleted}
+        onComplete={completeDevotion}
+        onViewSaved={viewSavedDevotion}
+        onReturnHome={returnHome}
+        onBack={returnHome}
         onReadChapter={() => {
           if (!activeDevotion) return;
           const startVerse = activeDevotion.startVerse ?? activeDevotion.verse;
@@ -154,16 +197,18 @@ export default function App() {
       activeTab={activeTab}
       setActiveTab={(tab) => {
         setActiveTab(tab);
+        if (tab !== 'journey') setSelectedHistoryId(null);
         if (tab !== 'bible') {
           setReturnFromBible(false);
           setBibleSelectionMode(false);
         }
       }}
-      completed={completed}
+      completed={completedToday}
       onStartDevotion={openDevotionChoice}
       onExit={() => {
         setScreen('welcome');
         setActiveTab('home');
+        setSelectedHistoryId(null);
         setBibleSelectionMode(false);
         setReturnFromBible(false);
       }}
@@ -182,6 +227,10 @@ export default function App() {
         setReturnFromBible(false);
         setScreen('devotion');
       } : null}
+      devotionHistory={devotionHistory}
+      selectedHistoryId={selectedHistoryId}
+      onSelectHistoryEntry={setSelectedHistoryId}
+      onCloseHistoryEntry={() => setSelectedHistoryId(null)}
     />
   );
 }
