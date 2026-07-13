@@ -9,14 +9,20 @@ function Welcome({ onBegin }) {
 }
 
 function createPersonalDevotion(selection) {
+  const startVerse = selection.startVerse ?? selection.verse;
+  const endVerse = selection.endVerse ?? startVerse;
+  const verseLabel = startVerse === endVerse ? `${startVerse}` : `${startVerse}–${endVerse}`;
+
   return {
-    id: `PERSONAL-${selection.bookId}-${selection.chapter}-${selection.verse}`,
+    id: `PERSONAL-${selection.bookId}-${selection.chapter}-${startVerse}-${endVerse}`,
     bookId: selection.bookId,
     bookSlug: selection.bookSlug,
     bookName: selection.bookName,
     chapter: selection.chapter,
-    verse: selection.verse,
-    reference: `${selection.bookName} ${selection.chapter}:${selection.verse}`,
+    verse: startVerse,
+    startVerse,
+    endVerse,
+    reference: `${selection.bookName} ${selection.chapter}:${verseLabel}`,
     text: selection.text,
     title: 'My Scripture Reflection',
     theme: 'Personal Scripture reflection',
