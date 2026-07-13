@@ -18,7 +18,7 @@ function HomeDashboard({ dailyVerse, dailyLoading, dailyError, completed, onStar
       <section className="greeting-block">
         <p className="dashboard-eyebrow">{formatManilaDate()}</p>
         <h2>{getManilaGreeting()}, Max.</h2>
-        <p>Take a quiet moment. You do not have to rush your time with God.</p>
+        <p>Start today with the Word, reflect, and respond.</p>
       </section>
       <TodayDevotionCard dailyVerse={dailyVerse} completed={completed} loading={dailyLoading} error={dailyError} onStart={onStartDevotion} />
       <section className="section-block">
