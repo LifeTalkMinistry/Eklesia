@@ -1,0 +1,13 @@
+.day-circle.is-today:not(.is-complete) {
+  border-color: rgba(232, 217, 170, 0.42);
+  color: #e8d9aa;
+  box-shadow: 0 0 0 3px rgba(232, 217, 170, 0.06);
+}
+
+.day-circle.is-future:not(.is-complete) {
+  opacity: 0.48;
+}
+
+.day-circle.is-complete.is-today {
+  box-shadow: 0 0 0 3px rgba(184, 215, 190, 0.12);
+}
