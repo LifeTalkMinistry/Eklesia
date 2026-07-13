@@ -7,7 +7,7 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
   const [bookSlug, setBookSlug] = useState(target?.bookSlug || 'genesis');
   const [chapterNumber, setChapterNumber] = useState(target?.chapter || 1);
   const [highlightVerse, setHighlightVerse] = useState(target?.verse || null);
-  const [selectedVerse, setSelectedVerse] = useState(null);
+  const [selectedRange, setSelectedRange] = useState(null);
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -34,7 +34,7 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
     setBookSlug(target.bookSlug);
     setChapterNumber(target.chapter || 1);
     setHighlightVerse(target.verse || null);
-    setSelectedVerse(null);
+    setSelectedRange(null);
     const matchingBook = manifest.find((item) => item.slug === target.bookSlug);
     if (matchingBook) setTestament(matchingBook.testament);
   }, [target?.bookSlug, target?.chapter, target?.verse, manifest]);
@@ -60,6 +60,25 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
   const chapter = book?.chapters.find((item) => item.number === chapterNumber) || null;
   const visibleBooks = useMemo(() => manifest.filter((item) => testament === 'all' || item.testament === testament), [manifest, testament]);
 
+  const selectedPassage = useMemo(() => {
+    if (!selectedRange || !book || !chapter) return null;
+    const startVerse = selectedRange.start;
+    const endVerse = selectedRange.end ?? startVerse;
+    const verses = chapter.verses.filter((verse) => verse.number >= startVerse && verse.number <= endVerse);
+    if (!verses.length) return null;
+
+    return {
+      bookId: book.id,
+      bookSlug,
+      bookName: book.name,
+      chapter: chapter.number,
+      verse: startVerse,
+      startVerse,
+      endVerse,
+      text: verses.map((verse) => verse.text).join(' '),
+    };
+  }, [selectedRange, book, chapter, bookSlug]);
+
   useEffect(() => {
     if (!chapter || !highlightVerse) return;
     const id = `bible-verse-${bookSlug}-${chapterNumber}-${highlightVerse}`;
@@ -73,9 +92,13 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
     return () => window.clearTimeout(timer);
   }, [bookSlug, chapterNumber, highlightVerse, chapter]);
 
+  function clearSelection() {
+    setSelectedRange(null);
+  }
+
   function changeTestament(nextTestament) {
     setTestament(nextTestament);
-    setSelectedVerse(null);
+    clearSelection();
     const first = manifest.find((item) => nextTestament === 'all' || item.testament === nextTestament);
     if (first && !manifest.find((item) => item.slug === bookSlug && (nextTestament === 'all' || item.testament === nextTestament))) {
       setBookSlug(first.slug);
@@ -88,7 +111,7 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
     setBookSlug(nextBookSlug);
     setChapterNumber(nextChapter);
     setHighlightVerse(null);
-    setSelectedVerse(null);
+    clearSelection();
   }
 
   function goPrevious() {
@@ -107,37 +130,48 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
 
   function chooseVerse(verse) {
     if (!book || !chapter) return;
-    setSelectedVerse({
-      bookId: book.id,
-      bookSlug,
-      bookName: book.name,
-      chapter: chapter.number,
-      verse: verse.number,
-      text: verse.text,
+
+    if (!selectedRange || selectedRange.end !== null) {
+      setSelectedRange({ start: verse.number, end: null });
+      return;
+    }
+
+    if (verse.number === selectedRange.start) {
+      setSelectedRange({ start: verse.number, end: null });
+      return;
+    }
+
+    setSelectedRange({
+      start: Math.min(selectedRange.start, verse.number),
+      end: Math.max(selectedRange.start, verse.number),
     });
   }
+
+  const selectionReference = selectedPassage
+    ? `${selectedPassage.bookName} ${selectedPassage.chapter}:${selectedPassage.startVerse}${selectedPassage.endVerse === selectedPassage.startVerse ? '' : `–${selectedPassage.endVerse}`}`
+    : '';
 
   return (
     <section className="bible-reader" aria-busy={loading}>
       <div className="bible-title-row">
         <div>
           <p className="dashboard-eyebrow">{selectionMode ? 'Personal devotion' : 'Scripture'}</p>
-          <h2>{selectionMode ? 'Choose a verse' : 'Bible'}</h2>
-          <p className="panel-intro">{selectionMode ? 'Tap one verse to use for your private devotion.' : 'Berean Standard Bible'}</p>
+          <h2>{selectionMode ? 'Choose a passage' : 'Bible'}</h2>
+          <p className="panel-intro">{selectionMode ? 'Select one verse or a verse range.' : 'Berean Standard Bible'}</p>
         </div>
         {selectionMode && <button className="secondary-button compact-button" type="button" onClick={onCancelSelection}>Back to choices</button>}
         {!selectionMode && onReturn && <button className="secondary-button compact-button" type="button" onClick={onReturn}>Return to devotion</button>}
       </div>
 
-      {selectionMode && <div className="selection-instructions" aria-live="polite"><strong>Find your passage</strong><p>Choose a testament, book, and chapter below. Then tap the verse you want to reflect on.</p></div>}
+      {selectionMode && <div className="selection-instructions" aria-live="polite"><strong>{selectedRange ? (selectedRange.end === null ? 'Starting verse selected' : 'Passage selected') : 'Select your starting verse'}</strong><p>{selectedRange?.end === null ? 'Tap another verse for the ending, or continue with this verse only.' : 'Tap any new verse to begin a different selection.'}</p></div>}
 
       <div className="testament-filter" aria-label="Filter Bible books by testament">
         {[["all", "All"], ["old", "Old Testament"], ["new", "New Testament"]].map(([value, label]) => <button key={value} className={testament === value ? 'active' : ''} type="button" onClick={() => changeTestament(value)}>{label}</button>)}
       </div>
 
       <div className="bible-controls">
-        <label htmlFor="bible-book">Book<select id="bible-book" value={bookSlug} onChange={(event) => { setBookSlug(event.target.value); setChapterNumber(1); setHighlightVerse(null); setSelectedVerse(null); }}>{visibleBooks.map((item) => <option key={item.id} value={item.slug}>{item.name}</option>)}</select></label>
-        <label htmlFor="bible-chapter">Chapter<select id="bible-chapter" value={chapterNumber} disabled={!book} onChange={(event) => { setChapterNumber(Number(event.target.value)); setHighlightVerse(null); setSelectedVerse(null); }}>{book?.chapters.map((item) => <option key={item.number} value={item.number}>{item.number}</option>)}</select></label>
+        <label htmlFor="bible-book">Book<select id="bible-book" value={bookSlug} onChange={(event) => { setBookSlug(event.target.value); setChapterNumber(1); setHighlightVerse(null); clearSelection(); }}>{visibleBooks.map((item) => <option key={item.id} value={item.slug}>{item.name}</option>)}</select></label>
+        <label htmlFor="bible-chapter">Chapter<select id="bible-chapter" value={chapterNumber} disabled={!book} onChange={(event) => { setChapterNumber(Number(event.target.value)); setHighlightVerse(null); clearSelection(); }}>{book?.chapters.map((item) => <option key={item.number} value={item.number}>{item.number}</option>)}</select></label>
       </div>
 
       <div className="chapter-nav">
@@ -153,20 +187,24 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
           <h3>{book.name} {chapter.number}</h3>
           {chapter.verses.map((verse) => {
             const highlighted = verse.number === highlightVerse;
-            const selected = selectedVerse?.verse === verse.number;
+            const selectedEnd = selectedRange?.end ?? selectedRange?.start;
+            const inSelectedRange = selectedRange && verse.number >= selectedRange.start && verse.number <= selectedEnd;
+            const isStart = selectedRange?.start === verse.number;
+            const isEnd = selectedRange?.end !== null && selectedRange?.end === verse.number;
+            const selectionLabel = isStart && selectedRange?.end === null ? 'Start' : isStart ? 'Start' : isEnd ? 'End' : '';
 
             if (selectionMode) {
               return (
                 <button
                   id={`bible-verse-${bookSlug}-${chapterNumber}-${verse.number}`}
                   key={verse.number}
-                  className={`chapter-verse-button ${selected ? 'selected-verse' : ''}`}
+                  className={`chapter-verse-button ${inSelectedRange ? 'selected-range' : ''} ${isStart ? 'range-start' : ''} ${isEnd ? 'range-end' : ''}`}
                   type="button"
-                  aria-pressed={selected}
+                  aria-pressed={Boolean(inSelectedRange)}
                   onClick={() => chooseVerse(verse)}
                 >
                   <span><sup>{verse.number}</sup>{verse.text}</span>
-                  {selected && <span className="highlight-label">Selected</span>}
+                  {selectionLabel && <span className="highlight-label">{selectionLabel}</span>}
                 </button>
               );
             }
@@ -176,10 +214,10 @@ export default function BibleReader({ target, onReturn, selectionMode = false, o
         </article>
       )}
 
-      {selectionMode && selectedVerse && (
+      {selectionMode && selectedPassage && (
         <div className="verse-selection-bar" aria-live="polite">
-          <div><small>Selected verse</small><strong>{selectedVerse.bookName} {selectedVerse.chapter}:{selectedVerse.verse}</strong></div>
-          <button className="primary-button" type="button" onClick={() => onSelectVerse(selectedVerse)}>Start devotion with this verse</button>
+          <div><small>{selectedPassage.startVerse === selectedPassage.endVerse ? 'Selected verse' : 'Selected passage'}</small><strong>{selectionReference}</strong></div>
+          <button className="primary-button" type="button" onClick={() => onSelectVerse(selectedPassage)}>Start devotion with this {selectedPassage.startVerse === selectedPassage.endVerse ? 'verse' : 'passage'}</button>
         </div>
       )}
 
