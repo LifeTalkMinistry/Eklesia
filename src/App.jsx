@@ -8,6 +8,14 @@ function Welcome({ onBegin }) {
   return <main className="app-shell welcome-shell"><section className="welcome-card"><p className="eyebrow">A healthier way to grow together</p><h1>Eklesia</h1><p className="tagline">Track the habit. Protect the heart.</p><p className="description">Build a consistent devotional life while keeping personal reflections private and helping church leaders know when encouragement may be needed.</p><button className="primary-button" type="button" onClick={onBegin}>Begin your journey</button></section></main>;
 }
 
+function createEmptyWgap() {
+  return {
+    getsKo: '',
+    application: '',
+    prayer: '',
+  };
+}
+
 function createPersonalDevotion(selection) {
   const startVerse = selection.startVerse ?? selection.verse;
   const endVerse = selection.endVerse ?? startVerse;
@@ -28,8 +36,6 @@ function createPersonalDevotion(selection) {
     previewText,
     fullText: selection.text,
     title: 'My Scripture Reflection',
-    theme: 'Personal Scripture reflection',
-    prompt: 'What is God showing you through this passage today?',
     devotionType: 'personal',
   };
 }
@@ -37,7 +43,7 @@ function createPersonalDevotion(selection) {
 export default function App() {
   const [screen, setScreen] = useState('welcome');
   const [activeTab, setActiveTab] = useState('home');
-  const [reflection, setReflection] = useState('');
+  const [wgap, setWgap] = useState(createEmptyWgap);
   const [completed, setCompleted] = useState(false);
   const [completedDevotion, setCompletedDevotion] = useState(null);
   const [activeDevotion, setActiveDevotion] = useState(null);
@@ -64,7 +70,7 @@ export default function App() {
 
   function openSuggestedDevotion() {
     if (!dailyVerse) return;
-    setReflection('');
+    setWgap(createEmptyWgap());
     setActiveDevotion(dailyVerse);
     setBibleSelectionMode(false);
     setScreen('devotion');
@@ -79,7 +85,7 @@ export default function App() {
   }
 
   function openPersonalDevotion(selection) {
-    setReflection('');
+    setWgap(createEmptyWgap());
     setActiveDevotion(createPersonalDevotion(selection));
     setBibleSelectionMode(false);
     setReturnFromBible(false);
@@ -114,8 +120,8 @@ export default function App() {
     return (
       <Devotion
         devotion={activeDevotion}
-        reflection={reflection}
-        setReflection={setReflection}
+        wgap={wgap}
+        setWgap={setWgap}
         completed={completed}
         onComplete={() => {
           setCompleted(true);
