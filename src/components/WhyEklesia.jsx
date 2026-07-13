@@ -8,11 +8,11 @@ const leaderVisibility = [
   'Your most recent devotional activity date',
 ];
 
-const protectedDetails = [
-  'Your private reflections',
+const personalDetails = [
+  'Your WGAP reflections',
   'Your personal prayers',
   'Your journal entries',
-  'The private details of what you are going through',
+  'The details of what you are going through',
 ];
 
 export default function WhyEklesia({ open, onClose, triggerRef }) {
@@ -118,7 +118,7 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
           <section className="why-eklesia-section" aria-labelledby="why-eklesia-vision">
             <p className="why-eklesia-label">Our vision</p>
             <h3 id="why-eklesia-vision">A church where no one quietly disappears.</h3>
-            <p>We envision churches where members feel spiritually supported, leaders can recognize when encouragement may be needed, and personal reflections remain protected.</p>
+            <p>We envision churches where members feel spiritually supported, leaders can recognize when encouragement may be needed, and every person remains in control of what they choose to share.</p>
           </section>
 
           <section className="why-eklesia-section why-eklesia-creator" aria-labelledby="why-eklesia-creator">
@@ -127,7 +127,7 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
             <div className="why-eklesia-note">
               <p>I created Eklesia because spiritual growth should never feel like surveillance.</p>
               <p>Sometimes people do not need to be confronted. They need to be remembered, encouraged, and gently invited to begin again.</p>
-              <p>Eklesia helps leaders care without invading privacy, and helps members build consistency without feeling condemned.</p>
+              <p>Eklesia helps leaders care without overstepping, and helps members build consistency without feeling condemned.</p>
               <p>You are not being measured by your streak. The streak is only a reminder that you continue to make room for God.</p>
               <div className="why-eklesia-signature">
                 <strong>Max Emorej</strong>
@@ -136,9 +136,9 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
             </div>
           </section>
 
-          <section className="why-eklesia-section" aria-labelledby="why-eklesia-privacy">
-            <p className="why-eklesia-label">Our privacy promise</p>
-            <h3 id="why-eklesia-privacy">Track the habit. Protect the heart.</h3>
+          <section className="why-eklesia-section" aria-labelledby="why-eklesia-support">
+            <p className="why-eklesia-label">How support works</p>
+            <h3 id="why-eklesia-support">Care with healthy boundaries.</h3>
             <div className="why-eklesia-privacy-grid">
               <article className="why-eklesia-privacy-card">
                 <h4>Leaders may see</h4>
@@ -147,13 +147,13 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
                 </ul>
               </article>
               <article className="why-eklesia-privacy-card is-protected">
-                <h4>Leaders do not automatically see</h4>
+                <h4>You choose whether to share</h4>
                 <ul>
-                  {protectedDetails.map((item) => <li key={item}>{item}</li>)}
+                  {personalDetails.map((item) => <li key={item}>{item}</li>)}
                 </ul>
               </article>
             </div>
-            <p className="why-eklesia-control-note">You remain in control of what you choose to share.</p>
+            <p className="why-eklesia-control-note">Your devotional journey belongs to you. Eklesia simply helps you keep showing up.</p>
           </section>
 
           <aside className="why-eklesia-reminder" aria-label="Final reminder">
