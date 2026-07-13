@@ -1,0 +1,134 @@
+.wgap-word-card .wgap-section-title {
+  margin-bottom: 18px;
+}
+
+.wgap-section-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.wgap-letter {
+  display: grid;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(232, 217, 170, 0.28);
+  border-radius: 13px;
+  color: #e8d9aa;
+  background: rgba(232, 217, 170, 0.08);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.wgap-section-title > div {
+  min-width: 0;
+}
+
+.wgap-section-title strong,
+.wgap-section-title label {
+  display: block;
+  color: #fffdf5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.18rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.wgap-word-card .dashboard-eyebrow {
+  margin-top: 5px;
+}
+
+.wgap-form {
+  display: grid;
+  gap: 14px;
+  margin: 24px;
+}
+
+.wgap-privacy-note {
+  margin: 0 2px 2px;
+  color: rgba(244, 245, 239, 0.48);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.wgap-field {
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.wgap-field .wgap-section-title p {
+  margin: 4px 0 0;
+  color: rgba(244, 245, 239, 0.52);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.wgap-field textarea {
+  width: 100%;
+  margin-top: 16px;
+  resize: vertical;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  padding: 15px;
+  color: #fffdf5;
+  background: rgba(5, 12, 8, 0.56);
+  font: inherit;
+  line-height: 1.6;
+}
+
+.wgap-field textarea::placeholder {
+  color: rgba(244, 245, 239, 0.28);
+}
+
+.wgap-field textarea[readonly] {
+  cursor: default;
+  border-color: rgba(184, 215, 190, 0.12);
+  background: rgba(184, 215, 190, 0.045);
+}
+
+.wgap-form .form-message {
+  margin: 0 2px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.wgap-form .submit-button {
+  margin-top: 2px;
+}
+
+.wgap-form .review-result {
+  margin-top: 2px;
+}
+
+@media (max-width: 600px) {
+  .wgap-form {
+    margin: 20px 18px 28px;
+    gap: 12px;
+  }
+
+  .wgap-field {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .wgap-letter {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 390px) {
+  .wgap-form {
+    margin-inline: 14px;
+  }
+
+  .wgap-field {
+    padding: 16px;
+  }
+}
