@@ -1,4 +1,9 @@
-import { formatDevotionHistoryDate, getDevotionMetrics } from '../lib/devotionHistory.js';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  formatArchiveEntryDate,
+  formatDevotionCount,
+  groupDevotionHistoryByYearAndMonth,
+} from '../lib/devotionHistory.js';
 
 const REVIEW_FIELDS = [
   ['G', 'Gets Ko', 'getsKo'],
@@ -15,7 +20,7 @@ function JourneyReview({ entry, onBack }) {
       <button className="journey-back-button" type="button" onClick={onBack}>← Devotion history</button>
       <p className="dashboard-eyebrow">Saved WGAP devotion</p>
       <h2>{devotion.reference}</h2>
-      <p className="panel-intro">{formatDevotionHistoryDate(entry.completedAt)}</p>
+      <p className="panel-intro">{formatArchiveEntryDate(entry.dateKey, entry.completedAt, { includeYear: true })}</p>
 
       <article className="history-review-card history-word-card">
         <div className="history-review-heading">
@@ -39,66 +44,142 @@ function JourneyReview({ entry, onBack }) {
   );
 }
 
+function monthDrawerKey(year, month) {
+  return `${year}-${month}`;
+}
+
 export default function Journey({ history, selectedEntryId, onSelectEntry, onCloseEntry }) {
-  const selectedEntry = history.find((entry) => entry.id === selectedEntryId);
+  const safeHistory = Array.isArray(history) ? history : [];
+  const archive = useMemo(() => groupDevotionHistoryByYearAndMonth(safeHistory), [safeHistory]);
+  const [expandedYear, setExpandedYear] = useState(null);
+  const [expandedMonths, setExpandedMonths] = useState(() => new Set());
+  const selectedEntry = safeHistory.find((entry) => entry.id === selectedEntryId);
+
+  useEffect(() => {
+    if (!archive.length) {
+      setExpandedYear(null);
+      return;
+    }
+
+    setExpandedYear((currentYear) => {
+      if (currentYear && archive.some((yearGroup) => yearGroup.year === currentYear)) return currentYear;
+      return archive[0].year;
+    });
+
+    const newestMonth = archive[0].months[0];
+    if (!newestMonth) return;
+
+    const newestMonthKey = monthDrawerKey(archive[0].year, newestMonth.month);
+    setExpandedMonths((currentMonths) => {
+      if (currentMonths.size) return currentMonths;
+      return new Set([newestMonthKey]);
+    });
+  }, [archive]);
+
   if (selectedEntry) return <JourneyReview entry={selectedEntry} onBack={onCloseEntry} />;
 
-  const rhythm = getDevotionMetrics(history);
+  function toggleYear(year) {
+    setExpandedYear((currentYear) => (currentYear === year ? null : year));
+  }
+
+  function toggleMonth(year, month) {
+    const key = monthDrawerKey(year, month);
+    setExpandedMonths((currentMonths) => {
+      const nextMonths = new Set(currentMonths);
+      if (nextMonths.has(key)) nextMonths.delete(key);
+      else nextMonths.add(key);
+      return nextMonths;
+    });
+  }
 
   return (
-    <section className="panel-page">
-      <p className="dashboard-eyebrow">Your spiritual journey</p>
-      <h2>Small steps are becoming a rhythm.</h2>
-      <p className="panel-intro">Review the WGAP devotions you have completed and keep noticing how God is growing you.</p>
+    <section className="panel-page journey-archive-page">
+      <header className="journey-archive-header">
+        <p className="dashboard-eyebrow">Your devotion journey</p>
+        <h2>A record of your time in the Word.</h2>
+        <p className="panel-intro">Look back on the Scriptures, insights, applications, and prayers that shaped your journey.</p>
+      </header>
 
-      <div className="journey-progress-card">
-        <div
-          className="progress-ring"
-          aria-label={`${rhythm.weeklyPercentage} percent weekly consistency`}
-          style={{ background: `radial-gradient(circle,#0d1913 56%,transparent 57%), conic-gradient(#b8d7be 0 ${rhythm.weeklyPercentage}%,rgba(255,255,255,.07) ${rhythm.weeklyPercentage}% 100%)` }}
-        >
-          <span>{rhythm.weeklyPercentage}%</span>
+      {archive.length ? (
+        <div className="devotion-archive" aria-label="Completed WGAP devotions">
+          {archive.map((yearGroup) => {
+            const yearIsExpanded = expandedYear === yearGroup.year;
+            const yearPanelId = `devotion-archive-year-${yearGroup.year}`;
+
+            return (
+              <section className={`archive-year-drawer ${yearIsExpanded ? 'is-expanded' : ''}`} key={yearGroup.year}>
+                <h3 className="archive-drawer-heading">
+                  <button
+                    className="archive-drawer-button archive-year-button"
+                    type="button"
+                    aria-expanded={yearIsExpanded}
+                    aria-controls={yearPanelId}
+                    onClick={() => toggleYear(yearGroup.year)}
+                  >
+                    <span className="archive-drawer-title">{yearGroup.year}</span>
+                    <span className="archive-drawer-meta">
+                      <span>{formatDevotionCount(yearGroup.count)}</span>
+                      <span className="archive-chevron" aria-hidden="true">⌄</span>
+                    </span>
+                  </button>
+                </h3>
+
+                <div className="archive-year-content" id={yearPanelId} hidden={!yearIsExpanded}>
+                  {yearGroup.months.map((monthGroup) => {
+                    const monthKey = monthDrawerKey(yearGroup.year, monthGroup.month);
+                    const monthIsExpanded = expandedMonths.has(monthKey);
+                    const monthPanelId = `devotion-archive-month-${yearGroup.year}-${monthGroup.month}`;
+
+                    return (
+                      <section className={`archive-month-drawer ${monthIsExpanded ? 'is-expanded' : ''}`} key={monthKey}>
+                        <h4 className="archive-drawer-heading">
+                          <button
+                            className="archive-drawer-button archive-month-button"
+                            type="button"
+                            aria-expanded={monthIsExpanded}
+                            aria-controls={monthPanelId}
+                            onClick={() => toggleMonth(yearGroup.year, monthGroup.month)}
+                          >
+                            <span className="archive-drawer-title">{monthGroup.monthName}</span>
+                            <span className="archive-drawer-meta">
+                              <span>{formatDevotionCount(monthGroup.count)}</span>
+                              <span className="archive-chevron" aria-hidden="true">⌄</span>
+                            </span>
+                          </button>
+                        </h4>
+
+                        <div className="archive-month-content" id={monthPanelId} hidden={!monthIsExpanded}>
+                          {monthGroup.entries.map((entry) => (
+                            <button
+                              className="devotion-archive-entry"
+                              type="button"
+                              key={entry.id}
+                              onClick={() => onSelectEntry(entry.id)}
+                            >
+                              <span className="archive-entry-copy">
+                                <strong>{formatArchiveEntryDate(entry.archiveDateKey, entry.completedAt)}</strong>
+                                <span className="archive-entry-reference">{entry.devotion.reference || 'Scripture reflection'}</span>
+                                <small>WGAP completed</small>
+                              </span>
+                              <span className="history-arrow" aria-hidden="true">→</span>
+                            </button>
+                          ))}
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
         </div>
-        <div>
-          <p className="dashboard-eyebrow">Weekly consistency</p>
-          <h3>{rhythm.growthSignal}</h3>
-          <p>{rhythm.weeklyCount} of 7 days completed this week · {rhythm.currentStreak} day rhythm.</p>
+      ) : (
+        <div className="journey-history-empty archive-empty-state">
+          <span aria-hidden="true">✦</span>
+          <h3>Your devotion journey begins here.</h3>
+          <p>Complete a WGAP devotion and it will appear in your archive.</p>
         </div>
-      </div>
-
-      <section className="journey-history-section">
-        <div className="journey-history-heading">
-          <div>
-            <p className="dashboard-eyebrow">Devotion journal</p>
-            <h3>Your Devotion History</h3>
-          </div>
-          <span>{rhythm.savedCount}</span>
-        </div>
-
-        {history.length ? (
-          <div className="devotion-history-list">
-            {history.map((entry) => (
-              <button className="devotion-history-card" type="button" key={entry.id} onClick={() => onSelectEntry(entry.id)}>
-                <span className="history-check" aria-hidden="true">✓</span>
-                <span className="history-card-copy">
-                  <small>{formatDevotionHistoryDate(entry.completedAt)}</small>
-                  <strong>{entry.devotion.reference}</strong>
-                  <span>WGAP completed</span>
-                </span>
-                <span className="history-arrow" aria-hidden="true">→</span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="journey-history-empty">
-            <span aria-hidden="true">✦</span>
-            <h3>Your completed devotions will appear here.</h3>
-            <p>Finish a WGAP devotion to begin your journey.</p>
-          </div>
-        )}
-      </section>
-
-      <div className="privacy-card"><span aria-hidden="true">✦</span><div><h3>Look back. Keep growing.</h3><p>Revisit your Gets Ko, Application, and Prayer as your devotional journey continues.</p></div></div>
+      )}
     </section>
   );
 }
