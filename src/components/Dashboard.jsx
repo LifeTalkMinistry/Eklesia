@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import BibleReader from './BibleReader.jsx';
 import Journey from './Journey.jsx';
 import TodayDevotionCard from './TodayDevotionCard.jsx';
+import Together from './Together.jsx';
 import WhyEklesia from './WhyEklesia.jsx';
 import { formatManilaDate, getManilaGreeting } from '../lib/dailyVerse.js';
 
@@ -36,12 +37,8 @@ function HomeDashboard({ dailyVerse, dailyLoading, dailyError, completed, onStar
   );
 }
 
-function Community() {
-  return <section className="panel-page"><p className="dashboard-eyebrow">Healthy encouragement</p><h2>You are growing with a community.</h2><p className="panel-intro">This space will help members encourage one another without comparing streaks.</p><div className="empty-state-card"><span className="empty-state-icon" aria-hidden="true">◎</span><h3>Encouragement circles are coming</h3><p>Share prayer support and gentle encouragement with people you trust.</p></div></section>;
-}
-
 function Profile() {
-  return <section className="panel-page"><p className="dashboard-eyebrow">Your account</p><h2>Max Emorej</h2><p className="panel-intro">Member · LifeTalk Ministry</p><div className="settings-list"><button type="button"><span><b>Devotion journal</b><small>Your saved WGAP entries</small></span><span aria-hidden="true">›</span></button><button type="button"><span><b>Devotional reminder</b><small>Every day at 7:00 AM</small></span><span aria-hidden="true">›</span></button><button type="button"><span><b>Church connection</b><small>LifeTalk Ministry</small></span><span aria-hidden="true">›</span></button></div></section>;
+  return <section className="panel-page"><p className="dashboard-eyebrow">Your account</p><h2>Max Emorej</h2><p className="panel-intro">Member · LifeTalk Ministry</p><div className="settings-list"><button type="button"><span><b>Reflection privacy</b><small>Private by default</small></span><span aria-hidden="true">›</span></button><button type="button"><span><b>Devotional reminder</b><small>Every day at 7:00 AM</small></span><span aria-hidden="true">›</span></button><button type="button"><span><b>Church connection</b><small>LifeTalk Ministry</small></span><span aria-hidden="true">›</span></button></div></section>;
 }
 
 export default function Dashboard({
@@ -71,7 +68,7 @@ export default function Dashboard({
     home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} completed={completed} onStartDevotion={onStartDevotion} devotionCount={devotionHistory.length} />,
     journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
-    community: <Community />,
+    community: <Together />,
     profile: <Profile />,
   }[activeTab];
 
