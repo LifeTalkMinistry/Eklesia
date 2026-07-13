@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function Devotion({ dailyVerse, reflection, setReflection, completed, onComplete, onBack, onReadChapter }) {
+export default function Devotion({ devotion, reflection, setReflection, completed, onComplete, onBack, onReadChapter }) {
   const [message, setMessage] = useState('');
 
   function submitReflection(event) {
@@ -14,23 +14,25 @@ export default function Devotion({ dailyVerse, reflection, setReflection, comple
     onComplete();
   }
 
-  if (!dailyVerse) {
-    return <main className="devotion-shell"><div className="devotion-frame"><header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>Today&apos;s devotion</p><strong>Scripture unavailable</strong></div></header><p className="page-error" role="alert">Today&apos;s Scripture could not be loaded. Please return to the dashboard and try again.</p></div></main>;
+  if (!devotion) {
+    return <main className="devotion-shell"><div className="devotion-frame"><header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>Personal devotion</p><strong>Scripture unavailable</strong></div></header><p className="page-error" role="alert">The selected Scripture could not be loaded. Please return and choose a verse again.</p></div></main>;
   }
+
+  const devotionLabel = devotion.devotionType === 'personal' ? 'My chosen devotion' : 'Today’s suggested devotion';
 
   return (
     <main className="devotion-shell">
       <div className="devotion-frame">
-        <header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>Today&apos;s devotion</p><strong>{dailyVerse.title}</strong></div><span className="soft-badge">5 min</span></header>
+        <header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>{devotionLabel}</p><strong>{devotion.title}</strong></div><span className="soft-badge">5 min</span></header>
         <article className="scripture-card">
-          <p className="dashboard-eyebrow">{dailyVerse.reference} · BSB</p>
-          <blockquote>“{dailyVerse.text}”</blockquote>
+          <p className="dashboard-eyebrow">{devotion.reference} · BSB</p>
+          <blockquote>“{devotion.text}”</blockquote>
           <button className="secondary-button" type="button" onClick={onReadChapter}>Read full chapter</button>
         </article>
         <section className="devotion-reading">
-          <p><b>Theme:</b> {dailyVerse.theme}</p>
-          <p><b>Eklesia reflection prompt:</b> {dailyVerse.prompt}</p>
-          <p className="privacy-note">The Scripture text above is from the Berean Standard Bible. The question is an Eklesia prompt, and your answer remains private.</p>
+          <p><b>Theme:</b> {devotion.theme}</p>
+          <p><b>Eklesia reflection prompt:</b> {devotion.prompt}</p>
+          <p className="privacy-note">The Scripture text above is from the Berean Standard Bible. The reflection question is an Eklesia prompt, and your answer remains private.</p>
         </section>
         <form className="reflection-form" onSubmit={submitReflection}>
           <label htmlFor="reflection">Write your personal devotion</label>
