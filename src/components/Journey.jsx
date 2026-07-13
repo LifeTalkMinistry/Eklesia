@@ -70,7 +70,7 @@ export default function Journey({ history, selectedEntryId, onSelectEntry, onClo
       <section className="journey-history-section">
         <div className="journey-history-heading">
           <div>
-            <p className="dashboard-eyebrow">Private journal</p>
+            <p className="dashboard-eyebrow">Devotion journal</p>
             <h3>Your Devotion History</h3>
           </div>
           <span>{history.length}</span>
@@ -94,12 +94,12 @@ export default function Journey({ history, selectedEntryId, onSelectEntry, onClo
           <div className="journey-history-empty">
             <span aria-hidden="true">✦</span>
             <h3>Your completed devotions will appear here.</h3>
-            <p>Finish a WGAP devotion to begin your private history.</p>
+            <p>Finish a WGAP devotion to begin your journey.</p>
           </div>
         )}
       </section>
 
-      <div className="privacy-card"><span aria-hidden="true">🔒</span><div><h3>Your reflections stay private</h3><p>Only you can open the Gets Ko, Application, and Prayer entries saved on this device.</p></div></div>
+      <div className="privacy-card"><span aria-hidden="true">✦</span><div><h3>Look back. Keep growing.</h3><p>Revisit your Gets Ko, Application, and Prayer as your devotional journey continues.</p></div></div>
     </section>
   );
 }
