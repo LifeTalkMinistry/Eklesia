@@ -1,15 +1,49 @@
 import { useState } from 'react';
 
-export default function Devotion({ devotion, reflection, setReflection, completed, onComplete, onBack, onReadChapter }) {
+const WGAP_FIELDS = [
+  {
+    key: 'getsKo',
+    letter: 'G',
+    label: 'Gets Ko',
+    helper: 'Ano ang naintindihan o napansin mo sa Salita?',
+    placeholder: 'Isulat kung ano ang malinaw na mensahe sa iyo...',
+    rows: 4,
+  },
+  {
+    key: 'application',
+    letter: 'A',
+    label: 'Application',
+    helper: 'Paano mo ito isasabuhay?',
+    placeholder: 'Isulat ang specific action na gagawin mo...',
+    rows: 4,
+  },
+  {
+    key: 'prayer',
+    letter: 'P',
+    label: 'Prayer',
+    helper: 'Ipanalangin ang iyong response sa Diyos.',
+    placeholder: 'Lord, tulungan Mo po ako na...',
+    rows: 5,
+  },
+];
+
+export default function Devotion({ devotion, wgap, setWgap, completed, onComplete, onBack, onReadChapter }) {
   const [message, setMessage] = useState('');
 
-  function submitReflection(event) {
+  function updateField(field, value) {
+    setWgap((current) => ({ ...current, [field]: value }));
+    if (message) setMessage('');
+  }
+
+  function submitDevotion(event) {
     event.preventDefault();
-    const wordCount = reflection.trim().split(/\s+/).filter(Boolean).length;
-    if (wordCount < 10) {
-      setMessage('Write at least one clear thought about what this passage reminded you of.');
+    const missingFields = WGAP_FIELDS.filter((field) => !wgap[field.key]?.trim()).map((field) => field.label);
+
+    if (missingFields.length) {
+      setMessage(`Complete ${missingFields.join(', ')} before finishing your devotion.`);
       return;
     }
+
     setMessage('');
     onComplete();
   }
@@ -25,23 +59,50 @@ export default function Devotion({ devotion, reflection, setReflection, complete
   return (
     <main className="devotion-shell">
       <div className="devotion-frame">
-        <header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>{devotionLabel}</p><strong>{devotion.title}</strong></div><span className="soft-badge">5 min</span></header>
-        <article className="scripture-card">
-          <p className="dashboard-eyebrow">{devotion.reference} · BSB</p>
+        <header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>{devotionLabel}</p><strong>WGAP Devotion</strong></div><span className="soft-badge">5 min</span></header>
+
+        <article className="scripture-card wgap-word-card">
+          <div className="wgap-section-title">
+            <span className="wgap-letter">W</span>
+            <div>
+              <strong>Word of God</strong>
+              <p className="dashboard-eyebrow">{devotion.reference} · BSB</p>
+            </div>
+          </div>
           <blockquote>“{scripturePreview}”</blockquote>
           <button className="secondary-button" type="button" onClick={onReadChapter}>{isSelectedPassage ? 'Read selected passage' : 'Read full chapter'}</button>
         </article>
-        <section className="devotion-reading">
-          <p><b>Theme:</b> {devotion.theme}</p>
-          <p><b>Eklesia reflection prompt:</b> {devotion.prompt}</p>
-          <p className="privacy-note">The Scripture text above is from the Berean Standard Bible. The reflection question is an Eklesia prompt, and your answer remains private.</p>
-        </section>
-        <form className="reflection-form" onSubmit={submitReflection}>
-          <label htmlFor="reflection">Write your personal devotion</label>
-          <p>Your answer remains private unless you choose to share it later.</p>
-          <textarea id="reflection" value={reflection} onChange={(event) => setReflection(event.target.value)} placeholder="Write one honest takeaway..." rows="7" />
-          {message && <p className="form-message error-message">{message}</p>}
-          {completed ? <div className="review-result"><span aria-hidden="true">✓</span><div><strong>Today&apos;s devotion is complete</strong><p>Your personal reflection has been kept private.</p></div></div> : <button className="primary-button submit-button" type="submit">Complete today’s devotion</button>}
+
+        <form className="wgap-form" onSubmit={submitDevotion}>
+          <p className="wgap-privacy-note">Your Gets Ko, Application, and Prayer stay private.</p>
+
+          {WGAP_FIELDS.map((field) => (
+            <section className="wgap-field" key={field.key}>
+              <div className="wgap-section-title">
+                <span className="wgap-letter">{field.letter}</span>
+                <div>
+                  <label htmlFor={`wgap-${field.key}`}>{field.label}</label>
+                  <p>{field.helper}</p>
+                </div>
+              </div>
+              <textarea
+                id={`wgap-${field.key}`}
+                value={wgap[field.key] || ''}
+                onChange={(event) => updateField(field.key, event.target.value)}
+                placeholder={field.placeholder}
+                rows={field.rows}
+                readOnly={completed}
+              />
+            </section>
+          ))}
+
+          {message && <p className="form-message error-message" role="alert">{message}</p>}
+
+          {completed ? (
+            <div className="review-result"><span aria-hidden="true">✓</span><div><strong>Today&apos;s WGAP devotion is complete</strong><p>Your personal entries have been kept private.</p></div></div>
+          ) : (
+            <button className="primary-button submit-button" type="submit">Complete today’s devotion</button>
+          )}
         </form>
       </div>
     </main>
