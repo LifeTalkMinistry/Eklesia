@@ -10,6 +10,15 @@ on:
       - src/**
       - package.json
       - .github/workflows/stage-bible.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - scripts/import-bsb.mjs
+      - scripts/validate-bible.mjs
+      - src/**
+      - package.json
+      - .github/workflows/stage-bible.yml
 
 permissions:
   contents: write
@@ -20,6 +29,8 @@ jobs:
     steps:
       - name: Check out staging branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -46,4 +57,4 @@ jobs:
             exit 0
           fi
           git commit -m "Add generated BSB Bible data"
-          git push
+          git push origin HEAD:${{ github.head_ref || github.ref_name }}
