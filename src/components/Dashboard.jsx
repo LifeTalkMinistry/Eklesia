@@ -1,6 +1,8 @@
+import { useCallback, useRef, useState } from 'react';
 import BibleReader from './BibleReader.jsx';
 import Journey from './Journey.jsx';
 import TodayDevotionCard from './TodayDevotionCard.jsx';
+import WhyEklesia from './WhyEklesia.jsx';
 import { formatManilaDate, getManilaGreeting } from '../lib/dailyVerse.js';
 
 const week = [
@@ -61,6 +63,10 @@ export default function Dashboard({
   onSelectHistoryEntry,
   onCloseHistoryEntry,
 }) {
+  const [showWhyEklesia, setShowWhyEklesia] = useState(false);
+  const whyEklesiaButtonRef = useRef(null);
+  const closeWhyEklesia = useCallback(() => setShowWhyEklesia(false), []);
+
   const content = {
     home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} completed={completed} onStartDevotion={onStartDevotion} devotionCount={devotionHistory.length} />,
     journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} />,
@@ -74,7 +80,15 @@ export default function Dashboard({
       <div className="dashboard-frame">
         <header className="dashboard-header">
           <button className="brand-button" type="button" onClick={onExit} aria-label="Return to welcome screen"><span className="brand-mark">E</span><span>Eklesia</span></button>
-          <button className="notification-button" type="button" aria-label="Notifications"><span aria-hidden="true">⌁</span><i /></button>
+          <button
+            className="notification-button why-eklesia-trigger"
+            type="button"
+            aria-label="Why Eklesia?"
+            onClick={() => setShowWhyEklesia(true)}
+            ref={whyEklesiaButtonRef}
+          >
+            <span className="information-glyph" aria-hidden="true">i</span>
+          </button>
         </header>
         <div className="dashboard-content">{content}</div>
         <nav className="bottom-nav" aria-label="Main navigation">
@@ -82,6 +96,7 @@ export default function Dashboard({
             ['home', '⌂', 'Home'], ['journey', '◔', 'Journey'], ['bible', '✦', 'Bible'], ['community', '♧', 'Together'], ['profile', '○', 'Profile'],
           ].map(([id, icon, label]) => <button className={activeTab === id ? 'active' : ''} type="button" key={id} onClick={() => setActiveTab(id)}><span aria-hidden="true">{icon}</span><small>{label}</small></button>)}
         </nav>
+        <WhyEklesia open={showWhyEklesia} onClose={closeWhyEklesia} triggerRef={whyEklesiaButtonRef} />
       </div>
     </main>
   );
