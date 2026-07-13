@@ -5,7 +5,6 @@ const WGAP_FIELDS = [
     key: 'getsKo',
     letter: 'G',
     label: 'Gets Ko',
-    helper: 'Ano ang naintindihan o napansin mo sa Salita?',
     placeholder: 'Isulat kung ano ang malinaw na mensahe sa iyo...',
     rows: 4,
   },
@@ -13,7 +12,6 @@ const WGAP_FIELDS = [
     key: 'application',
     letter: 'A',
     label: 'Application',
-    helper: 'Paano mo ito isasabuhay?',
     placeholder: 'Isulat ang specific action na gagawin mo...',
     rows: 4,
   },
@@ -21,7 +19,6 @@ const WGAP_FIELDS = [
     key: 'prayer',
     letter: 'P',
     label: 'Prayer',
-    helper: 'Ipanalangin ang iyong response sa Diyos.',
     placeholder: 'Lord, tulungan Mo po ako na...',
     rows: 5,
   },
@@ -74,16 +71,11 @@ export default function Devotion({ devotion, wgap, setWgap, completed, onComplet
         </article>
 
         <form className="wgap-form" onSubmit={submitDevotion}>
-          <p className="wgap-privacy-note">Your Gets Ko, Application, and Prayer stay private.</p>
-
           {WGAP_FIELDS.map((field) => (
             <section className="wgap-field" key={field.key}>
               <div className="wgap-section-title">
                 <span className="wgap-letter">{field.letter}</span>
-                <div>
-                  <label htmlFor={`wgap-${field.key}`}>{field.label}</label>
-                  <p>{field.helper}</p>
-                </div>
+                <label htmlFor={`wgap-${field.key}`}>{field.label}</label>
               </div>
               <textarea
                 id={`wgap-${field.key}`}
