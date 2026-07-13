@@ -1,0 +1,8 @@
+{
+  "name": "eklesia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A devotional monitoring app for churches that tracks consistency while protecting private reflections.",
+  "scripts": {},
+  "license": "UNLICENSED"
+}
