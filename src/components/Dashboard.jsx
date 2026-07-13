@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import BibleReader from './BibleReader.jsx';
+import DailyCheckInPortal from './DailyCheckInPortal.jsx';
 import Journey from './Journey.jsx';
 import TodayDevotionCard from './TodayDevotionCard.jsx';
 import Together from './Together.jsx';
@@ -79,7 +80,7 @@ export default function Dashboard({
     home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} completed={completed} onStartDevotion={onStartDevotion} devotionHistory={devotionHistory} />,
     journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
-    community: <Together />,
+    community: <><Together /><DailyCheckInPortal /></>,
     profile: <Profile />,
   }[activeTab];
 
