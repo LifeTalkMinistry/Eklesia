@@ -47,13 +47,6 @@
   margin: 24px;
 }
 
-.wgap-privacy-note {
-  margin: 0 2px 2px;
-  color: rgba(244, 245, 239, 0.48);
-  font-size: 0.8rem;
-  line-height: 1.5;
-}
-
 .wgap-field {
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -62,11 +55,8 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
-.wgap-field .wgap-section-title p {
-  margin: 4px 0 0;
-  color: rgba(244, 245, 239, 0.52);
-  font-size: 0.82rem;
-  line-height: 1.45;
+.wgap-field .wgap-section-title {
+  align-items: center;
 }
 
 .wgap-field textarea {
