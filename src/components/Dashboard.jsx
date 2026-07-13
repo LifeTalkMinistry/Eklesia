@@ -1,4 +1,5 @@
 import BibleReader from './BibleReader.jsx';
+import Journey from './Journey.jsx';
 import TodayDevotionCard from './TodayDevotionCard.jsx';
 import { formatManilaDate, getManilaGreeting } from '../lib/dailyVerse.js';
 
@@ -8,7 +9,7 @@ const week = [
   { day: 'S', complete: false },
 ];
 
-function HomeDashboard({ dailyVerse, dailyLoading, dailyError, completed, onStartDevotion }) {
+function HomeDashboard({ dailyVerse, dailyLoading, dailyError, completed, onStartDevotion, devotionCount }) {
   return (
     <>
       <section className="greeting-block">
@@ -25,16 +26,12 @@ function HomeDashboard({ dailyVerse, dailyLoading, dailyError, completed, onStar
       </section>
       <section className="stats-grid">
         <article className="stat-card"><span className="stat-icon" aria-hidden="true">🔥</span><strong>12</strong><p>day rhythm</p></article>
-        <article className="stat-card"><span className="stat-icon" aria-hidden="true">✦</span><strong>4</strong><p>reflections</p></article>
+        <article className="stat-card"><span className="stat-icon" aria-hidden="true">✦</span><strong>{devotionCount}</strong><p>saved devotions</p></article>
         <article className="stat-card"><span className="stat-icon" aria-hidden="true">♡</span><strong>Steady</strong><p>growth signal</p></article>
       </section>
       <section className="encouragement-card"><span className="quote-mark" aria-hidden="true">“</span><p>Consistency is not about proving your faith. It is about making room to hear God again and again.</p><small>Eklesia reminder</small></section>
     </>
   );
-}
-
-function Journey() {
-  return <section className="panel-page"><p className="dashboard-eyebrow">Your spiritual journey</p><h2>Small steps are becoming a rhythm.</h2><p className="panel-intro">Eklesia tracks the habit without exposing the private things you write.</p><div className="journey-progress-card"><div className="progress-ring" aria-label="71 percent weekly consistency"><span>71%</span></div><div><p className="dashboard-eyebrow">Weekly consistency</p><h3>Growing steadily</h3><p>You completed five meaningful devotional reflections this week.</p></div></div><div className="privacy-card"><span aria-hidden="true">🔒</span><div><h3>Your reflections stay private</h3><p>Leaders can see your consistency status, not your personal journal entries.</p></div></div></section>;
 }
 
 function Community() {
@@ -59,10 +56,14 @@ export default function Dashboard({
   onSelectBibleVerse,
   onCancelBibleSelection,
   onReturnFromBible,
+  devotionHistory,
+  selectedHistoryId,
+  onSelectHistoryEntry,
+  onCloseHistoryEntry,
 }) {
   const content = {
-    home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} completed={completed} onStartDevotion={onStartDevotion} />,
-    journey: <Journey />,
+    home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} completed={completed} onStartDevotion={onStartDevotion} devotionCount={devotionHistory.length} />,
+    journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
     community: <Community />,
     profile: <Profile />,
