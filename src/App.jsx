@@ -12,6 +12,7 @@ function createPersonalDevotion(selection) {
   const startVerse = selection.startVerse ?? selection.verse;
   const endVerse = selection.endVerse ?? startVerse;
   const verseLabel = startVerse === endVerse ? `${startVerse}` : `${startVerse}–${endVerse}`;
+  const previewText = selection.firstVerseText || selection.text;
 
   return {
     id: `PERSONAL-${selection.bookId}-${selection.chapter}-${startVerse}-${endVerse}`,
@@ -23,7 +24,9 @@ function createPersonalDevotion(selection) {
     startVerse,
     endVerse,
     reference: `${selection.bookName} ${selection.chapter}:${verseLabel}`,
-    text: selection.text,
+    text: previewText,
+    previewText,
+    fullText: selection.text,
     title: 'My Scripture Reflection',
     theme: 'Personal Scripture reflection',
     prompt: 'What is God showing you through this passage today?',
@@ -121,7 +124,16 @@ export default function App() {
         onBack={() => { setScreen('dashboard'); setActiveTab('home'); }}
         onReadChapter={() => {
           if (!activeDevotion) return;
-          setBibleTarget({ bookSlug: activeDevotion.bookSlug, chapter: activeDevotion.chapter, verse: activeDevotion.verse });
+          const startVerse = activeDevotion.startVerse ?? activeDevotion.verse;
+          const endVerse = activeDevotion.endVerse ?? startVerse;
+          const isPersonalPassage = activeDevotion.devotionType === 'personal' && endVerse > startVerse;
+          setBibleTarget({
+            bookSlug: activeDevotion.bookSlug,
+            chapter: activeDevotion.chapter,
+            verse: startVerse,
+            endVerse,
+            label: isPersonalPassage ? 'Selected passage' : activeDevotion.devotionType === 'personal' ? 'Selected verse' : 'Today’s verse',
+          });
           setBibleSelectionMode(false);
           setReturnFromBible(true);
           setActiveTab('bible');
