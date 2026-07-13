@@ -1,0 +1,273 @@
+.devotion-complete-card {
+  padding: 20px;
+  border: 1px solid rgba(184, 215, 190, 0.16);
+  border-radius: 22px;
+  background: rgba(184, 215, 190, 0.07);
+}
+
+.devotion-complete-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.devotion-complete-message > span {
+  display: grid;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 999px;
+  color: #0c1911;
+  background: #b8d7be;
+  font-weight: 900;
+}
+
+.devotion-complete-message strong {
+  color: #e6f2e8;
+}
+
+.devotion-complete-message p {
+  margin: 6px 0 0;
+  color: rgba(244, 245, 239, 0.58);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.devotion-complete-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.devotion-complete-actions .primary-button,
+.devotion-complete-actions .secondary-button {
+  width: 100%;
+  margin-top: 0;
+  text-align: center;
+}
+
+.journey-history-section {
+  margin-top: 24px;
+}
+
+.journey-history-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.journey-history-heading h3 {
+  margin: 5px 0 0;
+  color: #fffdf5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.55rem;
+}
+
+.journey-history-heading > span {
+  display: grid;
+  min-width: 34px;
+  height: 34px;
+  padding-inline: 9px;
+  place-items: center;
+  border: 1px solid rgba(232, 217, 170, 0.18);
+  border-radius: 999px;
+  color: #e8d9aa;
+  background: rgba(232, 217, 170, 0.08);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.devotion-history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.devotion-history-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 17px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.035);
+  text-align: left;
+  cursor: pointer;
+}
+
+.devotion-history-card:hover {
+  border-color: rgba(184, 215, 190, 0.2);
+  background: rgba(184, 215, 190, 0.06);
+}
+
+.history-check {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 999px;
+  color: #0c1911;
+  background: #b8d7be;
+  font-weight: 900;
+}
+
+.history-card-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.history-card-copy small,
+.history-card-copy > span {
+  color: rgba(244, 245, 239, 0.48);
+  font-size: 0.72rem;
+}
+
+.history-card-copy strong {
+  overflow: hidden;
+  color: #fffdf5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.08rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-arrow {
+  color: #e8d9aa;
+  font-size: 1.1rem;
+}
+
+.journey-history-empty {
+  padding: 34px 22px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: center;
+}
+
+.journey-history-empty > span {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 14px;
+  place-items: center;
+  border-radius: 16px;
+  color: #e8d9aa;
+  background: rgba(232, 217, 170, 0.08);
+}
+
+.journey-history-empty h3 {
+  margin: 0;
+  color: #fffdf5;
+}
+
+.journey-history-empty p {
+  margin: 8px 0 0;
+  color: rgba(244, 245, 239, 0.5);
+  line-height: 1.55;
+}
+
+.journey-back-button {
+  margin-bottom: 22px;
+  padding: 9px 12px;
+  border: 1px solid rgba(232, 217, 170, 0.18);
+  border-radius: 12px;
+  color: #e8d9aa;
+  background: rgba(232, 217, 170, 0.07);
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.history-review-card {
+  margin-top: 14px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.history-word-card {
+  margin-top: 24px;
+  border-color: rgba(232, 217, 170, 0.13);
+  background: radial-gradient(circle at 100% 0%, rgba(232, 217, 170, 0.11), transparent 38%), rgba(23, 47, 33, 0.72);
+}
+
+.history-review-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.history-review-heading > span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgba(232, 217, 170, 0.28);
+  border-radius: 13px;
+  color: #e8d9aa;
+  background: rgba(232, 217, 170, 0.08);
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+}
+
+.history-review-heading strong {
+  color: #fffdf5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.2rem;
+}
+
+.history-reference {
+  margin: 18px 0 0;
+  color: #b8d8c4;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.history-word-card blockquote {
+  margin: 14px 0 0;
+  color: #fffdf5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 5vw, 2.2rem);
+  line-height: 1.4;
+}
+
+.history-entry-text {
+  margin: 16px 0 0;
+  color: rgba(255, 253, 245, 0.82);
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 600px) {
+  .devotion-complete-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .history-review-card,
+  .devotion-history-card,
+  .journey-history-empty {
+    border-radius: 20px;
+  }
+}
+
+@media (max-width: 390px) {
+  .devotion-history-card {
+    gap: 10px;
+    padding: 15px;
+  }
+
+  .history-check {
+    width: 32px;
+    height: 32px;
+  }
+}
