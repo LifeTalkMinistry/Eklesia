@@ -21,6 +21,9 @@ export default function TodayDevotionCard({
   completed,
   loading,
   error,
+  refreshing,
+  refreshError,
+  onRefresh,
   onStart,
   onReview,
   onSpendMore,
@@ -87,16 +90,29 @@ export default function TodayDevotionCard({
 
         <section
           className="today-card today-card-face today-card-devotion"
-          aria-busy={loading}
+          aria-busy={loading || refreshing}
           aria-hidden={!revealed}
         >
           <div className="today-card-topline">
             <span className="soft-badge">Today&apos;s devotion</span>
-            <span className="reading-time">5 min read</span>
+            <div className="daily-suggestion-tools">
+              <span className="reading-time">5 min read</span>
+              <button
+                className={`daily-suggestion-refresh ${refreshing ? 'is-refreshing' : ''}`}
+                type="button"
+                onClick={onRefresh}
+                disabled={loading || refreshing || !dailyVerse}
+                aria-label={refreshing ? 'Loading another devotion suggestion' : 'Show another devotion suggestion'}
+                title="Show another suggestion"
+              >
+                <span aria-hidden="true">↻</span>
+              </button>
+            </div>
           </div>
 
           {loading && <p className="status-message" aria-live="polite">Preparing today&apos;s Scripture…</p>}
           {error && <p className="status-message error-message" role="alert">Today&apos;s verse could not be loaded. Please try again shortly.</p>}
+          {refreshError && <p className="suggestion-refresh-error" role="alert">{refreshError}</p>}
 
           {dailyVerse && (
             <>

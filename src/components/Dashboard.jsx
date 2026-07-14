@@ -12,9 +12,12 @@ function HomeDashboard({
   dailyVerse,
   dailyLoading,
   dailyError,
+  dailyRefreshing,
+  dailyRefreshError,
   completed,
   officialDevotion,
   onStartDaily,
+  onRefreshDaily,
   onReviewDaily,
   onSpendMore,
   devotionHistory,
@@ -33,6 +36,9 @@ function HomeDashboard({
         completed={completed}
         loading={dailyLoading}
         error={dailyError}
+        refreshing={dailyRefreshing}
+        refreshError={dailyRefreshError}
+        onRefresh={onRefreshDaily}
         onStart={onStartDaily}
         onReview={onReviewDaily}
         onSpendMore={onSpendMore}
@@ -83,6 +89,9 @@ export default function Dashboard({
   dailyVerse,
   dailyLoading,
   dailyError,
+  dailyRefreshing,
+  dailyRefreshError,
+  onRefreshDaily,
   bibleTarget,
   bibleSelectionMode,
   onSelectBibleVerse,
@@ -98,7 +107,7 @@ export default function Dashboard({
   const closeWhyEklesia = useCallback(() => setShowWhyEklesia(false), []);
 
   const content = {
-    home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} />,
+    home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} dailyRefreshing={dailyRefreshing} dailyRefreshError={dailyRefreshError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onRefreshDaily={onRefreshDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} />,
     journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
     community: <><Together /><DailyCheckInPortal /></>,
