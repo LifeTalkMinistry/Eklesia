@@ -18,13 +18,21 @@ Eklesia is a devotional monitoring app for churches. It helps members build a co
 - GitHub Pages-compatible static Bible data under `/Eklesia/`
 - Frontend accountability ecosystem code prototype
 
+## Daily Rhythm and Additional Devotions
+
+One completed devotion within an `Asia/Manila` calendar day completes the member’s official daily rhythm. The first completion is saved as that date’s **Daily devotion**, marks one completed day in the weekly rhythm, and can increase the rhythm streak by only one day.
+
+After the daily rhythm is complete, members may complete unlimited **Additional devotions** through another curated suggestion, a passage selected from the built-in Bible, or the most recently opened Bible chapter. Additional devotions are saved privately in Journey and do not add another daily check mark, another streak day, or another accountability completion for the same date.
+
+The accountability circle does not receive additional-devotion totals, selected passages, private reflections, personal prayers, or journal contents. Current devotion persistence uses `localStorage` on the current device. Cross-device synchronization, real accounts, secure server persistence, and shared member activity require the future Eklesia backend and database.
+
 ## Accountability Ecosystem Prototype
 
 Members can enter an ecosystem code, review the accountability circle and its privacy boundaries, and confirm joining before the circle overview appears. The current implementation uses local prototype data rather than live church records.
 
 Joined state is saved only on the current device through `localStorage`. Real member accounts, secure code validation, subscription enforcement, multi-user activity, and cross-device synchronization require the future Eklesia backend and database.
 
-The circle interface displays only healthy progress signals. Private reflections, personal prayers, journal entries, and the contents of a member’s devotion are not displayed.
+The circle interface displays only healthy progress signals. Private reflections, personal prayers, journal entries, devotion passages, and additional-devotion totals are not displayed.
 
 Prototype code: `LIFETALK30`
 
