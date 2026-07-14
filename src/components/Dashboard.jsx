@@ -5,10 +5,20 @@ import Journey from './Journey.jsx';
 import TodayDevotionCard from './TodayDevotionCard.jsx';
 import Together from './Together.jsx';
 import WhyEklesia from './WhyEklesia.jsx';
-import { formatManilaDate, getManilaGreeting } from '../lib/dailyVerse.js';
-import { getDevotionMetrics } from '../lib/devotionHistory.js';
+import { formatManilaDate, getManilaGreeting } from '../lib/manilaTime.js';
+import { getDevotionMetrics } from '../services/devotionService.js';
 
-function HomeDashboard({ dailyVerse, dailyLoading, dailyError, completed, onStartDevotion, devotionHistory }) {
+function HomeDashboard({
+  dailyVerse,
+  dailyLoading,
+  dailyError,
+  completed,
+  officialDevotion,
+  onStartDaily,
+  onReviewDaily,
+  onSpendMore,
+  devotionHistory,
+}) {
   const rhythm = getDevotionMetrics(devotionHistory);
 
   return (
@@ -18,7 +28,16 @@ function HomeDashboard({ dailyVerse, dailyLoading, dailyError, completed, onStar
         <h2>{getManilaGreeting()}, Max.</h2>
         <p>Start today with the Word, reflect, and respond.</p>
       </section>
-      <TodayDevotionCard dailyVerse={dailyVerse} completed={completed} loading={dailyLoading} error={dailyError} onStart={onStartDevotion} />
+      <TodayDevotionCard
+        dailyVerse={dailyVerse}
+        officialDevotion={officialDevotion}
+        completed={completed}
+        loading={dailyLoading}
+        error={dailyError}
+        onStart={onStartDaily}
+        onReview={onReviewDaily}
+        onSpendMore={onSpendMore}
+      />
       <section className="section-block">
         <div className="section-heading">
           <div><p className="dashboard-eyebrow">Your rhythm</p><h3>This week</h3></div>
@@ -41,7 +60,7 @@ function HomeDashboard({ dailyVerse, dailyLoading, dailyError, completed, onStar
       </section>
       <section className="stats-grid">
         <article className="stat-card"><span className="stat-icon" aria-hidden="true">🔥</span><strong>{rhythm.currentStreak}</strong><p>day rhythm</p></article>
-        <article className="stat-card"><span className="stat-icon" aria-hidden="true">✦</span><strong>{rhythm.savedCount}</strong><p>saved devotions</p></article>
+        <article className="stat-card"><span className="stat-icon" aria-hidden="true">✦</span><strong>{rhythm.savedCount}</strong><p>private devotions</p></article>
         <article className="stat-card"><span className="stat-icon" aria-hidden="true">♡</span><strong>{rhythm.growthSignal}</strong><p>growth signal</p></article>
       </section>
       <section className="encouragement-card"><span className="quote-mark" aria-hidden="true">“</span><p>Consistency is not about proving your faith. It is about making room to hear God again and again.</p><small>Eklesia reminder</small></section>
@@ -57,7 +76,10 @@ export default function Dashboard({
   activeTab,
   setActiveTab,
   completed,
-  onStartDevotion,
+  officialDevotion,
+  onStartDaily,
+  onReviewDaily,
+  onSpendMore,
   onExit,
   dailyVerse,
   dailyLoading,
@@ -77,7 +99,7 @@ export default function Dashboard({
   const closeWhyEklesia = useCallback(() => setShowWhyEklesia(false), []);
 
   const content = {
-    home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} completed={completed} onStartDevotion={onStartDevotion} devotionHistory={devotionHistory} />,
+    home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} />,
     journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
     community: <><Together /><DailyCheckInPortal /></>,
@@ -89,13 +111,7 @@ export default function Dashboard({
       <div className="dashboard-frame">
         <header className="dashboard-header">
           <button className="brand-button" type="button" onClick={onExit} aria-label="Return to welcome screen"><span className="brand-mark">E</span><span>Eklesia</span></button>
-          <button
-            className="notification-button why-eklesia-trigger"
-            type="button"
-            aria-label="Why Eklesia?"
-            onClick={() => setShowWhyEklesia(true)}
-            ref={whyEklesiaButtonRef}
-          >
+          <button className="notification-button why-eklesia-trigger" type="button" aria-label="Why Eklesia?" onClick={() => setShowWhyEklesia(true)} ref={whyEklesiaButtonRef}>
             <span className="information-glyph" aria-hidden="true">i</span>
           </button>
         </header>
