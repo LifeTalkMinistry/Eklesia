@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getVerseContext } from '../data/verseContexts.js';
 import { getBibleVerse } from '../lib/bible.js';
-import VerseContextSheet from './VerseContextSheet.jsx';
+import './DevotionContext.css';
 
 const WGAP_FIELDS = [
   {
@@ -43,9 +44,7 @@ export default function Devotion({
   const [message, setMessage] = useState('');
   const [reviewVerseText, setReviewVerseText] = useState('');
   const [reviewVerseError, setReviewVerseError] = useState('');
-  const [contextOpen, setContextOpen] = useState(false);
-  const contextTriggerRef = useRef(null);
-  const closeVerseContext = useCallback(() => setContextOpen(false), []);
+  const [showContext, setShowContext] = useState(false);
 
   const isAdditional = devotion?.flowType === 'additional' || completionType === 'additional';
   const devotionLabel = isAdditional ? 'Additional devotion' : 'Today’s devotion';
@@ -55,7 +54,7 @@ export default function Devotion({
   const shouldCompactCompletedPassage = Boolean(completed && isSelectedPassage);
 
   useEffect(() => {
-    setContextOpen(false);
+    setShowContext(false);
   }, [devotion?.reference]);
 
   useEffect(() => {
@@ -113,6 +112,7 @@ export default function Devotion({
   const passageButtonLabel = shouldCompactCompletedPassage
     ? 'View highlighted verses'
     : isSelectedPassage ? 'Read selected passage' : 'Read full chapter';
+  const verseContext = getVerseContext(devotion);
 
   return (
     <main className="devotion-shell">
@@ -123,31 +123,46 @@ export default function Devotion({
           <p className="devotion-context-note">Your daily rhythm is already complete. This devotion will be added to Journey.</p>
         )}
 
-        <article className="scripture-card wgap-word-card">
-          <div className="wgap-section-title">
-            <span className="wgap-letter">W</span>
-            <div>
-              <strong>Word of God</strong>
-              <p className="dashboard-eyebrow">{devotion.reference} · BSB</p>
-            </div>
-          </div>
-          {scripturePreview ? (
-            <blockquote>“{scripturePreview}”</blockquote>
-          ) : shouldCompactCompletedPassage && !reviewVerseError ? (
-            <p className="status-message" role="status">Loading the starting verse…</p>
-          ) : null}
-          {reviewVerseError && <p className="status-message error-message" role="alert">{reviewVerseError}</p>}
-          <div className="scripture-card-actions">
-            <button className="secondary-button" type="button" onClick={onReadChapter}>{passageButtonLabel}</button>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => setContextOpen(true)}
-              ref={contextTriggerRef}
-            >
-              Understand context
-            </button>
-          </div>
+        <article className={`scripture-card wgap-word-card ${showContext ? 'is-context-view' : ''}`}>
+          {showContext ? (
+            <>
+              <div className="wgap-section-title">
+                <span className="wgap-letter">C</span>
+                <div>
+                  <strong>Verse context</strong>
+                  <p className="dashboard-eyebrow">{devotion.reference} · BSB</p>
+                </div>
+              </div>
+              <p className="inline-verse-context-kicker">What is happening here?</p>
+              <p className="inline-verse-context-copy">{verseContext}</p>
+              <button className="secondary-button inline-context-back" type="button" onClick={() => setShowContext(false)}>
+                <span aria-hidden="true">←</span>
+                Back to verse
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="wgap-section-title">
+                <span className="wgap-letter">W</span>
+                <div>
+                  <strong>Word of God</strong>
+                  <p className="dashboard-eyebrow">{devotion.reference} · BSB</p>
+                </div>
+              </div>
+              {scripturePreview ? (
+                <blockquote>“{scripturePreview}”</blockquote>
+              ) : shouldCompactCompletedPassage && !reviewVerseError ? (
+                <p className="status-message" role="status">Loading the starting verse…</p>
+              ) : null}
+              {reviewVerseError && <p className="status-message error-message" role="alert">{reviewVerseError}</p>}
+              <div className="scripture-card-actions">
+                <button className="secondary-button" type="button" onClick={onReadChapter}>{passageButtonLabel}</button>
+                <button className="secondary-button" type="button" onClick={() => setShowContext(true)}>
+                  Understand context
+                </button>
+              </div>
+            </>
+          )}
         </article>
 
         <form className="wgap-form" onSubmit={submitDevotion}>
@@ -192,13 +207,6 @@ export default function Devotion({
           )}
         </form>
       </div>
-
-      <VerseContextSheet
-        open={contextOpen}
-        onClose={closeVerseContext}
-        devotion={devotion}
-        triggerRef={contextTriggerRef}
-      />
     </main>
   );
 }

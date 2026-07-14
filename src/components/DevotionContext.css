@@ -1,0 +1,69 @@
+.scripture-card-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.scripture-card-actions .secondary-button {
+  margin: 0;
+}
+
+.wgap-word-card.is-context-view {
+  display: flex;
+  min-height: 340px;
+  flex-direction: column;
+}
+
+.inline-verse-context-kicker {
+  position: relative;
+  z-index: 1;
+  margin: 6px 0 10px;
+  color: #b8d8c4;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.inline-verse-context-copy {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: rgba(244, 245, 239, 0.78);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.inline-context-back {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 8px;
+  margin-top: auto;
+}
+
+@media (max-width: 430px) {
+  .scripture-card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .scripture-card-actions .secondary-button {
+    min-width: 0;
+    padding-inline: 12px;
+  }
+
+  .wgap-word-card.is-context-view {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 350px) {
+  .scripture-card-actions {
+    grid-template-columns: 1fr;
+  }
+}
