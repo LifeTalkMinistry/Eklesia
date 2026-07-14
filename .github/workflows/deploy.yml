@@ -7,9 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: ekklesia-pulse-migration-${{ github.event.pull_request.number || github.ref }}
@@ -26,6 +24,7 @@ jobs:
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Set up Node.js
@@ -50,8 +49,6 @@ jobs:
           PY
 
       - name: Apply and validate controlled branding changes
-        id: apply_migration
-        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
@@ -64,10 +61,6 @@ jobs:
           name: migration-output
           path: migration-output.log
 
-      - name: Stop after migration failure
-        if: steps.apply_migration.outcome == 'failure'
-        run: exit 1
-
       - name: Validate Bible data
         run: npm run validate:bible
 
@@ -77,100 +70,13 @@ jobs:
       - name: Confirm Bible source data is unchanged
         run: git diff --exit-code -- src/data/bible
 
-      - name: Check patch formatting
+      - name: Check source patch formatting
         run: git diff --check
 
-      - name: Restore permanent deployment workflow
+      - name: Commit validated application source
         run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          marker = '$' + '{{ steps.deployment.outputs.page_url }}'
-          workflow = f'''name: Deploy Ekklesia Pulse to GitHub Pages
-
-          on:
-            push:
-              branches:
-                - main
-            pull_request:
-              branches:
-                - main
-            workflow_dispatch:
-
-          permissions:
-            contents: read
-            pages: write
-            id-token: write
-
-          concurrency:
-            group: github-pages
-            cancel-in-progress: false
-
-          jobs:
-            build:
-              runs-on: ubuntu-latest
-
-              steps:
-                - name: Check out repository
-                  uses: actions/checkout@v4
-
-                - name: Set up Node.js
-                  uses: actions/setup-node@v4
-                  with:
-                    node-version: 20
-
-                - name: Install dependencies
-                  run: npm install
-
-                - name: Build Ekklesia Pulse
-                  run: npm run build -- --base=/Eklesia/
-
-                - name: Configure GitHub Pages
-                  if: github.event_name != 'pull_request'
-                  uses: actions/configure-pages@v5
-
-                - name: Upload website files
-                  if: github.event_name != 'pull_request'
-                  uses: actions/upload-pages-artifact@v3
-                  with:
-                    path: ./dist
-
-            deploy:
-              if: github.event_name != 'pull_request'
-              needs: build
-              runs-on: ubuntu-latest
-
-              environment:
-                name: github-pages
-                url: {marker}
-
-              steps:
-                - name: Deploy to GitHub Pages
-                  id: deployment
-                  uses: actions/deploy-pages@v4
-          '''
-          Path('.github/workflows/deploy.yml').write_text('\n'.join(line[10:] if line.startswith('          ') else line for line in workflow.splitlines()) + '\n')
-          PY
-
-      - name: Remove one-time migration automation and diagnostics
-        run: rm scripts/apply-brand-migration.mjs .github/workflows/brand-migration.yml migration-output.log
-
-      - name: Validate final patch formatting
-        run: git diff --check
-
-      - name: Package validated migration
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          git add -N src/services/brandMigration.js
-          git diff --name-status "$BASE_SHA" > migration-changed-files.txt
-          awk '$1 != "D" { print $NF }' migration-changed-files.txt > migration-existing-files.txt
-          tar -czf validated-migration.tar.gz -T migration-existing-files.txt
-
-      - name: Upload validated migration
-        uses: actions/upload-artifact@v4
-        with:
-          name: validated-migration
-          path: |
-            validated-migration.tar.gz
-            migration-changed-files.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md index.html package.json package-lock.json src/
+          git commit -m "Apply validated Ekklesia Pulse source migration"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
