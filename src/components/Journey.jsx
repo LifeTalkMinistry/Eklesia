@@ -18,7 +18,6 @@ function JourneyReview({ entry, onBack }) {
       <p className="dashboard-eyebrow">{entry.type === 'additional' ? 'Additional devotion' : 'Daily devotion'}</p>
       <h2>{entry.reference}</h2>
       <p className="panel-intro">{formatArchiveEntryDate(entry.dateKey, entry.completedAt, { includeYear: true })} · {formatCompletionTime(entry.completedAt)}</p>
-      <p className="journey-private-reminder">This reflection is private to your Journey.</p>
 
       <article className="history-review-card history-word-card">
         <div className="history-review-heading"><span>W</span><strong>Word of God</strong></div>
@@ -48,7 +47,7 @@ export default function Journey({ history, selectedEntryId, onSelectEntry, onClo
       <header className="journey-archive-header">
         <p className="dashboard-eyebrow">Your devotion journey</p>
         <h2>A record of your time in the Word.</h2>
-        <p className="panel-intro">Each date counts once toward your daily rhythm, while every private devotion remains available here.</p>
+        <p className="panel-intro">Each date counts once toward your daily rhythm, while every devotion remains available here.</p>
       </header>
 
       {dateGroups.length ? (
@@ -75,7 +74,7 @@ export default function Journey({ history, selectedEntryId, onSelectEntry, onClo
         <div className="journey-history-empty archive-empty-state">
           <span aria-hidden="true">✦</span>
           <h3>Your devotion journey begins here.</h3>
-          <p>Complete a WGAP devotion and it will appear privately in your Journey.</p>
+          <p>Complete a WGAP devotion and it will appear in your Journey.</p>
         </div>
       )}
     </section>
