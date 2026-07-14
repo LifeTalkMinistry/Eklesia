@@ -83,13 +83,28 @@ function HomeDashboard({
 }
 
 function TogetherDemoNotice() {
+  const [expanded, setExpanded] = useState(false);
+  const detailsId = 'together-demo-details';
+
   return (
-    <aside className="together-alpha-notice" aria-label="Together demonstration notice">
-      <div className="together-alpha-notice-heading">
+    <aside className={`together-alpha-notice ${expanded ? 'is-expanded' : ''}`} aria-label="Together demonstration notice">
+      <button
+        className="together-alpha-disclosure"
+        type="button"
+        onClick={() => setExpanded((current) => !current)}
+        aria-expanded={expanded}
+        aria-controls={detailsId}
+      >
         <span className="alpha-badge">DEMO DATA</span>
-        <strong>Together is not connected to live church members.</strong>
-      </div>
-      <p>This section currently uses demonstration information. The connected version will require secure personal accounts and the Ekklesia Pulse backend.</p>
+        <span className="together-alpha-disclosure-label">What this means</span>
+        <span className="together-alpha-disclosure-icon" aria-hidden="true">{expanded ? '−' : '+'}</span>
+      </button>
+      {expanded ? (
+        <div className="together-alpha-notice-details" id={detailsId}>
+          <strong>Together is not connected to live church members.</strong>
+          <p>This section currently uses demonstration information. The connected version will require secure personal accounts and the Ekklesia Pulse backend.</p>
+        </div>
+      ) : null}
     </aside>
   );
 }
