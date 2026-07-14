@@ -1,5 +1,15 @@
-export default function TodayDevotionCard({ dailyVerse, completed, loading, error, onStart }) {
+export default function TodayDevotionCard({
+  dailyVerse,
+  officialDevotion,
+  completed,
+  loading,
+  error,
+  onStart,
+  onReview,
+  onSpendMore,
+}) {
   if (dailyVerse && completed) {
+    const reference = officialDevotion?.reference || dailyVerse.reference;
     return (
       <section className="today-card today-card-complete" aria-label="Today’s devotion is complete">
         <div className="completion-status-row">
@@ -8,15 +18,21 @@ export default function TodayDevotionCard({ dailyVerse, completed, loading, erro
         </div>
 
         <div className="completion-copy">
-          <p className="verse-reference">{dailyVerse.reference} · BSB</p>
+          <p className="verse-reference">{reference} · BSB</p>
           <h3>Devotion complete</h3>
           <p>Your WGAP for today is saved in Journey.</p>
         </div>
 
-        <button className="card-button completion-review-button" type="button" onClick={onStart}>
-          Review devotion
-          <span aria-hidden="true">→</span>
-        </button>
+        <div className="additional-devotion-actions">
+          <button className="card-button completion-review-button" type="button" onClick={onReview}>
+            Review today’s devotion
+            <span aria-hidden="true">→</span>
+          </button>
+          <button className="secondary-button spend-more-button" type="button" onClick={onSpendMore}>
+            Spend more time in the Word
+          </button>
+          <p className="completion-support">Your daily rhythm is complete. You may continue spending time in Scripture without pressure.</p>
+        </div>
       </section>
     );
   }
