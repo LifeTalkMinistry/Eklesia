@@ -5,6 +5,7 @@ import { runBrandMigration } from './services/brandMigration.js';
 import './index.css';
 import './alpha.css';
 import './together-demo-disclosure.css';
+import './member-visitor-progress.css';
 import './devotion-choice.css';
 import './bible-return.css';
 import './wgap.css';
