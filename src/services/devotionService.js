@@ -35,7 +35,9 @@ function createUniqueId(dateKey) {
 
 function inferDateKey(entry) {
   if (parseDateKey(entry?.dateKey)) return entry.dateKey;
-  return getManilaDateKey(entry?.completedAt);
+  if (!entry?.completedAt) return null;
+  const completedAt = new Date(entry.completedAt);
+  return Number.isNaN(completedAt.getTime()) ? null : getManilaDateKey(completedAt);
 }
 
 function normalizeWgap(wgap = {}) {
