@@ -59,6 +59,17 @@
   pointer-events: auto;
 }
 
+.daily-verse-preview {
+  position: relative;
+  z-index: 1;
+  max-width: 590px;
+  margin: 18px 0 0;
+  color: #fffdf5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.65rem, 5.8vw, 2.75rem);
+  line-height: 1.18;
+}
+
 .reminder-kicker {
   position: relative;
   z-index: 1;
@@ -121,6 +132,10 @@
 
   .reminder-message {
     font-size: clamp(1.7rem, 8vw, 2.35rem);
+  }
+
+  .daily-verse-preview {
+    font-size: clamp(1.55rem, 7.4vw, 2.25rem);
   }
 }
 
