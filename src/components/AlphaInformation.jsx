@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { APP_STAGE, APP_VERSION } from '../config/appConfig.js';
 import AccessibleDialog from './AccessibleDialog.jsx';
 import AlphaBadge from './AlphaBadge.jsx';
+import WhyEklesia from './WhyEklesia.jsx';
 
 function InformationContent({ detailed = false }) {
   return (
@@ -79,6 +80,7 @@ export default function AlphaInformation({
   storageAvailable = true,
 }) {
   const [acknowledged, setAcknowledged] = useState(false);
+  const [showHeartBehindApp, setShowHeartBehindApp] = useState(false);
   const closeRef = useRef(null);
 
   if (mode === 'dialog') {
@@ -101,6 +103,10 @@ export default function AlphaInformation({
     );
   }
 
+  if (showHeartBehindApp) {
+    return <WhyEklesia mode="onboarding" onContinue={onContinue} />;
+  }
+
   return (
     <main className="app-shell welcome-shell alpha-flow-shell">
       <section className="welcome-card alpha-information-card">
@@ -118,7 +124,14 @@ export default function AlphaInformation({
           />
           <span>I understand that this is a private alpha version and that my information is currently stored only on this device.</span>
         </label>
-        <button className="primary-button" type="button" onClick={onContinue} disabled={!acknowledged}>Enter Ekklesia Pulse</button>
+        <button
+          className="primary-button"
+          type="button"
+          onClick={() => setShowHeartBehindApp(true)}
+          disabled={!acknowledged}
+        >
+          Continue
+        </button>
       </section>
     </main>
   );
