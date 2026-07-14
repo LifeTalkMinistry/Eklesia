@@ -1,47 +1,66 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import AdditionalDevotionChooser from './components/AdditionalDevotionChooser.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Devotion from './components/Devotion.jsx';
-import DevotionChoice from './components/DevotionChoice.jsx';
-import { getDailyVerseForDate, getManilaDateKey } from './lib/dailyVerse.js';
+import { getAdditionalVerseForSession, getDailyVerseForDate } from './lib/dailyVerse.js';
+import { getManilaDateKey } from './lib/manilaTime.js';
 import {
-  createDevotionHistoryRecord,
-  loadDevotionHistory,
-  saveDevotionHistory,
-} from './lib/devotionHistory.js';
+  getAllDevotions,
+  getLastBibleLocation,
+  getOfficialDailyDevotion,
+  getRecentlyCompletedReferences,
+  saveCompletedDevotion,
+} from './services/devotionService.js';
 
 function Welcome({ onBegin }) {
   return <main className="app-shell welcome-shell"><section className="welcome-card"><p className="eyebrow">A healthier way to grow together</p><h1>Eklesia</h1><p className="tagline">Track the habit. Protect the heart.</p><p className="description">Build a consistent devotional life, reflect on Scripture through WGAP, and stay connected to a church community that knows when encouragement may be needed.</p><button className="primary-button" type="button" onClick={onBegin}>Begin your journey</button></section></main>;
 }
 
 function createEmptyWgap() {
-  return {
-    getsKo: '',
-    application: '',
-    prayer: '',
-  };
+  return { word: '', gratitude: '', application: '', prayer: '' };
 }
 
-function createPersonalDevotion(selection) {
+function createPersonalDevotion(selection, source = 'bible-selection') {
   const startVerse = selection.startVerse ?? selection.verse;
   const endVerse = selection.endVerse ?? startVerse;
   const verseLabel = startVerse === endVerse ? `${startVerse}` : `${startVerse}–${endVerse}`;
-  const previewText = selection.firstVerseText || selection.text;
-
   return {
-    id: `PERSONAL-${selection.bookId}-${selection.chapter}-${startVerse}-${endVerse}`,
     bookId: selection.bookId,
     bookSlug: selection.bookSlug,
     bookName: selection.bookName,
     chapter: selection.chapter,
     verse: startVerse,
-    startVerse,
-    endVerse,
+    verseStart: startVerse,
+    verseEnd: endVerse,
     reference: `${selection.bookName} ${selection.chapter}:${verseLabel}`,
-    text: previewText,
-    previewText,
-    fullText: selection.text,
-    title: 'My Scripture Reflection',
-    devotionType: 'personal',
+    text: selection.text,
+    scriptureText: selection.text,
+    title: 'Personal Scripture reflection',
+    theme: 'Selected from the Bible',
+    prompt: 'What is God showing you through this passage?',
+    source,
+    flowType: 'additional',
+  };
+}
+
+function entryToDevotion(entry) {
+  if (!entry) return null;
+  return {
+    bookId: entry.bookId,
+    bookSlug: entry.bookSlug,
+    bookName: entry.bookName,
+    chapter: entry.chapter,
+    verse: entry.verseStart,
+    verseStart: entry.verseStart,
+    verseEnd: entry.verseEnd,
+    reference: entry.reference,
+    text: entry.scriptureText,
+    scriptureText: entry.scriptureText,
+    title: entry.title,
+    theme: entry.theme,
+    prompt: entry.prompt,
+    source: entry.source,
+    flowType: entry.type,
   };
 }
 
@@ -51,88 +70,192 @@ export default function App() {
   const [wgap, setWgap] = useState(createEmptyWgap);
   const [activeDevotion, setActiveDevotion] = useState(null);
   const [activeSavedEntryId, setActiveSavedEntryId] = useState(null);
-  const [devotionHistory, setDevotionHistory] = useState(loadDevotionHistory);
+  const [completionType, setCompletionType] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [devotions, setDevotions] = useState(getAllDevotions);
   const [selectedHistoryId, setSelectedHistoryId] = useState(null);
+  const [manilaDateKey, setManilaDateKey] = useState(getManilaDateKey);
   const [dailyVerse, setDailyVerse] = useState(null);
   const [dailyLoading, setDailyLoading] = useState(true);
   const [dailyError, setDailyError] = useState('');
   const [bibleTarget, setBibleTarget] = useState(null);
   const [returnFromBible, setReturnFromBible] = useState(false);
   const [bibleSelectionMode, setBibleSelectionMode] = useState(false);
+  const [bibleSelectionSource, setBibleSelectionSource] = useState('bible-selection');
+  const [additionalChooserOpen, setAdditionalChooserOpen] = useState(false);
+  const [additionalSuggestion, setAdditionalSuggestion] = useState(null);
+  const [additionalSuggestionLoading, setAdditionalSuggestionLoading] = useState(false);
+  const [additionalSuggestionError, setAdditionalSuggestionError] = useState('');
+  const [lastBibleLocation, setLastBibleLocation] = useState(getLastBibleLocation);
 
-  const todayRecord = devotionHistory.find((entry) => entry.dateKey === getManilaDateKey()) || null;
-  const completedToday = Boolean(todayRecord);
+  const submissionKeyRef = useRef('');
+  const additionalTriggerRef = useRef(null);
+  const suggestionIndexRef = useRef(0);
+  const suggestionRequestRef = useRef(0);
+
+  const todayOfficial = getOfficialDailyDevotion(manilaDateKey, devotions);
+  const completedToday = Boolean(todayOfficial);
   const activeEntryCompleted = Boolean(activeSavedEntryId);
 
   useEffect(() => {
-    saveDevotionHistory(devotionHistory);
-  }, [devotionHistory]);
+    const interval = window.setInterval(() => {
+      const nextKey = getManilaDateKey();
+      setManilaDateKey((current) => (current === nextKey ? current : nextKey));
+    }, 30000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     setDailyLoading(true);
     setDailyError('');
-    getDailyVerseForDate(getManilaDateKey())
-      .then((verse) => { if (!cancelled) setDailyVerse({ ...verse, devotionType: 'suggested' }); })
+    getDailyVerseForDate(manilaDateKey)
+      .then((verse) => { if (!cancelled) setDailyVerse({ ...verse, flowType: 'daily' }); })
       .catch((error) => {
         console.error('Daily verse load failed', error);
-        if (!cancelled) setDailyError('Today’s Scripture could not be loaded.');
+        if (!cancelled) {
+          setDailyVerse(null);
+          setDailyError('Today’s Scripture could not be loaded.');
+        }
       })
       .finally(() => { if (!cancelled) setDailyLoading(false); });
     return () => { cancelled = true; };
+  }, [manilaDateKey]);
+
+  useEffect(() => {
+    setAdditionalChooserOpen(false);
+    setAdditionalSuggestion(null);
+  }, [manilaDateKey]);
+
+  const closeAdditionalChooser = useCallback(() => {
+    setAdditionalChooserOpen(false);
   }, []);
 
-  function openSuggestedDevotion() {
-    if (!dailyVerse) return;
+  async function prepareAdditionalSuggestion(index) {
+    const requestId = suggestionRequestRef.current + 1;
+    suggestionRequestRef.current = requestId;
+    setAdditionalSuggestionLoading(true);
+    setAdditionalSuggestionError('');
+    try {
+      const suggestion = await getAdditionalVerseForSession({
+        dateKey: manilaDateKey,
+        officialReference: todayOfficial?.reference || dailyVerse?.reference || '',
+        recentReferences: getRecentlyCompletedReferences(30, new Date(), devotions),
+        sessionSeed: String(index),
+      });
+      if (suggestionRequestRef.current !== requestId) return;
+      if (!suggestion) {
+        setAdditionalSuggestion(null);
+        setAdditionalSuggestionError('No curated suggestion is available right now. You may choose a passage from the Bible instead.');
+        return;
+      }
+      setAdditionalSuggestion({ ...suggestion, flowType: 'additional' });
+    } catch (error) {
+      console.error('Additional verse load failed', error);
+      if (suggestionRequestRef.current === requestId) {
+        setAdditionalSuggestion(null);
+        setAdditionalSuggestionError('This Scripture suggestion could not be loaded. Please choose from the Bible or try another suggestion.');
+      }
+    } finally {
+      if (suggestionRequestRef.current === requestId) setAdditionalSuggestionLoading(false);
+    }
+  }
+
+  function openAdditionalChooser(event) {
+    if (event?.currentTarget) additionalTriggerRef.current = event.currentTarget;
+    setLastBibleLocation(getLastBibleLocation());
+    setAdditionalChooserOpen(true);
+    if (!additionalSuggestion) {
+      suggestionIndexRef.current = 0;
+      prepareAdditionalSuggestion(0);
+    }
+  }
+
+  function showAnotherSuggestion() {
+    suggestionIndexRef.current += 1;
+    prepareAdditionalSuggestion(suggestionIndexRef.current);
+  }
+
+  function beginDevotion(devotion) {
     setWgap(createEmptyWgap());
-    setActiveDevotion(dailyVerse);
+    setActiveDevotion(devotion);
     setActiveSavedEntryId(null);
+    setCompletionType(null);
+    setIsSaving(false);
+    submissionKeyRef.current = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${devotion.reference}`;
     setBibleSelectionMode(false);
+    setReturnFromBible(false);
+    setAdditionalChooserOpen(false);
     setScreen('devotion');
   }
 
-  function openPersonalVersePicker() {
-    setBibleTarget(null);
+  function openOfficialDevotion() {
+    if (!dailyVerse || completedToday) return;
+    beginDevotion({ ...dailyVerse, source: 'daily-suggestion', flowType: 'daily' });
+  }
+
+  function reviewTodayDevotion() {
+    if (!todayOfficial) return;
+    setActiveDevotion(entryToDevotion(todayOfficial));
+    setWgap(todayOfficial.wgap || createEmptyWgap());
+    setActiveSavedEntryId(todayOfficial.id);
+    setCompletionType('daily');
+    setScreen('devotion');
+  }
+
+  function useAdditionalSuggestion() {
+    if (!additionalSuggestion) return;
+    beginDevotion({ ...additionalSuggestion, source: 'additional-suggestion', flowType: 'additional' });
+  }
+
+  function openBibleForAdditional(source = 'bible-selection', target = null) {
+    setBibleSelectionSource(source);
+    setBibleTarget(target);
     setReturnFromBible(false);
     setBibleSelectionMode(true);
+    setAdditionalChooserOpen(false);
     setActiveTab('bible');
     setScreen('dashboard');
   }
 
-  function openPersonalDevotion(selection) {
-    setWgap(createEmptyWgap());
-    setActiveDevotion(createPersonalDevotion(selection));
-    setActiveSavedEntryId(null);
-    setBibleSelectionMode(false);
-    setReturnFromBible(false);
-    setScreen('devotion');
-  }
-
-  function openDevotionChoice() {
-    if (todayRecord) {
-      setActiveDevotion(todayRecord.devotion);
-      setWgap(todayRecord.wgap);
-      setActiveSavedEntryId(todayRecord.id);
-      setScreen('devotion');
+  function continueReading() {
+    const location = getLastBibleLocation();
+    setLastBibleLocation(location);
+    if (!location) {
+      openBibleForAdditional('bible-selection', null);
       return;
     }
-    setScreen('devotion-choice');
+    openBibleForAdditional('continue-reading', {
+      ...location,
+      label: 'Continue reading',
+    });
+  }
+
+  function openPersonalDevotion(selection) {
+    beginDevotion(createPersonalDevotion(selection, bibleSelectionSource));
   }
 
   function completeDevotion() {
-    if (!activeDevotion) return;
-    const record = createDevotionHistoryRecord(activeDevotion, wgap);
-
-    setDevotionHistory((current) => [
-      record,
-      ...current.filter((entry) => entry.id !== record.id),
-    ].sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()));
-    setActiveSavedEntryId(record.id);
-    setSelectedHistoryId(record.id);
+    if (!activeDevotion || isSaving || activeSavedEntryId) return;
+    setIsSaving(true);
+    try {
+      const result = saveCompletedDevotion(activeDevotion, wgap, { submissionKey: submissionKeyRef.current });
+      const refreshed = getAllDevotions();
+      setDevotions(refreshed);
+      setActiveSavedEntryId(result.entry.id);
+      setSelectedHistoryId(result.entry.id);
+      setCompletionType(result.type);
+      setActiveDevotion(entryToDevotion(result.entry));
+      setWgap(result.entry.wgap);
+    } catch (error) {
+      console.error('Devotion save failed', error);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function viewSavedDevotion() {
-    const entryId = activeSavedEntryId || todayRecord?.id;
+    const entryId = activeSavedEntryId || todayOfficial?.id;
     if (!entryId) return;
     setSelectedHistoryId(entryId);
     setActiveTab('journey');
@@ -145,20 +268,13 @@ export default function App() {
     setScreen('dashboard');
   }
 
-  if (screen === 'welcome') return <Welcome onBegin={() => setScreen('dashboard')} />;
-
-  if (screen === 'devotion-choice') {
-    return (
-      <DevotionChoice
-        dailyVerse={dailyVerse}
-        loading={dailyLoading}
-        error={dailyError}
-        onBack={() => { setScreen('dashboard'); setActiveTab('home'); }}
-        onUseSuggested={openSuggestedDevotion}
-        onChooseVerse={openPersonalVersePicker}
-      />
-    );
+  function spendMoreFromDevotion(event) {
+    if (event?.currentTarget) additionalTriggerRef.current = event.currentTarget;
+    returnHome();
+    window.requestAnimationFrame(() => openAdditionalChooser());
   }
+
+  if (screen === 'welcome') return <Welcome onBegin={() => setScreen('dashboard')} />;
 
   if (screen === 'devotion') {
     return (
@@ -167,21 +283,23 @@ export default function App() {
         wgap={wgap}
         setWgap={setWgap}
         completed={activeEntryCompleted}
+        completionType={completionType}
+        isSaving={isSaving}
         onComplete={completeDevotion}
         onViewSaved={viewSavedDevotion}
         onReturnHome={returnHome}
+        onSpendMore={spendMoreFromDevotion}
         onBack={returnHome}
         onReadChapter={() => {
           if (!activeDevotion) return;
-          const startVerse = activeDevotion.startVerse ?? activeDevotion.verse;
-          const endVerse = activeDevotion.endVerse ?? startVerse;
-          const isPersonalPassage = activeDevotion.devotionType === 'personal' && endVerse > startVerse;
+          const startVerse = activeDevotion.verseStart ?? activeDevotion.startVerse ?? activeDevotion.verse;
+          const endVerse = activeDevotion.verseEnd ?? activeDevotion.endVerse ?? startVerse;
           setBibleTarget({
             bookSlug: activeDevotion.bookSlug,
             chapter: activeDevotion.chapter,
             verse: startVerse,
             endVerse,
-            label: isPersonalPassage ? 'Selected passage' : activeDevotion.devotionType === 'personal' ? 'Selected verse' : 'Today’s verse',
+            label: endVerse > startVerse ? 'Selected passage' : completionType === 'additional' ? 'Additional devotion' : 'Today’s verse',
           });
           setBibleSelectionMode(false);
           setReturnFromBible(true);
@@ -193,44 +311,65 @@ export default function App() {
   }
 
   return (
-    <Dashboard
-      activeTab={activeTab}
-      setActiveTab={(tab) => {
-        setActiveTab(tab);
-        if (tab !== 'journey') setSelectedHistoryId(null);
-        if (tab !== 'bible') {
-          setReturnFromBible(false);
+    <>
+      <Dashboard
+        activeTab={activeTab}
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          if (tab !== 'journey') setSelectedHistoryId(null);
+          if (tab !== 'bible') {
+            setReturnFromBible(false);
+            setBibleSelectionMode(false);
+          }
+        }}
+        completed={completedToday}
+        officialDevotion={todayOfficial}
+        onStartDaily={openOfficialDevotion}
+        onReviewDaily={reviewTodayDevotion}
+        onSpendMore={openAdditionalChooser}
+        onExit={() => {
+          setScreen('welcome');
+          setActiveTab('home');
+          setSelectedHistoryId(null);
           setBibleSelectionMode(false);
-        }
-      }}
-      completed={completedToday}
-      onStartDevotion={openDevotionChoice}
-      onExit={() => {
-        setScreen('welcome');
-        setActiveTab('home');
-        setSelectedHistoryId(null);
-        setBibleSelectionMode(false);
-        setReturnFromBible(false);
-      }}
-      dailyVerse={dailyVerse}
-      dailyLoading={dailyLoading}
-      dailyError={dailyError}
-      bibleTarget={bibleTarget}
-      bibleSelectionMode={bibleSelectionMode}
-      onSelectBibleVerse={openPersonalDevotion}
-      onCancelBibleSelection={() => {
-        setBibleSelectionMode(false);
-        setActiveTab('home');
-        setScreen('devotion-choice');
-      }}
-      onReturnFromBible={returnFromBible ? () => {
-        setReturnFromBible(false);
-        setScreen('devotion');
-      } : null}
-      devotionHistory={devotionHistory}
-      selectedHistoryId={selectedHistoryId}
-      onSelectHistoryEntry={setSelectedHistoryId}
-      onCloseHistoryEntry={() => setSelectedHistoryId(null)}
-    />
+          setReturnFromBible(false);
+          setAdditionalChooserOpen(false);
+        }}
+        dailyVerse={dailyVerse}
+        dailyLoading={dailyLoading}
+        dailyError={dailyError}
+        bibleTarget={bibleTarget}
+        bibleSelectionMode={bibleSelectionMode}
+        onSelectBibleVerse={openPersonalDevotion}
+        onCancelBibleSelection={() => {
+          setBibleSelectionMode(false);
+          setActiveTab('home');
+          setScreen('dashboard');
+          setLastBibleLocation(getLastBibleLocation());
+          setAdditionalChooserOpen(true);
+        }}
+        onReturnFromBible={returnFromBible ? () => {
+          setReturnFromBible(false);
+          setScreen('devotion');
+        } : null}
+        devotionHistory={devotions}
+        selectedHistoryId={selectedHistoryId}
+        onSelectHistoryEntry={setSelectedHistoryId}
+        onCloseHistoryEntry={() => setSelectedHistoryId(null)}
+      />
+      <AdditionalDevotionChooser
+        open={additionalChooserOpen}
+        suggestion={additionalSuggestion}
+        suggestionLoading={additionalSuggestionLoading}
+        suggestionError={additionalSuggestionError}
+        lastLocation={lastBibleLocation}
+        onUseSuggestion={useAdditionalSuggestion}
+        onShowAnother={showAnotherSuggestion}
+        onChooseBible={() => openBibleForAdditional('bible-selection', null)}
+        onContinueReading={continueReading}
+        onClose={closeAdditionalChooser}
+        triggerRef={additionalTriggerRef}
+      />
+    </>
   );
 }
