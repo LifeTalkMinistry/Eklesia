@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -26,7 +26,7 @@ jobs:
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -139,10 +139,21 @@ jobs:
       - name: Remove one-time migration automation and diagnostics
         run: rm scripts/apply-brand-migration.mjs .github/workflows/brand-migration.yml migration-output.log
 
-      - name: Commit validated migration
+      - name: Validate final patch formatting
+        run: git diff --check
+
+      - name: Package validated migration
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Rename Eklesia to Ekklesia Pulse"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          git diff --name-status "$BASE_SHA" > migration-changed-files.txt
+          awk '$1 != "D" { print $NF }' migration-changed-files.txt > migration-existing-files.txt
+          tar -czf validated-migration.tar.gz -T migration-existing-files.txt
+
+      - name: Upload validated migration
+        uses: actions/upload-artifact@v4
+        with:
+          name: validated-migration
+          path: |
+            validated-migration.tar.gz
+            migration-changed-files.txt
