@@ -1,13 +1,23 @@
 import { useEffect, useRef } from 'react';
 import AlphaBadge from './AlphaBadge.jsx';
 import './WhyEklesia.css';
+import './WhyEklesiaOnboarding.css';
 
-export default function WhyEklesia({ open, onClose, triggerRef }) {
+export default function WhyEklesia({
+  open = false,
+  onClose,
+  triggerRef,
+  mode = 'dialog',
+  onContinue,
+}) {
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const isOnboarding = mode === 'onboarding';
+  const visible = isOnboarding || open;
+  const continueAction = isOnboarding ? onContinue : onClose;
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!visible || isOnboarding) return undefined;
 
     const previouslyFocused = document.activeElement;
     const previousOverflow = document.body.style.overflow;
@@ -20,7 +30,7 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
         event.preventDefault();
-        onClose();
+        onClose?.();
         return;
       }
 
@@ -56,39 +66,50 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
         focusTarget?.focus?.();
       });
     };
-  }, [open, onClose, triggerRef]);
+  }, [visible, isOnboarding, onClose, triggerRef]);
 
-  if (!open) return null;
+  useEffect(() => {
+    if (!visible || !isOnboarding) return undefined;
+
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    const focusPanel = window.requestAnimationFrame(() => panelRef.current?.focus());
+    return () => window.cancelAnimationFrame(focusPanel);
+  }, [visible, isOnboarding]);
+
+  if (!visible) return null;
 
   return (
     <div
-      className="why-eklesia-overlay"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+      className={isOnboarding ? 'why-eklesia-onboarding' : 'why-eklesia-overlay'}
+      onMouseDown={isOnboarding ? undefined : (event) => {
+        if (event.target === event.currentTarget) onClose?.();
       }}
     >
       <section
-        className="why-eklesia-panel"
-        role="dialog"
-        aria-modal="true"
+        className={`why-eklesia-panel ${isOnboarding ? 'why-eklesia-onboarding-panel' : ''}`}
+        role={isOnboarding ? 'region' : 'dialog'}
+        aria-modal={isOnboarding ? undefined : true}
         aria-labelledby="why-eklesia-title"
         aria-describedby="why-eklesia-intro"
         ref={panelRef}
+        tabIndex={isOnboarding ? -1 : undefined}
       >
         <header className="why-eklesia-header">
           <div>
             <p className="why-eklesia-eyebrow">The heart behind the app</p>
             <h2 id="why-eklesia-title">Why Ekklesia Pulse?</h2>
           </div>
-          <button
-            className="why-eklesia-close"
-            type="button"
-            onClick={onClose}
-            ref={closeButtonRef}
-            aria-label="Close Why Ekklesia Pulse?"
-          >
-            <span aria-hidden="true">×</span>
-          </button>
+          {!isOnboarding ? (
+            <button
+              className="why-eklesia-close"
+              type="button"
+              onClick={onClose}
+              ref={closeButtonRef}
+              aria-label="Close Why Ekklesia Pulse?"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          ) : null}
         </header>
 
         <div className="why-eklesia-content">
@@ -133,8 +154,8 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
             <p>Ekklesia Pulse does not measure the depth of your faith. It simply helps you keep showing up, reflect honestly, and stay connected to a community that cares.</p>
           </aside>
 
-          <button className="primary-button why-eklesia-continue" type="button" onClick={onClose}>
-            Continue my journey
+          <button className="primary-button why-eklesia-continue" type="button" onClick={continueAction}>
+            {isOnboarding ? 'Enter Ekklesia Pulse' : 'Continue my journey'}
           </button>
         </div>
       </section>
