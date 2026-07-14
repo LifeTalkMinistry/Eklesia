@@ -57,7 +57,7 @@ export default function PersonalSetup({ profile, storageAvailable, onContinue, o
               type="text"
               autoComplete="name"
               maxLength={PROFILE_LIMITS.displayName.max}
-              placeholder="Example: Maria"
+              placeholder="Example: Hanna"
               value={values.displayName}
               onChange={updateField}
               aria-invalid={Boolean(errors.displayName)}
