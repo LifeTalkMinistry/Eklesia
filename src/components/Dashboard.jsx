@@ -26,7 +26,6 @@ function HomeDashboard({
       <section className="greeting-block">
         <p className="dashboard-eyebrow">{formatManilaDate()}</p>
         <h2>{getManilaGreeting()}, Max.</h2>
-        <p>Start today with the Word, reflect, and respond.</p>
       </section>
       <TodayDevotionCard
         dailyVerse={dailyVerse}
