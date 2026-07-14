@@ -1,3 +1,20 @@
+import { useState } from 'react';
+import { getDailyDevotionReminder } from '../data/devotionReminders.js';
+import { getManilaDateKey } from '../lib/manilaTime.js';
+
+const REVEALED_SESSION_KEY = 'ekklesiaPulse.todayDevotionRevealedDate';
+
+function wasRevealedToday(dateKey) {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return window.sessionStorage.getItem(REVEALED_SESSION_KEY) === dateKey;
+  } catch (error) {
+    console.warn('Today’s devotion reveal state could not be restored.', error);
+    return false;
+  }
+}
+
 export default function TodayDevotionCard({
   dailyVerse,
   officialDevotion,
@@ -8,6 +25,20 @@ export default function TodayDevotionCard({
   onReview,
   onSpendMore,
 }) {
+  const dateKey = getManilaDateKey();
+  const reminder = getDailyDevotionReminder(dateKey);
+  const [revealed, setRevealed] = useState(() => wasRevealedToday(dateKey));
+
+  function revealDevotion() {
+    setRevealed(true);
+
+    try {
+      window.sessionStorage.setItem(REVEALED_SESSION_KEY, dateKey);
+    } catch (storageError) {
+      console.warn('Today’s devotion reveal state could not be saved.', storageError);
+    }
+  }
+
   if (dailyVerse && completed) {
     const reference = officialDevotion?.reference || dailyVerse.reference;
     return (
@@ -36,26 +67,50 @@ export default function TodayDevotionCard({
   }
 
   return (
-    <section className="today-card" aria-busy={loading}>
-      <div className="today-card-topline">
-        <span className="soft-badge">Today&apos;s devotion</span>
-        <span className="reading-time">5 min read</span>
+    <div className={`today-card-flip ${revealed ? 'is-revealed' : ''}`}>
+      <div className="today-card-flip-inner">
+        <button
+          className="today-card today-card-face today-card-reminder"
+          type="button"
+          onClick={revealDevotion}
+          aria-hidden={revealed}
+          tabIndex={revealed ? -1 : 0}
+          aria-label={`${reminder} Flip to start today’s devotion.`}
+        >
+          <span className="reminder-kicker">A gentle reminder</span>
+          <span className="reminder-message">{reminder}</span>
+          <span className="reminder-flip-prompt">
+            <span>Flip to start today’s devotion</span>
+            <span className="reminder-flip-icon" aria-hidden="true">↻</span>
+          </span>
+        </button>
+
+        <section
+          className="today-card today-card-face today-card-devotion"
+          aria-busy={loading}
+          aria-hidden={!revealed}
+        >
+          <div className="today-card-topline">
+            <span className="soft-badge">Today&apos;s devotion</span>
+            <span className="reading-time">5 min read</span>
+          </div>
+
+          {loading && <p className="status-message" aria-live="polite">Preparing today&apos;s Scripture…</p>}
+          {error && <p className="status-message error-message" role="alert">Today&apos;s verse could not be loaded. Please try again shortly.</p>}
+
+          {dailyVerse && (
+            <>
+              <p className="verse-reference">{dailyVerse.reference} · BSB</p>
+              <h3>{dailyVerse.title}</h3>
+              <p>{dailyVerse.theme} — {dailyVerse.prompt}</p>
+              <button className="card-button" type="button" onClick={onStart} tabIndex={revealed ? 0 : -1}>
+                Choose today’s devotion
+                <span aria-hidden="true">→</span>
+              </button>
+            </>
+          )}
+        </section>
       </div>
-
-      {loading && <p className="status-message" aria-live="polite">Preparing today&apos;s Scripture…</p>}
-      {error && <p className="status-message error-message" role="alert">Today&apos;s verse could not be loaded. Please try again shortly.</p>}
-
-      {dailyVerse && (
-        <>
-          <p className="verse-reference">{dailyVerse.reference} · BSB</p>
-          <h3>{dailyVerse.title}</h3>
-          <p>{dailyVerse.theme} — {dailyVerse.prompt}</p>
-          <button className="card-button" type="button" onClick={onStart}>
-            Choose today’s devotion
-            <span aria-hidden="true">→</span>
-          </button>
-        </>
-      )}
-    </section>
+    </div>
   );
 }
