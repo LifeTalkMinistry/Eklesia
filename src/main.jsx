@@ -4,6 +4,7 @@ import App from './App.jsx';
 import { runBrandMigration } from './services/brandMigration.js';
 import './index.css';
 import './alpha.css';
+import './together-demo-disclosure.css';
 import './devotion-choice.css';
 import './bible-return.css';
 import './wgap.css';
