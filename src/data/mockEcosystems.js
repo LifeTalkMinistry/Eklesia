@@ -18,6 +18,7 @@ export const mockEcosystems = [
         lastActiveLabel: 'Today',
         devotionCompletedWithin24Hours: true,
         devotionCheckInLabel: 'Completed today',
+        weeklyCheckIns: [true, true, true, true, true, true, true],
         canEncourage: false,
       },
       {
@@ -28,6 +29,7 @@ export const mockEcosystems = [
         lastActiveLabel: 'Yesterday',
         devotionCompletedWithin24Hours: true,
         devotionCheckInLabel: 'Completed within the last 24 hours',
+        weeklyCheckIns: [true, false, true, false, true, false, true],
         canEncourage: true,
       },
       {
@@ -38,6 +40,7 @@ export const mockEcosystems = [
         lastActiveLabel: '4 days ago',
         devotionCompletedWithin24Hours: false,
         devotionCheckInLabel: 'No devotion check-in yet in this 24-hour window',
+        weeklyCheckIns: [false, true, false, false, false, false, false],
         canEncourage: true,
       },
     ],
