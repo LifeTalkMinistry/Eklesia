@@ -184,7 +184,12 @@ export function setOnboardingComplete() {
 export function resetOnboarding() {
   memoryState.onboardingComplete = false;
   const result = removeStorageValue(STORAGE_KEYS.onboardingComplete);
-  return { ok: !result.error && !result.unavailable, removed: result.removed };
+  return {
+    ok: !result.error,
+    removed: result.removed,
+    persisted: !result.unavailable && result.removed,
+    message: result.unavailable ? 'The introduction was restarted for this session, but this browser is still blocking storage access.' : '',
+  };
 }
 
 export function hasAcceptedAlphaNotice() {
@@ -225,7 +230,12 @@ export function resetAlphaNotice() {
     writeStorageValue(STORAGE_KEYS.localProfile, JSON.stringify(updatedProfile));
   }
 
-  return { ok: !storageResult.error && !storageResult.unavailable, removed: storageResult.removed };
+  return {
+    ok: !storageResult.error,
+    removed: storageResult.removed,
+    persisted: !storageResult.unavailable && storageResult.removed,
+    message: storageResult.unavailable ? 'The alpha notice was reset for this session, but this browser is still blocking storage access.' : '',
+  };
 }
 
 export function clearLocalProfile({ removeStorage = true } = {}) {
