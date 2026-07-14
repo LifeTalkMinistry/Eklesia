@@ -73,7 +73,7 @@ export default function PersonalSetup({ profile, storageAvailable, onContinue, o
               name="churchName"
               type="text"
               maxLength={PROFILE_LIMITS.churchName.max}
-              placeholder="Example: LifeTalk Ministry"
+              placeholder="Example: Amazing Hope"
               value={values.churchName}
               onChange={updateField}
               aria-invalid={Boolean(errors.churchName)}
@@ -89,7 +89,7 @@ export default function PersonalSetup({ profile, storageAvailable, onContinue, o
               name="ministryName"
               type="text"
               maxLength={PROFILE_LIMITS.ministryName.max}
-              placeholder="Example: Young Professionals"
+              placeholder="Example: Music Team"
               value={values.ministryName}
               onChange={updateField}
               aria-invalid={Boolean(errors.ministryName)}
