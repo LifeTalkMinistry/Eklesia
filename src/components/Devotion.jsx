@@ -2,24 +2,24 @@ import { useState } from 'react';
 
 const WGAP_FIELDS = [
   {
-    key: 'getsKo',
+    key: 'gratitude',
     letter: 'G',
-    label: 'Gets Ko',
-    placeholder: 'Isulat kung ano ang malinaw na mensahe sa iyo...',
+    label: 'Gratitude',
+    placeholder: 'What truth or grace from this passage are you grateful for?',
     rows: 4,
   },
   {
     key: 'application',
     letter: 'A',
     label: 'Application',
-    placeholder: 'Isulat ang specific action na gagawin mo...',
+    placeholder: 'What specific response will you carry into your life?',
     rows: 4,
   },
   {
     key: 'prayer',
     letter: 'P',
     label: 'Prayer',
-    placeholder: 'Lord, tulungan Mo po ako na...',
+    placeholder: 'Write your honest prayer to God...',
     rows: 5,
   },
 ];
@@ -29,9 +29,12 @@ export default function Devotion({
   wgap,
   setWgap,
   completed,
+  completionType,
+  isSaving,
   onComplete,
   onViewSaved,
   onReturnHome,
+  onSpendMore,
   onBack,
   onReadChapter,
 }) {
@@ -44,13 +47,11 @@ export default function Devotion({
 
   function submitDevotion(event) {
     event.preventDefault();
-    const missingFields = WGAP_FIELDS.filter((field) => !wgap[field.key]?.trim()).map((field) => field.label);
-
-    if (missingFields.length) {
-      setMessage(`Complete ${missingFields.join(', ')} before finishing your devotion.`);
+    const hasResponse = WGAP_FIELDS.some((field) => wgap[field.key]?.trim());
+    if (!hasResponse) {
+      setMessage('Write at least one honest WGAP response before saving your devotion.');
       return;
     }
-
     setMessage('');
     onComplete();
   }
@@ -59,14 +60,21 @@ export default function Devotion({
     return <main className="devotion-shell"><div className="devotion-frame"><header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>Personal devotion</p><strong>Scripture unavailable</strong></div></header><p className="page-error" role="alert">The selected Scripture could not be loaded. Please return and choose a verse again.</p></div></main>;
   }
 
-  const devotionLabel = devotion.devotionType === 'personal' ? 'My chosen devotion' : 'Today’s suggested devotion';
-  const isSelectedPassage = devotion.devotionType === 'personal' && devotion.endVerse > devotion.startVerse;
-  const scripturePreview = devotion.previewText || devotion.text;
+  const isAdditional = devotion.flowType === 'additional' || completionType === 'additional';
+  const devotionLabel = isAdditional ? 'Additional devotion' : 'Today’s devotion';
+  const verseStart = devotion.verseStart ?? devotion.startVerse ?? devotion.verse;
+  const verseEnd = devotion.verseEnd ?? devotion.endVerse ?? verseStart;
+  const isSelectedPassage = verseEnd > verseStart;
+  const scripturePreview = devotion.scriptureText || devotion.fullText || devotion.previewText || devotion.text;
 
   return (
     <main className="devotion-shell">
       <div className="devotion-frame">
-        <header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>{devotionLabel}</p><strong>WGAP Devotion</strong></div><span className="soft-badge">5 min</span></header>
+        <header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>{devotionLabel}</p><strong>WGAP Devotion</strong></div><span className="soft-badge">Private</span></header>
+
+        {isAdditional && !completed && (
+          <p className="devotion-context-note">Your daily rhythm is already complete. This devotion will be saved privately in Journey.</p>
+        )}
 
         <article className="scripture-card wgap-word-card">
           <div className="wgap-section-title">
@@ -77,10 +85,14 @@ export default function Devotion({
             </div>
           </div>
           <blockquote>“{scripturePreview}”</blockquote>
+          {devotion.title && <h2 className="devotion-passage-title">{devotion.title}</h2>}
+          {devotion.theme && <p className="devotion-theme">{devotion.theme}</p>}
+          {devotion.prompt && <p className="devotion-prompt">{devotion.prompt}</p>}
           <button className="secondary-button" type="button" onClick={onReadChapter}>{isSelectedPassage ? 'Read selected passage' : 'Read full chapter'}</button>
         </article>
 
         <form className="wgap-form" onSubmit={submitDevotion}>
+          <p className="wgap-private-note">Your reflection, prayer, and personal responses stay private in your Journey.</p>
           {WGAP_FIELDS.map((field) => (
             <section className="wgap-field" key={field.key}>
               <div className="wgap-section-title">
@@ -104,15 +116,21 @@ export default function Devotion({
             <section className="devotion-complete-card" aria-live="polite">
               <div className="devotion-complete-message">
                 <span aria-hidden="true">✓</span>
-                <div><strong>Today&apos;s WGAP devotion is saved</strong><p>You can review it anytime from Journey.</p></div>
+                <div>
+                  <strong>{completionType === 'additional' ? 'Additional devotion saved' : 'Daily rhythm complete'}</strong>
+                  <p>{completionType === 'additional'
+                    ? 'Your daily rhythm was already complete. This reflection has been added privately to your Journey.'
+                    : 'You made room for God today. Your reflection has been saved privately.'}</p>
+                </div>
               </div>
               <div className="devotion-complete-actions">
-                <button className="primary-button" type="button" onClick={onViewSaved}>View saved devotion</button>
-                <button className="secondary-button" type="button" onClick={onReturnHome}>Return to Home</button>
+                <button className="primary-button" type="button" onClick={onViewSaved}>View in Journey</button>
+                <button className="secondary-button" type="button" onClick={onReturnHome}>Return home</button>
+                <button className="secondary-button" type="button" onClick={onSpendMore}>Spend more time in the Word</button>
               </div>
             </section>
           ) : (
-            <button className="primary-button submit-button" type="submit">Complete today’s devotion</button>
+            <button className="primary-button submit-button" type="submit" disabled={isSaving}>{isSaving ? 'Saving reflection…' : isAdditional ? 'Save additional devotion' : 'Complete today’s devotion'}</button>
           )}
         </form>
       </div>

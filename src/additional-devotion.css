@@ -1,0 +1,72 @@
+.additional-devotion-actions { position: relative; z-index: 1; display: grid; gap: 12px; margin-top: 26px; }
+.additional-devotion-actions .card-button { margin-top: 0; }
+.spend-more-button { width: 100%; min-height: 48px; }
+.completion-support { margin: 2px 0 0; color: rgba(244,245,239,.64); font-size: .9rem; line-height: 1.6; }
+
+.additional-devotion-overlay { position: fixed; inset: 0; z-index: 100; display: grid; align-items: end; padding: 14px; background: rgba(1,7,4,.76); backdrop-filter: blur(10px); }
+.additional-devotion-dialog { overflow: auto; width: min(100%, 940px); max-height: min(90vh, 820px); margin: 0 auto; padding: clamp(22px, 4vw, 34px); border: 1px solid rgba(255,255,255,.11); border-radius: 28px 28px 20px 20px; background: linear-gradient(160deg,#102019,#09140f); box-shadow: 0 30px 90px rgba(0,0,0,.55); }
+.additional-devotion-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.additional-devotion-heading h2 { margin: 7px 0 9px; color: #fffdf5; font-family: Georgia,"Times New Roman",serif; font-size: clamp(1.8rem,6vw,2.8rem); font-weight: 500; line-height: 1.08; }
+.additional-devotion-heading p:last-child { max-width: 680px; margin: 0; color: rgba(244,245,239,.67); line-height: 1.65; }
+.additional-devotion-grid { display: grid; gap: 14px; margin-top: 26px; }
+.additional-choice-card { display: flex; min-width: 0; flex-direction: column; padding: 22px; border: 1px solid rgba(255,255,255,.08); border-radius: 22px; background: rgba(255,255,255,.035); }
+.additional-choice-card .option-icon { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid rgba(232,217,170,.2); border-radius: 14px; color: #e8d9aa; background: rgba(232,217,170,.07); }
+.additional-choice-card h3 { margin: 18px 0 8px; color: #fffdf5; font-size: 1.15rem; }
+.additional-choice-card > p { margin: 0; color: rgba(244,245,239,.62); line-height: 1.6; }
+.additional-suggestion-preview,.continue-location { display: grid; gap: 5px; margin-top: 18px; padding: 14px; border-radius: 15px; background: rgba(184,215,190,.07); }
+.additional-suggestion-preview small,.continue-location small { color: #b8d8c4; }
+.additional-suggestion-preview strong,.continue-location strong { color: #fffdf5; }
+.chooser-action { width: 100%; min-height: 48px; margin-top: auto; }
+.additional-choice-card .primary-button.chooser-action { margin-top: 20px; }
+.additional-choice-card .secondary-button.chooser-action { margin-top: 20px; }
+.text-button { min-height: 44px; margin-top: 6px; cursor: pointer; color: #cce0d1; background: transparent; text-decoration: underline; text-underline-offset: 4px; }
+.empty-location { margin-top: 18px !important; color: rgba(244,245,239,.48) !important; }
+
+.devotion-context-note,.wgap-private-note,.journey-private-reminder { margin: 0 24px 20px; padding: 14px 16px; border: 1px solid rgba(184,215,190,.14); border-radius: 15px; color: #c9dfcf; background: rgba(184,215,190,.055); line-height: 1.6; }
+.wgap-private-note { margin: 0; }
+.devotion-passage-title { margin: 20px 0 6px; color: #fffdf5; font-family: Georgia,"Times New Roman",serif; font-size: 1.45rem; font-weight: 500; }
+.devotion-theme { margin: 0; color: #b8d8c4; font-size: .88rem; font-weight: 700; }
+.devotion-prompt { margin: 12px 0 0; color: rgba(244,245,239,.7); line-height: 1.65; }
+.devotion-complete-actions { flex-wrap: wrap; }
+.devotion-complete-actions .primary-button,.devotion-complete-actions .secondary-button { min-height: 46px; }
+
+.journey-date-list { display: grid; gap: 22px; margin-top: 28px; }
+.journey-date-group { min-width: 0; }
+.journey-date-group > h3 { margin: 0 0 10px; color: #b8d8c4; font-size: .76rem; letter-spacing: .13em; text-transform: uppercase; }
+.journey-date-entries { overflow: hidden; border: 1px solid rgba(255,255,255,.08); border-radius: 20px; background: rgba(255,255,255,.03); }
+.journey-date-entry { position: relative; display: grid; width: 100%; min-height: 96px; gap: 5px; padding: 18px 52px 18px 18px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,.06); color: inherit; background: transparent; text-align: left; }
+.journey-date-entry:last-child { border-bottom: 0; }
+.journey-date-entry:hover { background: rgba(255,255,255,.035); }
+.journey-date-entry strong { overflow-wrap: anywhere; color: #fffdf5; }
+.journey-date-entry small { color: rgba(244,245,239,.5); }
+.journey-entry-type { width: fit-content; padding: 4px 8px; border-radius: 999px; font-size: .69rem; font-weight: 800; }
+.journey-entry-type.is-daily { color: #0b1711; background: #b8d7be; }
+.journey-entry-type.is-additional { color: #eadfb8; background: rgba(232,217,170,.1); }
+.journey-date-entry .history-arrow { position: absolute; top: 50%; right: 18px; transform: translateY(-50%); }
+.journey-private-reminder { margin: 18px 0 0; }
+
+.selection-error { margin-top: 8px !important; color: #efb4a7 !important; }
+.verse-selection-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.verse-selection-actions .primary-button { margin-top: 0; }
+.verse-selection-actions .secondary-button { min-height: 44px; }
+
+@media (min-width: 760px) {
+  .additional-devotion-overlay { align-items: center; padding: 30px; }
+  .additional-devotion-dialog { border-radius: 28px; }
+  .additional-devotion-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+
+@media (max-width: 430px) {
+  .additional-devotion-overlay { padding: 0; }
+  .additional-devotion-dialog { max-height: 94vh; border-right: 0; border-bottom: 0; border-left: 0; border-radius: 26px 26px 0 0; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  .additional-devotion-heading .icon-button { flex: 0 0 auto; }
+  .additional-choice-card { padding: 19px; }
+  .devotion-complete-actions { display: grid; }
+  .devotion-complete-actions > * { width: 100%; }
+  .verse-selection-actions { display: grid; width: 100%; }
+  .verse-selection-actions > * { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .additional-devotion-overlay *, .additional-devotion-dialog * { scroll-behavior: auto !important; transition: none !important; }
+}
