@@ -7,7 +7,7 @@ import {
 } from '../services/devotionService.js';
 
 const REVIEW_FIELDS = [
-  ['G', 'Gratitude', 'gratitude'],
+  ['G', 'Gets Ko', 'gratitude'],
   ['A', 'Application', 'application'],
   ['P', 'Prayer', 'prayer'],
 ];

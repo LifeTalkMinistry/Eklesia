@@ -7,8 +7,8 @@ const WGAP_FIELDS = [
   {
     key: 'gratitude',
     letter: 'G',
-    label: 'Gratitude',
-    placeholder: 'What truth or grace from this passage are you grateful for?',
+    label: 'Gets Ko',
+    placeholder: 'What did you understand or receive from this passage?',
     rows: 4,
   },
   {
