@@ -1,0 +1,39 @@
+.why-eklesia-onboarding {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(80, 168, 122, 0.18), transparent 34%),
+    radial-gradient(circle at 90% 92%, rgba(180, 139, 77, 0.12), transparent 30%),
+    #08110d;
+}
+
+.why-eklesia-onboarding-panel {
+  min-height: calc(100vh - 48px);
+  max-height: none;
+  overflow: visible;
+}
+
+.why-eklesia-onboarding-panel .why-eklesia-content {
+  overflow: visible;
+}
+
+.why-eklesia-onboarding-panel:focus {
+  outline: none;
+}
+
+@media (max-width: 700px) {
+  .why-eklesia-onboarding {
+    display: block;
+    min-height: 100dvh;
+    padding: 0;
+  }
+
+  .why-eklesia-onboarding-panel {
+    width: 100%;
+    min-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+}
