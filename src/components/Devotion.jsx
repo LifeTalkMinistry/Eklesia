@@ -129,9 +129,6 @@ export default function Devotion({
             <p className="status-message" role="status">Loading the starting verse…</p>
           ) : null}
           {reviewVerseError && <p className="status-message error-message" role="alert">{reviewVerseError}</p>}
-          {devotion.title && <h2 className="devotion-passage-title">{devotion.title}</h2>}
-          {devotion.theme && <p className="devotion-theme">{devotion.theme}</p>}
-          {devotion.prompt && <p className="devotion-prompt">{devotion.prompt}</p>}
           <button className="secondary-button" type="button" onClick={onReadChapter}>{passageButtonLabel}</button>
         </article>
 
