@@ -21,7 +21,7 @@ function DailyCheckIn({ members, loading, error }) {
       </div>
 
       <p className="daily-checkin-intro">
-        See who completed a devotion within the last 24 hours. Only the check-in is visible—not what anyone read, prayed, or wrote.
+        See who completed a devotion within the last 24 hours.
       </p>
 
       {loading ? (
@@ -70,7 +70,7 @@ export default function DailyCheckInPortal() {
   useEffect(() => {
     let cancelled = false;
     let host = null;
-    let currentPrivacyCard = null;
+    let currentAnchor = null;
 
     async function loadMembers() {
       setLoading(true);
@@ -103,26 +103,26 @@ export default function DailyCheckInPortal() {
     function removeHost() {
       if (host?.isConnected) host.remove();
       host = null;
-      currentPrivacyCard = null;
+      currentAnchor = null;
       setPortalTarget(null);
     }
 
     function syncPortalTarget() {
-      const privacyCard = document.querySelector('.together-compact-privacy-card');
+      const anchor = document.querySelector('.together-joined-page .together-heading-row');
 
-      if (!privacyCard) {
+      if (!anchor) {
         if (host) removeHost();
         return;
       }
 
-      if (privacyCard === currentPrivacyCard && host?.isConnected) return;
+      if (anchor === currentAnchor && host?.isConnected) return;
 
       if (host?.isConnected) host.remove();
-      currentPrivacyCard = privacyCard;
+      currentAnchor = anchor;
       host = document.createElement('div');
       host.className = 'daily-checkin-portal-host';
       host.dataset.prototypeFeature = 'daily-devotion-check-in';
-      privacyCard.insertAdjacentElement('afterend', host);
+      anchor.insertAdjacentElement('afterend', host);
       setPortalTarget(host);
       loadMembers();
     }
