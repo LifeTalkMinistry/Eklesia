@@ -1,0 +1,60 @@
+.archive-day-drawer {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.archive-day-drawer.is-expanded {
+  border-color: rgba(232, 217, 170, 0.14);
+  background: rgba(232, 217, 170, 0.035);
+}
+
+.archive-day-button {
+  min-height: 50px;
+  padding: 12px 14px;
+}
+
+.archive-day-button .archive-drawer-title {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.archive-day-content {
+  display: grid;
+  gap: 8px;
+  padding: 0 8px 8px;
+}
+
+.archive-day-content[hidden] {
+  display: none;
+}
+
+.archive-day-drawer.is-expanded > .archive-drawer-heading .archive-chevron {
+  transform: rotate(180deg);
+}
+
+.archive-entry-time {
+  color: rgba(244, 245, 239, 0.5);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 390px) {
+  .archive-day-button {
+    padding-inline: 12px;
+  }
+
+  .archive-day-button .archive-drawer-title {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+  }
+
+  .archive-day-content {
+    padding-inline: 6px;
+    padding-bottom: 6px;
+  }
+}
