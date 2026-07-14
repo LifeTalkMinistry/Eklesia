@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MANILA_TIME_ZONE } from '../lib/manilaTime.js';
 import { getEcosystemMembers, getJoinedEcosystem } from '../services/ecosystemService.js';
 import './DailyCheckInPortal.css';
 
 const WEEKDAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const WEEKDAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const WEEKDAY_INDEX = {
   Mon: 0,
   Tue: 1,
@@ -77,11 +78,130 @@ function getRhythmLabel(member, elapsedDays) {
   return `${member.currentStreak}-day streak`;
 }
 
+function WeeklyRhythm({ member, todayIndex, accessible = false }) {
+  return (
+    <div
+      className={`daily-rhythm-week ${accessible ? 'member-visitor-week' : ''}`}
+      aria-label={accessible ? `${member.name}'s shared weekly devotion rhythm` : undefined}
+      aria-hidden={accessible ? undefined : 'true'}
+    >
+      {WEEKDAY_LABELS.map((label, dayIndex) => {
+        const future = dayIndex > todayIndex;
+        const completed = !future && member.checkIns[dayIndex];
+        const today = dayIndex === todayIndex;
+        const status = future ? 'upcoming' : completed ? 'completed' : 'not completed';
+
+        return (
+          <div className="daily-rhythm-day" key={`${member.id}-${dayIndex}`}>
+            <span
+              className={`daily-rhythm-circle ${completed ? 'is-complete' : ''} ${today ? 'is-today' : ''} ${future ? 'is-future' : ''}`}
+              aria-label={accessible ? `${WEEKDAY_NAMES[dayIndex]}: ${status}` : undefined}
+              aria-current={accessible && today ? 'date' : undefined}
+            >
+              {completed ? '✓' : label}
+            </span>
+            <small>{label}</small>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function MemberVisitorPage({ member, ranking, memberCount, elapsedDays, todayIndex, onBack }) {
+  const backButtonRef = useRef(null);
+  const completedToday = Boolean(member.checkIns[todayIndex]);
+
+  useEffect(() => {
+    backButtonRef.current?.focus();
+  }, []);
+
+  return (
+    <section className="member-visitor-page" aria-labelledby="member-visitor-heading">
+      <button
+        ref={backButtonRef}
+        className="member-visitor-back"
+        type="button"
+        onClick={onBack}
+      >
+        <span aria-hidden="true">←</span> Back to weekly ranking
+      </button>
+
+      <div className="member-visitor-identity">
+        <span className="member-visitor-avatar" aria-hidden="true">{member.name.charAt(0)}</span>
+        <div>
+          <p className="dashboard-eyebrow">Shared progress summary</p>
+          <h3 id="member-visitor-heading">{member.name}</h3>
+          <p>{getRhythmLabel(member, elapsedDays)}</p>
+        </div>
+      </div>
+
+      <section className="member-visitor-rhythm" aria-labelledby="member-week-heading">
+        <div className="member-visitor-section-heading">
+          <div>
+            <p className="dashboard-eyebrow">Devotional rhythm</p>
+            <h4 id="member-week-heading">This week</h4>
+          </div>
+          <strong>{member.completedCount} of {elapsedDays}</strong>
+        </div>
+        <WeeklyRhythm member={member} todayIndex={todayIndex} accessible />
+      </section>
+
+      <div className="member-visitor-stats">
+        <article>
+          <span>Position</span>
+          <strong>{ranking} of {memberCount}</strong>
+          <small>Lowest completion appears first</small>
+        </article>
+        <article>
+          <span>Current streak</span>
+          <strong>{member.currentStreak} {member.currentStreak === 1 ? 'day' : 'days'}</strong>
+          <small>Based on this week</small>
+        </article>
+        <article>
+          <span>Today</span>
+          <strong>{completedToday ? 'Completed' : 'Not yet'}</strong>
+          <small>{member.devotionCheckInLabel || member.status}</small>
+        </article>
+      </div>
+
+      <section className="member-visitor-signal" aria-labelledby="growth-signal-heading">
+        <p className="dashboard-eyebrow">General growth signal</p>
+        <h4 id="growth-signal-heading">{member.growthSignal || getRhythmLabel(member, elapsedDays)}</h4>
+        <p>Last activity: {member.lastActiveLabel || 'No recent activity shown'}</p>
+      </section>
+
+      <aside className="member-visitor-privacy">
+        <strong>Summary view only</strong>
+        <p>WGAP answers, prayers, reflection text, Bible-reading details, and full devotion history remain private.</p>
+      </aside>
+    </section>
+  );
+}
+
 function DailyCheckIn({ members, loading, error }) {
+  const [selectedMemberId, setSelectedMemberId] = useState(null);
   const todayIndex = getTodayIndex();
   const elapsedDays = todayIndex + 1;
   const checkedInCount = members.filter((member) => member.devotionCompletedWithin24Hours).length;
   const rankedMembers = prepareRankedMembers(members, todayIndex);
+  const selectedMemberIndex = rankedMembers.findIndex((member) => member.id === selectedMemberId);
+  const selectedMember = selectedMemberIndex >= 0 ? rankedMembers[selectedMemberIndex] : null;
+
+  if (selectedMember) {
+    return (
+      <section className="together-card daily-checkin-card member-visitor-card">
+        <MemberVisitorPage
+          member={selectedMember}
+          ranking={selectedMemberIndex + 1}
+          memberCount={rankedMembers.length}
+          elapsedDays={elapsedDays}
+          todayIndex={todayIndex}
+          onBack={() => setSelectedMemberId(null)}
+        />
+      </section>
+    );
+  }
 
   return (
     <section className="together-card daily-checkin-card" aria-labelledby="daily-checkin-heading">
@@ -98,7 +218,7 @@ function DailyCheckIn({ members, loading, error }) {
       </div>
 
       <p className="daily-checkin-intro">
-        Members who may need attention appear first. Stronger and perfect rhythms appear lower in the list.
+        Members who may need attention appear first. Tap a member to view their shared progress summary.
       </p>
 
       {loading ? (
@@ -119,34 +239,28 @@ function DailyCheckIn({ members, loading, error }) {
                 className={`daily-rhythm-row ${perfect ? 'is-perfect' : ''}`}
                 key={member.id}
                 role="listitem"
-                aria-label={`${member.name}, rank ${rankingIndex + 1}, ${member.completedCount} of ${elapsedDays} elapsed days completed`}
               >
-                <div className="daily-rhythm-member-line">
-                  <span className="daily-rhythm-rank" aria-hidden="true">{rankingIndex + 1}</span>
-                  <span className="daily-checkin-avatar" aria-hidden="true">{member.name.charAt(0)}</span>
-                  <div className="daily-checkin-member">
-                    <strong>{member.name}</strong>
-                    <small>{getRhythmLabel(member, elapsedDays)}</small>
+                <button
+                  className="daily-rhythm-row-button"
+                  type="button"
+                  onClick={() => setSelectedMemberId(member.id)}
+                  aria-label={`View ${member.name}'s shared progress summary. Rank ${rankingIndex + 1}, ${member.completedCount} of ${elapsedDays} elapsed days completed.`}
+                >
+                  <div className="daily-rhythm-member-line">
+                    <span className="daily-rhythm-rank" aria-hidden="true">{rankingIndex + 1}</span>
+                    <span className="daily-checkin-avatar" aria-hidden="true">{member.name.charAt(0)}</span>
+                    <div className="daily-checkin-member">
+                      <strong>{member.name}</strong>
+                      <small>{getRhythmLabel(member, elapsedDays)}</small>
+                    </div>
+                    <span className="daily-rhythm-meta">
+                      <span className="daily-rhythm-score">{member.completedCount} of {elapsedDays}</span>
+                      <span className="daily-rhythm-chevron" aria-hidden="true">›</span>
+                    </span>
                   </div>
-                  <span className="daily-rhythm-score">{member.completedCount} of {elapsedDays}</span>
-                </div>
 
-                <div className="daily-rhythm-week" aria-hidden="true">
-                  {WEEKDAY_LABELS.map((label, dayIndex) => {
-                    const future = dayIndex > todayIndex;
-                    const completed = !future && member.checkIns[dayIndex];
-                    const today = dayIndex === todayIndex;
-
-                    return (
-                      <div className="daily-rhythm-day" key={`${member.id}-${dayIndex}`}>
-                        <span className={`daily-rhythm-circle ${completed ? 'is-complete' : ''} ${today ? 'is-today' : ''} ${future ? 'is-future' : ''}`}>
-                          {completed ? '✓' : label}
-                        </span>
-                        <small>{label}</small>
-                      </div>
-                    );
-                  })}
-                </div>
+                  <WeeklyRhythm member={member} todayIndex={todayIndex} />
+                </button>
               </article>
             );
           })}
@@ -154,7 +268,7 @@ function DailyCheckIn({ members, loading, error }) {
       ) : null}
 
       <p className="daily-checkin-principle">
-        Ordered from the lowest weekly completion count to the strongest rhythm. Prototype data only.
+        Only progress summaries are shared. Personal devotion responses and prayers stay private. Prototype data only.
       </p>
     </section>
   );
