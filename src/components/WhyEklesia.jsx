@@ -1,20 +1,6 @@
 import { useEffect, useRef } from 'react';
 import './WhyEklesia.css';
 
-const leaderVisibility = [
-  'Your devotional consistency',
-  'Your general growth status',
-  'Whether you may benefit from encouragement',
-  'Your most recent devotional activity date',
-];
-
-const personalDetails = [
-  'Your WGAP reflections',
-  'Your personal prayers',
-  'Your journal entries',
-  'The details of what you are going through',
-];
-
 export default function WhyEklesia({ open, onClose, triggerRef }) {
   const panelRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -106,7 +92,7 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
 
         <div className="why-eklesia-content">
           <p className="why-eklesia-intro" id="why-eklesia-intro">
-            Eklesia was created to help people build a consistent devotional life while giving church leaders a healthier way to recognize when someone may need encouragement.
+            Eklesia was created to help people build a consistent devotional life and help church communities recognize when someone may need encouragement.
           </p>
 
           <section className="why-eklesia-section" aria-labelledby="why-eklesia-mission">
@@ -118,42 +104,22 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
           <section className="why-eklesia-section" aria-labelledby="why-eklesia-vision">
             <p className="why-eklesia-label">Our vision</p>
             <h3 id="why-eklesia-vision">A church where no one quietly disappears.</h3>
-            <p>We envision churches where members feel spiritually supported, leaders can recognize when encouragement may be needed, and every person remains in control of what they choose to share.</p>
+            <p>We envision churches where members feel spiritually supported, leaders recognize when encouragement may be needed, and people are gently invited to begin again.</p>
           </section>
 
           <section className="why-eklesia-section why-eklesia-creator" aria-labelledby="why-eklesia-creator">
             <p className="why-eklesia-label">A note from the creator</p>
             <h3 className="visually-hidden" id="why-eklesia-creator">Creator’s intent</h3>
             <div className="why-eklesia-note">
-              <p>I created Eklesia because spiritual growth should never feel like surveillance.</p>
+              <p>I created Eklesia because spiritual growth should never feel like pressure.</p>
               <p>Sometimes people do not need to be confronted. They need to be remembered, encouraged, and gently invited to begin again.</p>
-              <p>Eklesia helps leaders care without overstepping, and helps members build consistency without feeling condemned.</p>
+              <p>Eklesia helps leaders encourage consistently and helps members build a rhythm without feeling condemned.</p>
               <p>You are not being measured by your streak. The streak is only a reminder that you continue to make room for God.</p>
               <div className="why-eklesia-signature">
                 <strong>Max Emorej</strong>
                 <span>Creator of Eklesia</span>
               </div>
             </div>
-          </section>
-
-          <section className="why-eklesia-section" aria-labelledby="why-eklesia-support">
-            <p className="why-eklesia-label">How support works</p>
-            <h3 id="why-eklesia-support">Care with healthy boundaries.</h3>
-            <div className="why-eklesia-privacy-grid">
-              <article className="why-eklesia-privacy-card">
-                <h4>Leaders may see</h4>
-                <ul>
-                  {leaderVisibility.map((item) => <li key={item}>{item}</li>)}
-                </ul>
-              </article>
-              <article className="why-eklesia-privacy-card is-protected">
-                <h4>You choose whether to share</h4>
-                <ul>
-                  {personalDetails.map((item) => <li key={item}>{item}</li>)}
-                </ul>
-              </article>
-            </div>
-            <p className="why-eklesia-control-note">Your devotional journey belongs to you. Eklesia simply helps you keep showing up.</p>
           </section>
 
           <aside className="why-eklesia-reminder" aria-label="Final reminder">
