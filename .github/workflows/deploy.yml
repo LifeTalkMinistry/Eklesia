@@ -1,32 +1,30 @@
-# Permanent workflow identity: Deploy Ekklesia Pulse to GitHub Pages
-name: Apply Ekklesia Pulse Migration and Validate
+name: Deploy Ekklesia Pulse to GitHub Pages
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: ekklesia-pulse-migration-${{ github.event.pull_request.number || github.ref }}
+  group: github-pages
   cancel-in-progress: false
 
 jobs:
-  migrate-and-validate:
-    if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out migration branch
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -36,48 +34,29 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Update branded deterministic namespaces
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          target = Path('src/lib/dailyVerse.js')
-          content = target.read_text()
-          legacy_prefix = 'e' + 'klesia'
-          content = content.replace(f'{legacy_prefix}-daily-verse', 'ekklesia-pulse-daily-verse')
-          content = content.replace(f'{legacy_prefix}-additional', 'ekklesia-pulse-additional')
-          target.write_text(content)
-          PY
-
-      - name: Apply and validate controlled branding changes
-        shell: bash
-        run: |
-          set -o pipefail
-          node scripts/apply-brand-migration.mjs 2>&1 | tee migration-output.log
-
-      - name: Upload migration diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: migration-output
-          path: migration-output.log
-
-      - name: Validate Bible data
-        run: npm run validate:bible
-
-      - name: Build GitHub Pages production bundle
+      - name: Build Ekklesia Pulse
         run: npm run build -- --base=/Eklesia/
 
-      - name: Confirm Bible source data is unchanged
-        run: git diff --exit-code -- src/data/bible
+      - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
 
-      - name: Check source patch formatting
-        run: git diff --check
+      - name: Upload website files
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
 
-      - name: Commit validated application source
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md index.html package.json package-lock.json src/
-          git commit -m "Apply validated Ekklesia Pulse source migration"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
