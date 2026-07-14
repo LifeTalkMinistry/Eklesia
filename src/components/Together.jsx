@@ -456,7 +456,7 @@ export default function Together() {
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck="false"
-          placeholder="Example: LIFETALK30"
+          placeholder="Example: AMAZING12"
           value={code}
           onChange={handleCodeChange}
           disabled={validating}
