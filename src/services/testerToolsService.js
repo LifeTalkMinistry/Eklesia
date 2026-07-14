@@ -69,8 +69,9 @@ export function restartIntroductionState() {
   const alphaResult = resetAlphaNotice();
   return {
     ok: onboardingResult.ok && alphaResult.ok,
+    persisted: onboardingResult.persisted !== false && alphaResult.persisted !== false,
     message: onboardingResult.ok && alphaResult.ok
-      ? ''
+      ? onboardingResult.message || alphaResult.message || ''
       : 'The introduction could not be restarted completely on this device.',
   };
 }
