@@ -28,6 +28,39 @@ Joined-circle state is stored only on the current device. The interface displays
 
 Prototype code: `LIFETALK30`
 
+## Private Alpha Testing
+
+Ekklesia Pulse is ready for a small private test.
+
+- Testers create a personal profile for the current device.
+- No password or online account is created.
+- Devotions, WGAP reflections, Journey history, profile details, and Bible reading position remain in browser storage.
+- Together currently uses demonstration information and is not connected to live church members.
+- Data does not synchronize across devices.
+- Clearing browser storage may remove local information.
+- Testers can delete Ekklesia Pulse-owned local data from Profile without clearing unrelated browser storage.
+- Alpha feedback is shared through the device share sheet or copied manually.
+- Private reflections, prayers, Bible-reading history, and profile identity are excluded from diagnostic feedback automatically.
+
+## Recommended Alpha Scope
+
+Recommended testers: **3–5 trusted churchmates**
+
+Recommended testing areas:
+
+- First-time setup
+- Daily devotion
+- WGAP completion
+- Journey review
+- Additional devotion
+- Bible reader
+- Refresh persistence
+- Profile editing
+- Feedback sharing
+- Local-data deletion
+
+Do not use the current Together demo as an official church attendance or devotion-monitoring record.
+
 ## Prototype Limitations
 
 Ekklesia Pulse is currently a frontend prototype. A production-connected release still requires:
