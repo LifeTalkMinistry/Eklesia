@@ -13,7 +13,7 @@ import {
 } from './services/devotionService.js';
 
 function Welcome({ onBegin }) {
-  return <main className="app-shell welcome-shell"><section className="welcome-card"><p className="eyebrow">A healthier way to grow together</p><h1>Eklesia</h1><p className="tagline">Track the habit. Protect the heart.</p><p className="description">Build a consistent devotional life, reflect on Scripture through WGAP, and stay connected to a church community that knows when encouragement may be needed.</p><button className="primary-button" type="button" onClick={onBegin}>Begin your journey</button></section></main>;
+  return <main className="app-shell welcome-shell"><section className="welcome-card"><p className="eyebrow">A healthier way to grow together</p><h1>Ekklesia Pulse</h1><p className="tagline">Build your rhythm. Strengthen the church.</p><p className="description">Build a consistent devotional life, reflect on Scripture through WGAP, and stay connected to a church community that knows when encouragement may be needed.</p><button className="primary-button" type="button" onClick={onBegin}>Begin your journey</button></section></main>;
 }
 
 function createEmptyWgap() {

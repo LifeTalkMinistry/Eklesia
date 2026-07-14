@@ -1,8 +1,8 @@
 import { mockEcosystems } from '../data/mockEcosystems.js';
 
-// Replace this local prototype adapter with a real API client when Eklesia adds
+// Replace this local prototype adapter with a real API client when Ekklesia Pulse adds
 // accounts, memberships, rotating codes, plan limits, permissions, and synchronization.
-const JOINED_ECOSYSTEM_STORAGE_KEY = 'eklesia.joinedEcosystemId';
+const JOINED_ECOSYSTEM_STORAGE_KEY = 'ekklesiaPulse.joinedEcosystemId';
 const VALIDATION_DELAY_MS = 550;
 const JOIN_DELAY_MS = 650;
 const LEAVE_DELAY_MS = 250;

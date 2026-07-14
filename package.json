@@ -1,8 +1,8 @@
 {
-  "name": "eklesia",
+  "name": "ekklesia-pulse",
   "version": "1.0.0",
   "private": true,
-  "description": "A devotional monitoring app for churches that tracks consistency while protecting private reflections.",
+  "description": "A devotional accountability ecosystem that helps members build their rhythm and strengthen the church.",
   "type": "module",
   "scripts": {
     "dev": "vite",
