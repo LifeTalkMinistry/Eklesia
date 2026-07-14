@@ -72,9 +72,6 @@ function JourneyReview({ entry, onBack }) {
   return (
     <section className="panel-page journey-review-page">
       <button className="journey-back-button" type="button" onClick={onBack}>← Devotion history</button>
-      <p className="dashboard-eyebrow">{entry.type === 'additional' ? 'Additional devotion' : 'Daily devotion'}</p>
-      <h2>{entry.reference}</h2>
-      <p className="panel-intro">{formatArchiveEntryDate(entry.dateKey, entry.completedAt, { includeYear: true })} · {formatCompletionTime(entry.completedAt)}</p>
 
       <article className="history-review-card history-word-card">
         <div className="history-review-heading"><span>W</span><strong>Word of God</strong></div>
