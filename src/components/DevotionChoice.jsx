@@ -1,3 +1,5 @@
+import NotebookDevotionOption from './NotebookDevotionOption.jsx';
+
 export default function DevotionChoice({
   dailyVerse,
   loading,
@@ -5,6 +7,7 @@ export default function DevotionChoice({
   onBack,
   onUseSuggested,
   onChooseVerse,
+  onCaptureNotebook,
 }) {
   return (
     <main className="devotion-shell">
@@ -53,6 +56,8 @@ export default function DevotionChoice({
                 Browse the Bible
               </button>
             </article>
+
+            <NotebookDevotionOption onPhotoSelected={onCaptureNotebook} />
           </div>
         </section>
       </div>

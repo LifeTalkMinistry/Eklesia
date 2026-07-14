@@ -4,6 +4,7 @@ import {
   resetAlphaNotice,
   resetOnboarding,
 } from './profileService.js';
+import { isNotebookImageStorageAvailable, deleteAllNotebookImages } from './notebookImageService.js';
 import {
   getBrowserStorage,
   isLocalStorageAvailable,
@@ -55,6 +56,8 @@ export function createSafeDiagnosticSummary({
     `Screen dimensions: ${screenWidth} × ${screenHeight}`,
     `Installed as standalone PWA: ${isStandalonePwa() ? 'Yes' : 'No'}`,
     `Local storage available: ${isLocalStorageAvailable() ? 'Yes' : 'No'}`,
+    'Notebook capture feature available: Yes',
+    `Notebook-image storage accessible: ${isNotebookImageStorageAvailable() ? 'Yes' : 'No'}`,
     '',
     'What happened or what would you improve?',
     String(feedback || '').trim(),
@@ -76,39 +79,50 @@ export function restartIntroductionState() {
   };
 }
 
-export function deleteAllEkklesiaPulseLocalData() {
+export async function deleteAllEkklesiaPulseLocalData() {
   const storage = getBrowserStorage();
   const failedKeys = [];
   const removedKeys = [];
 
-  if (!storage) {
-    return {
-      ok: false,
-      removedKeys,
-      failedKeys: ['browser-storage-unavailable'],
-      message: 'Some local data could not be removed because this browser is blocking storage access. Please try again after allowing site storage.',
-    };
+  if (storage) {
+    getOwnedStorageKeys().forEach((key) => {
+      try {
+        storage.removeItem(key);
+        if (storage.getItem(key) === null) removedKeys.push(key);
+        else failedKeys.push(key);
+      } catch (error) {
+        console.warn(`Ekklesia Pulse could not remove ${key}.`, error);
+        failedKeys.push(key);
+      }
+    });
+  } else {
+    failedKeys.push('browser-storage-unavailable');
   }
 
-  getOwnedStorageKeys().forEach((key) => {
-    try {
-      storage.removeItem(key);
-      if (storage.getItem(key) === null) removedKeys.push(key);
-      else failedKeys.push(key);
-    } catch (error) {
-      console.warn(`Ekklesia Pulse could not remove ${key}.`, error);
-      failedKeys.push(key);
-    }
-  });
+  const localStorageCleared = failedKeys.length === 0;
+  if (localStorageCleared) clearLocalProfile({ removeStorage: false });
 
-  if (failedKeys.length === 0) clearLocalProfile({ removeStorage: false });
+  const notebookCleanup = await deleteAllNotebookImages();
+  const notebookImagesCleared = notebookCleanup.ok;
+  const ok = localStorageCleared && notebookImagesCleared;
+
+  let message = 'Local Ekklesia Pulse data was removed from this device.';
+  if (localStorageCleared && !notebookImagesCleared) {
+    message = 'Your profile and devotion records were removed, but some notebook-image data may still remain in this browser. Please try again.';
+  } else if (!localStorageCleared && notebookImagesCleared) {
+    message = 'Notebook photos were removed, but some profile or devotion records could not be removed. Please try again.';
+  } else if (!ok) {
+    message = 'Some local data could not be removed because this browser is blocking storage access. Please try again after allowing site storage.';
+  }
 
   return {
-    ok: failedKeys.length === 0,
+    ok,
+    localDataRemoved: localStorageCleared,
+    localStorageCleared,
+    notebookImagesCleared,
+    notebookCleanupError: notebookCleanup.ok ? null : notebookCleanup.error,
     removedKeys,
     failedKeys,
-    message: failedKeys.length
-      ? 'Some local data could not be removed. Please try again.'
-      : 'Local Ekklesia Pulse data was removed from this device.',
+    message,
   };
 }

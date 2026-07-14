@@ -43,8 +43,9 @@ export default function TodayDevotionCard({
     }
   }
 
-  if (dailyVerse && completed) {
-    const reference = officialDevotion?.reference || dailyVerse.reference;
+  if (completed) {
+    const isNotebook = officialDevotion?.devotionFormat === 'notebook';
+    const reference = officialDevotion?.reference || dailyVerse?.reference || '';
     return (
       <section className="today-card today-card-complete" aria-label="Today’s devotion is complete">
         <div className="completion-status-row">
@@ -53,8 +54,9 @@ export default function TodayDevotionCard({
         </div>
 
         <div className="completion-copy">
-          <p className="verse-reference">{reference} · BSB</p>
+          {!isNotebook && reference ? <p className="verse-reference">{reference} · BSB</p> : null}
           <h3>Devotion complete</h3>
+          {isNotebook ? <p className="notebook-home-completion-copy">Your notebook devotion is saved in Journey.</p> : null}
         </div>
 
         <div className="additional-devotion-actions">

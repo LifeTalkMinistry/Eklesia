@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { shareOrDownloadElementImage } from '../lib/exportElementImage.js';
+import NotebookJourneyReview from './NotebookJourneyReview.jsx';
 import {
   formatArchiveEntryDate,
   formatCompletionTime,
@@ -182,7 +183,7 @@ function JourneyReview({ entry, onBack }) {
   );
 }
 
-export default function Journey({ history, selectedEntryId, onSelectEntry, onCloseEntry }) {
+export default function Journey({ history, selectedEntryId, onSelectEntry, onCloseEntry, onEntryUpdated }) {
   const safeHistory = Array.isArray(history) ? history : [];
   const dateGroups = useMemo(() => groupDevotionsByDate(safeHistory), [safeHistory]);
   const archiveYears = useMemo(() => createArchiveHierarchy(dateGroups), [dateGroups]);
@@ -201,6 +202,9 @@ export default function Journey({ history, selectedEntryId, onSelectEntry, onClo
     setOpenDay((current) => current || latestDateKey);
   }, [latestDateKey, latestMonthKey, latestYearKey]);
 
+  if (selectedEntry?.devotionFormat === 'notebook') {
+    return <NotebookJourneyReview entry={selectedEntry} onBack={onCloseEntry} onEntryUpdated={onEntryUpdated} />;
+  }
   if (selectedEntry) return <JourneyReview entry={selectedEntry} onBack={onCloseEntry} />;
 
   function toggleYear(year) {
@@ -306,8 +310,14 @@ export default function Journey({ history, selectedEntryId, onSelectEntry, onClo
                                       onClick={() => onSelectEntry(entry.id)}
                                     >
                                       <span className="archive-entry-copy">
-                                        <small>{entry.type === 'additional' ? 'Additional devotion' : 'Daily devotion'}</small>
-                                        <strong className="archive-entry-reference">{entry.reference}</strong>
+                                        <small>{entry.devotionFormat === 'notebook'
+                                          ? 'Notebook devotion'
+                                          : entry.type === 'additional' ? 'Additional devotion' : 'Daily devotion'}</small>
+                                        <strong className="archive-entry-reference">
+                                          {entry.devotionFormat === 'notebook'
+                                            ? entry.reference || 'Handwritten reflection'
+                                            : entry.reference}
+                                        </strong>
                                         <span className="archive-entry-time">Completed at {formatCompletionTime(entry.completedAt)}</span>
                                       </span>
                                       <span className="history-arrow" aria-hidden="true">→</span>

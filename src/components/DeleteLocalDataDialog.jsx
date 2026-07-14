@@ -6,6 +6,7 @@ const DELETED_ITEMS = [
   'Devotion history',
   'WGAP reflections',
   'Journey entries',
+  'Notebook photos',
   'Bible reading position',
   'Joined demo-circle state',
   'Alpha acknowledgement',
@@ -15,20 +16,24 @@ const DELETED_ITEMS = [
 export default function DeleteLocalDataDialog({ open, onClose, onDelete, triggerRef }) {
   const [confirmation, setConfirmation] = useState('');
   const [message, setMessage] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const cancelRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
     setConfirmation('');
     setMessage('');
+    setDeleting(false);
   }, [open]);
 
-  function confirmDelete() {
-    if (confirmation !== 'DELETE') return;
-    const result = onDelete();
+  async function confirmDelete() {
+    if (confirmation !== 'DELETE' || deleting) return;
+    setDeleting(true);
+    const result = await onDelete();
     if (!result?.ok) {
       setMessage(result?.message || 'Some local data could not be removed. Please try again.');
     }
+    setDeleting(false);
   }
 
   return (
@@ -56,6 +61,7 @@ export default function DeleteLocalDataDialog({ open, onClose, onDelete, trigger
           type="text"
           autoComplete="off"
           value={confirmation}
+          disabled={deleting}
           onChange={(event) => {
             setConfirmation(event.target.value);
             setMessage('');
@@ -64,8 +70,8 @@ export default function DeleteLocalDataDialog({ open, onClose, onDelete, trigger
       </div>
       {message ? <p className="alpha-inline-message" role="alert">{message}</p> : null}
       <div className="alpha-dialog-actions">
-        <button ref={cancelRef} className="secondary-button" type="button" onClick={onClose}>Cancel</button>
-        <button className="alpha-danger-button" type="button" onClick={confirmDelete} disabled={confirmation !== 'DELETE'}>Delete local data</button>
+        <button ref={cancelRef} className="secondary-button" type="button" onClick={onClose} disabled={deleting}>Cancel</button>
+        <button className="alpha-danger-button" type="button" onClick={confirmDelete} disabled={confirmation !== 'DELETE' || deleting}>{deleting ? 'Deleting local data…' : 'Delete local data'}</button>
       </div>
     </AccessibleDialog>
   );
