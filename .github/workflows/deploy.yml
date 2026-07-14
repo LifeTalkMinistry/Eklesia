@@ -36,10 +36,25 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Update branded deterministic namespaces
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          target = Path('src/lib/dailyVerse.js')
+          content = target.read_text()
+          content = content.replace('eklesia-daily-verse', 'ekklesia-pulse-daily-verse')
+          content = content.replace('eklesia-additional', 'ekklesia-pulse-additional')
+          target.write_text(content)
+          PY
+
       - name: Apply and validate controlled branding changes
         id: apply_migration
         continue-on-error: true
-        run: node scripts/apply-brand-migration.mjs 2>&1 | tee migration-output.log
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/apply-brand-migration.mjs 2>&1 | tee migration-output.log
 
       - name: Upload migration diagnostics
         if: always()
@@ -146,6 +161,7 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
+          git add -N src/services/brandMigration.js
           git diff --name-status "$BASE_SHA" > migration-changed-files.txt
           awk '$1 != "D" { print $NF }' migration-changed-files.txt > migration-existing-files.txt
           tar -czf validated-migration.tar.gz -T migration-existing-files.txt
