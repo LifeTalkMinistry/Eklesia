@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { shareOrDownloadElementImage } from '../lib/exportElementImage.js';
 import {
   formatArchiveEntryDate,
   formatCompletionTime,
@@ -68,23 +69,115 @@ function createArchiveHierarchy(dateGroups) {
   return years.map(({ monthLookup, ...year }) => year);
 }
 
+function createDevotionImageFilename(entry) {
+  const referenceSlug = String(entry?.reference || 'devotion')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48);
+  return `ekklesia-pulse-${referenceSlug || 'devotion'}-${entry?.dateKey || 'reflection'}.png`;
+}
+
 function JourneyReview({ entry, onBack }) {
+  const imageAreaRef = useRef(null);
+  const [isPreparingImage, setIsPreparingImage] = useState(false);
+  const [shareMessage, setShareMessage] = useState('');
+  const [shareError, setShareError] = useState(false);
+
+  async function shareDevotionImage() {
+    if (!imageAreaRef.current || isPreparingImage) return;
+
+    setIsPreparingImage(true);
+    setShareMessage('Preparing your devotion image…');
+    setShareError(false);
+
+    try {
+      const result = await shareOrDownloadElementImage(imageAreaRef.current, {
+        filename: createDevotionImageFilename(entry),
+        title: `${entry.reference} · Ekklesia Pulse`,
+        text: 'A reflection from my time in the Word.',
+        backgroundColor: '#0b1711',
+        padding: 24,
+      });
+
+      if (result === 'shared') setShareMessage('Your devotion image was shared.');
+      else if (result === 'downloaded') setShareMessage('Your devotion image was downloaded.');
+      else setShareMessage('');
+    } catch (error) {
+      console.error('The devotion image could not be prepared', error);
+      setShareError(true);
+      setShareMessage('The devotion image could not be created on this browser. Please try again.');
+    } finally {
+      setIsPreparingImage(false);
+    }
+  }
+
   return (
     <section className="panel-page journey-review-page">
-      <button className="journey-back-button" type="button" onClick={onBack}>← Devotion history</button>
+      <div className="journey-review-toolbar">
+        <button className="journey-back-button" type="button" onClick={onBack}>← Devotion history</button>
+        <button
+          className="journey-share-button"
+          type="button"
+          onClick={shareDevotionImage}
+          disabled={isPreparingImage}
+          aria-label="Share this devotion as an image"
+        >
+          <span aria-hidden="true">⇩</span>
+          <span>{isPreparingImage ? 'Preparing…' : 'Share image'}</span>
+        </button>
+      </div>
 
-      <article className="history-review-card history-word-card">
-        <div className="history-review-heading"><span>W</span><strong>Word of God</strong></div>
-        <p className="history-reference">{entry.reference} · BSB</p>
-        <blockquote>“{entry.scriptureText}”</blockquote>
-      </article>
+      {shareMessage && (
+        <p className={`journey-share-status ${shareError ? 'is-error' : ''}`} role={shareError ? 'alert' : 'status'}>
+          {shareMessage}
+        </p>
+      )}
 
-      {REVIEW_FIELDS.map(([letter, label, key]) => entry.wgap?.[key] ? (
-        <article className="history-review-card" key={key}>
-          <div className="history-review-heading"><span>{letter}</span><strong>{label}</strong></div>
-          <p className="history-entry-text">{entry.wgap[key]}</p>
+      <div className="journey-share-canvas" ref={imageAreaRef}>
+        <header
+          className="journey-image-heading"
+          data-image-export-only
+          data-image-export-display="flex"
+          aria-hidden="true"
+        >
+          <div className="journey-image-brand">
+            <span>E</span>
+            <div>
+              <strong>Ekklesia Pulse</strong>
+              <small>My WGAP devotion</small>
+            </div>
+          </div>
+          <p>
+            {formatArchiveEntryDate(entry.dateKey, entry.completedAt, { includeYear: true })}
+            <span> · </span>
+            {entry.type === 'additional' ? 'Additional devotion' : 'Daily devotion'}
+          </p>
+        </header>
+
+        <article className="history-review-card history-word-card">
+          <div className="history-review-heading"><span>W</span><strong>Word of God</strong></div>
+          <p className="history-reference">{entry.reference} · BSB</p>
+          <blockquote>“{entry.scriptureText}”</blockquote>
         </article>
-      ) : null)}
+
+        {REVIEW_FIELDS.map(([letter, label, key]) => entry.wgap?.[key] ? (
+          <article className="history-review-card" key={key}>
+            <div className="history-review-heading"><span>{letter}</span><strong>{label}</strong></div>
+            <p className="history-entry-text">{entry.wgap[key]}</p>
+          </article>
+        ) : null)}
+
+        <footer
+          className="journey-image-footer"
+          data-image-export-only
+          data-image-export-display="flex"
+          aria-hidden="true"
+        >
+          <span>Build your rhythm.</span>
+          <strong>Strengthen the church.</strong>
+        </footer>
+      </div>
     </section>
   );
 }
