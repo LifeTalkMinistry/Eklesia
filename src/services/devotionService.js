@@ -291,7 +291,16 @@ export function getRecentlyCompletedReferences(days = 30, referenceDate = new Da
 
 export function getLastBibleLocation() {
   if (typeof window === 'undefined') return null;
-  const location = safeParse(window.localStorage.getItem(LAST_BIBLE_LOCATION_KEY), null);
+
+  let storedLocation = null;
+  try {
+    storedLocation = window.localStorage.getItem(LAST_BIBLE_LOCATION_KEY);
+  } catch (error) {
+    console.warn('Ekklesia Pulse could not read the Bible position from this device.', error);
+    return null;
+  }
+
+  const location = safeParse(storedLocation, null);
   if (!location || typeof location !== 'object' || !location.bookSlug || !location.chapter) return null;
   return {
     bookSlug: location.bookSlug,
@@ -302,14 +311,24 @@ export function getLastBibleLocation() {
 }
 
 export function saveLastBibleLocation(location) {
-  if (typeof window === 'undefined' || !location?.bookSlug || !location?.chapter) return;
+  if (typeof window === 'undefined' || !location?.bookSlug || !location?.chapter) {
+    return { ok: false, persisted: false };
+  }
+
   const normalized = {
     bookSlug: location.bookSlug,
     bookName: location.bookName || location.bookSlug,
     chapter: Number(location.chapter) || 1,
     verse: Number(location.verse) || 1,
   };
-  window.localStorage.setItem(LAST_BIBLE_LOCATION_KEY, JSON.stringify(normalized));
+
+  try {
+    window.localStorage.setItem(LAST_BIBLE_LOCATION_KEY, JSON.stringify(normalized));
+    return { ok: true, persisted: true };
+  } catch (error) {
+    console.warn('Ekklesia Pulse could not save the Bible position on this device.', error);
+    return { ok: false, persisted: false };
+  }
 }
 
 export function formatArchiveEntryDate(dateKey, _completedAt, { includeYear = false } = {}) {
