@@ -20,7 +20,6 @@ export default function TodayDevotionCard({
         <div className="completion-copy">
           <p className="verse-reference">{reference} · BSB</p>
           <h3>Devotion complete</h3>
-          <p>Your WGAP for today is saved in Journey.</p>
         </div>
 
         <div className="additional-devotion-actions">
@@ -31,7 +30,6 @@ export default function TodayDevotionCard({
           <button className="secondary-button spend-more-button" type="button" onClick={onSpendMore}>
             Spend more time in the Word
           </button>
-          <p className="completion-support">Your daily rhythm is complete. You may continue spending time in Scripture without pressure.</p>
         </div>
       </section>
     );
