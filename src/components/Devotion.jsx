@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getBibleVerse } from '../lib/bible.js';
+import VerseContextSheet from './VerseContextSheet.jsx';
 
 const WGAP_FIELDS = [
   {
@@ -42,6 +43,9 @@ export default function Devotion({
   const [message, setMessage] = useState('');
   const [reviewVerseText, setReviewVerseText] = useState('');
   const [reviewVerseError, setReviewVerseError] = useState('');
+  const [contextOpen, setContextOpen] = useState(false);
+  const contextTriggerRef = useRef(null);
+  const closeVerseContext = useCallback(() => setContextOpen(false), []);
 
   const isAdditional = devotion?.flowType === 'additional' || completionType === 'additional';
   const devotionLabel = isAdditional ? 'Additional devotion' : 'Today’s devotion';
@@ -49,6 +53,10 @@ export default function Devotion({
   const verseEnd = devotion?.verseEnd ?? devotion?.endVerse ?? verseStart;
   const isSelectedPassage = Boolean(verseStart && verseEnd > verseStart);
   const shouldCompactCompletedPassage = Boolean(completed && isSelectedPassage);
+
+  useEffect(() => {
+    setContextOpen(false);
+  }, [devotion?.reference]);
 
   useEffect(() => {
     let cancelled = false;
@@ -129,7 +137,17 @@ export default function Devotion({
             <p className="status-message" role="status">Loading the starting verse…</p>
           ) : null}
           {reviewVerseError && <p className="status-message error-message" role="alert">{reviewVerseError}</p>}
-          <button className="secondary-button" type="button" onClick={onReadChapter}>{passageButtonLabel}</button>
+          <div className="scripture-card-actions">
+            <button className="secondary-button" type="button" onClick={onReadChapter}>{passageButtonLabel}</button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => setContextOpen(true)}
+              ref={contextTriggerRef}
+            >
+              Understand context
+            </button>
+          </div>
         </article>
 
         <form className="wgap-form" onSubmit={submitDevotion}>
@@ -174,6 +192,13 @@ export default function Devotion({
           )}
         </form>
       </div>
+
+      <VerseContextSheet
+        open={contextOpen}
+        onClose={closeVerseContext}
+        devotion={devotion}
+        triggerRef={contextTriggerRef}
+      />
     </main>
   );
 }
