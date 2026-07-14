@@ -1,4 +1,5 @@
 import { mockEcosystems } from '../data/mockEcosystems.js';
+import { getLocalProfile } from './profileService.js';
 
 // Replace this local prototype adapter with a real API client when Ekklesia Pulse adds
 // accounts, memberships, rotating codes, plan limits, permissions, and synchronization.
@@ -11,8 +12,19 @@ function wait(milliseconds) {
   return new Promise((resolve) => globalThis.setTimeout(resolve, milliseconds));
 }
 
+function getDeclaredOwnerName() {
+  const result = getLocalProfile();
+  return result.ok && result.data?.displayName
+    ? result.data.displayName
+    : 'Ekklesia Pulse member';
+}
+
 function copyEcosystem(ecosystem) {
-  return ecosystem ? JSON.parse(JSON.stringify(ecosystem)) : null;
+  if (!ecosystem) return null;
+  return {
+    ...JSON.parse(JSON.stringify(ecosystem)),
+    ownerName: getDeclaredOwnerName(),
+  };
 }
 
 function resultError(code, message) {
