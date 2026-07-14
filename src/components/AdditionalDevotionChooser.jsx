@@ -80,7 +80,7 @@ export default function AdditionalDevotionChooser({
           <article className="additional-choice-card">
             <span className="option-icon" aria-hidden="true">✦</span>
             <h3>Another suggested verse</h3>
-            <p>Receive another passage from the curated Eklesia verse collection.</p>
+            <p>Receive another passage from the curated Ekklesia Pulse verse collection.</p>
             {suggestionLoading && <p className="status-message" aria-live="polite">Preparing a Scripture suggestion…</p>}
             {suggestionError && <p className="form-message error-message" role="alert">{suggestionError}</p>}
             {suggestion && !suggestionLoading && (

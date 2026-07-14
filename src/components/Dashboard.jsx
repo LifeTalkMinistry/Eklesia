@@ -63,7 +63,7 @@ function HomeDashboard({
         <article className="stat-card"><span className="stat-icon" aria-hidden="true">✦</span><strong>{rhythm.savedCount}</strong><p>saved devotions</p></article>
         <article className="stat-card"><span className="stat-icon" aria-hidden="true">♡</span><strong>{rhythm.growthSignal}</strong><p>growth signal</p></article>
       </section>
-      <section className="encouragement-card"><span className="quote-mark" aria-hidden="true">“</span><p>Consistency is not about proving your faith. It is about making room to hear God again and again.</p><small>Eklesia reminder</small></section>
+      <section className="encouragement-card"><span className="quote-mark" aria-hidden="true">“</span><p>Consistency is not about proving your faith. It is about making room to hear God again and again.</p><small>Ekklesia Pulse reminder</small></section>
     </>
   );
 }
@@ -110,8 +110,8 @@ export default function Dashboard({
     <main className="dashboard-shell">
       <div className="dashboard-frame">
         <header className="dashboard-header">
-          <button className="brand-button" type="button" onClick={onExit} aria-label="Return to welcome screen"><span className="brand-mark">E</span><span>Eklesia</span></button>
-          <button className="notification-button why-eklesia-trigger" type="button" aria-label="Why Eklesia?" onClick={() => setShowWhyEklesia(true)} ref={whyEklesiaButtonRef}>
+          <button className="brand-button" type="button" onClick={onExit} aria-label="Return to welcome screen"><span className="brand-mark">E</span><span>Ekklesia Pulse</span></button>
+          <button className="notification-button why-eklesia-trigger" type="button" aria-label="Why Ekklesia Pulse?" onClick={() => setShowWhyEklesia(true)} ref={whyEklesiaButtonRef}>
             <span className="information-glyph" aria-hidden="true">i</span>
           </button>
         </header>

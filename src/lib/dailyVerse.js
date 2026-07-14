@@ -32,7 +32,7 @@ function seededRandom(seed) {
 
 function shuffledPool(cycle) {
   const items = dailyVersePool.slice();
-  const random = seededRandom(hashSeed(`eklesia-daily-verse:${cycle}`));
+  const random = seededRandom(hashSeed(`ekklesia-pulse-daily-verse:${cycle}`));
   for (let index = items.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(random() * (index + 1));
     [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
@@ -85,7 +85,7 @@ export function getAdditionalVerseSuggestion({
   if (!eligible.length) return null;
   const numericSeed = Number.parseInt(sessionSeed, 10);
   const offset = Number.isFinite(numericSeed) ? numericSeed : hashSeed(String(sessionSeed));
-  const index = (hashSeed(`eklesia-additional:${dateKey}`) + offset) % eligible.length;
+  const index = (hashSeed(`ekklesia-pulse-additional:${dateKey}`) + offset) % eligible.length;
   const selected = eligible[index];
   return {
     ...selected,

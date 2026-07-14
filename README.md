@@ -1,70 +1,66 @@
-# Eklesia
+# Ekklesia Pulse
 
-Eklesia is a devotional monitoring app for churches. It helps members build a consistent devotional life while allowing leaders to see healthy progress without reading private personal reflections.
+**Build your rhythm. Strengthen the church.**
 
-## Core Principle
+Ekklesia Pulse is a devotional accountability ecosystem that helps church members build a consistent rhythm through Scripture, private reflection, and healthy community care.
 
-**Track the habit. Protect the heart.**
+## Core Experience
 
-## Current Capabilities
-
-- Welcome screen and member dashboard
-- Private daily reflection flow
-- Built-in complete Berean Standard Bible (BSB)
-- Lazy-loaded Bible reader with Old and New Testament filters
-- Deterministic daily curated verse using the `Asia/Manila` calendar date
-- At least one curated reflection entry from every canonical Protestant Bible book
-- “Read full chapter” navigation with automatic verse highlighting
-- GitHub Pages-compatible static Bible data under `/Eklesia/`
-- Frontend accountability ecosystem code prototype
+- **Daily devotional rhythm:** One completed devotion per `Asia/Manila` calendar day completes the member’s official daily rhythm.
+- **Built-in Bible:** The complete Berean Standard Bible (BSB) is available with Old and New Testament filters, chapter navigation, and highlighted passages.
+- **Private reflections:** WGAP reflections, prayers, and journal content stay on the member’s current device unless the member chooses to share them elsewhere.
+- **Journey history:** Daily and additional devotions remain available in a private date-grouped archive.
+- **Accountability circles:** Members can use a prototype circle code to preview healthy accountability and encouragement flows.
+- **Church pulse overview:** The Together experience demonstrates privacy-safe activity signals that can help a church notice when encouragement may be useful.
+- **Privacy-first monitoring:** Circle views show healthy consistency signals without exposing Scripture selections, reflection text, personal prayers, or journal contents.
 
 ## Daily Rhythm and Additional Devotions
 
-One completed devotion within an `Asia/Manila` calendar day completes the member’s official daily rhythm. The first completion is saved as that date’s **Daily devotion**, marks one completed day in the weekly rhythm, and can increase the rhythm streak by only one day.
+The first completed devotion on a Manila calendar date is saved as that date’s **Daily devotion**. It marks one completed day in the weekly rhythm and can increase the rhythm streak only once for that date.
 
-After the daily rhythm is complete, members may complete unlimited **Additional devotions** through another curated suggestion, a passage selected from the built-in Bible, or the most recently opened Bible chapter. Additional devotions are saved privately in Journey and do not add another daily check mark, another streak day, or another accountability completion for the same date.
+After the daily rhythm is complete, members may complete unlimited **Additional devotions** through another curated suggestion, a passage selected from the built-in Bible, or the most recently opened Bible chapter. Additional devotions are saved privately in Journey and do not create another daily check mark, streak day, or accountability completion for the same date.
 
-The accountability circle does not receive additional-devotion totals, selected passages, private reflections, personal prayers, or journal contents. Current devotion persistence uses `localStorage` on the current device. Cross-device synchronization, real accounts, secure server persistence, and shared member activity require the future Eklesia backend and database.
-
-## Accountability Ecosystem Prototype
+## Accountability Circle Prototype
 
 Members can enter an ecosystem code, review the accountability circle and its privacy boundaries, and confirm joining before the circle overview appears. The current implementation uses local prototype data rather than live church records.
 
-Joined state is saved only on the current device through `localStorage`. Real member accounts, secure code validation, subscription enforcement, multi-user activity, and cross-device synchronization require the future Eklesia backend and database.
-
-The circle interface displays only healthy progress signals. Private reflections, personal prayers, journal entries, devotion passages, and additional-devotion totals are not displayed.
+Joined-circle state is stored only on the current device. The interface displays healthy progress signals while keeping private reflections, personal prayers, journal entries, devotion passages, and additional-devotion totals out of the circle view.
 
 Prototype code: `LIFETALK30`
 
-### Future backend requirements
+## Prototype Limitations
 
-A connected release will require ecosystem records, owner accounts, unique rotating codes, personal member accounts, ecosystem memberships, subscription-plan member limits, member activity signals, role-based permissions, secure server-side code validation, and cross-device synchronization.
+Ekklesia Pulse is currently a frontend prototype. A production-connected release still requires:
+
+- Real member and ecosystem-owner accounts
+- Secure server persistence and code validation
+- Rotating circle codes and subscription enforcement
+- Role-based permissions and member-capacity controls
+- Cross-device synchronization
+- Live multi-user activity and Church Pulse data
+
+Backend functionality and cross-device synchronization are **not yet implemented**.
+
+## GitHub Pages Deployment
+
+The repository has not been renamed because repository-renaming support is unavailable in the current integration. To preserve the existing deployment, the technical Vite and GitHub Pages base path remains `/Eklesia/`.
+
+- Repository: `LifeTalkMinistry/Eklesia`
+- Current site: `https://lifetalkministry.github.io/Eklesia/`
+
+The visible application identity is Ekklesia Pulse even while this temporary technical path remains unchanged.
 
 ## Bible Source
 
 The Bible text comes only from the official Berean Bible download. The BSB text has been dedicated to the public domain. Full source and conversion documentation is available in [`docs/BIBLE_SOURCE.md`](docs/BIBLE_SOURCE.md).
+
+No Scripture text is generated, paraphrased, or rewritten by the application.
 
 ## Local Development
 
 ```bash
 npm install
 npm run dev
-```
-
-## Bible Import
-
-The generated Bible JSON files are committed so deployment does not need to run the importer.
-
-Download and import the official BSB text:
-
-```bash
-npm run import:bible
-```
-
-Import a previously downloaded official source file:
-
-```bash
-node scripts/import-bsb.mjs /path/to/bsb.txt
 ```
 
 ## Bible Validation
@@ -85,4 +81,4 @@ The production command validates the Bible data before Vite builds the GitHub Pa
 
 ## Privacy
 
-Personal reflections remain private unless the member chooses to share them. Eklesia tracks devotional consistency without exposing the contents of a member’s journal.
+Personal reflections remain private on the current device unless the member chooses to share them. Ekklesia Pulse tracks devotional consistency without exposing the contents of a member’s journal.

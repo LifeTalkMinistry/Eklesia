@@ -8,12 +8,12 @@ import {
   shiftDateKey,
 } from '../lib/manilaTime.js';
 
-export const DEVOTIONS_STORAGE_KEY = 'eklesia.devotions';
-export const LAST_BIBLE_LOCATION_KEY = 'eklesia.lastBibleLocation';
-export const DEVOTION_DATA_VERSION_KEY = 'eklesia.devotionDataVersion';
+export const DEVOTIONS_STORAGE_KEY = 'ekklesiaPulse.devotions';
+export const LAST_BIBLE_LOCATION_KEY = 'ekklesiaPulse.lastBibleLocation';
+export const DEVOTION_DATA_VERSION_KEY = 'ekklesiaPulse.devotionDataVersion';
 export const DEVOTION_DATA_VERSION = 2;
 
-const LEGACY_HISTORY_KEY = 'eklesia-wgap-history-v1';
+const LEGACY_HISTORY_KEY = 'ekklesiaPulse-wgap-history-v1';
 const WEEKDAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const VALID_SOURCES = new Set(['daily-suggestion', 'additional-suggestion', 'bible-selection', 'continue-reading']);
 
@@ -22,7 +22,7 @@ function safeParse(raw, fallback) {
   try {
     return JSON.parse(raw);
   } catch (error) {
-    console.error('Eklesia local data could not be parsed', error);
+    console.error('Ekklesia Pulse local data could not be parsed', error);
     return fallback;
   }
 }

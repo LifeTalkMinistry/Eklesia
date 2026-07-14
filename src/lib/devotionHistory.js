@@ -1,6 +1,6 @@
 import { getManilaDateKey } from './dailyVerse.js';
 
-const STORAGE_KEY = 'eklesia-wgap-history-v1';
+const STORAGE_KEY = 'ekklesiaPulse-wgap-history-v1';
 const DAY_IN_MS = 86400000;
 const WEEKDAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const MANILA_TIME_ZONE = 'Asia/Manila';

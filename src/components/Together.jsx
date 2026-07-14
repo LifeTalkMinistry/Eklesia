@@ -305,7 +305,7 @@ export default function Together() {
               <p className="dashboard-eyebrow">Healthy progress signals</p>
               <h3 id="your-circle-heading">Your circle</h3>
             </div>
-            <p>Track the habit. Protect the heart.</p>
+            <p>Build your rhythm. Strengthen the church.</p>
           </div>
 
           <div className="together-member-grid">
@@ -352,7 +352,7 @@ export default function Together() {
                         ))}
                       </div>
                       {isPrepared ? (
-                        <p className="together-prototype-notice" role="status">Encouragement prepared for the future connected version of Eklesia. This prototype has not sent it to {member.name}.</p>
+                        <p className="together-prototype-notice" role="status">Encouragement prepared for the future connected version of Ekklesia Pulse. This prototype has not sent it to {member.name}.</p>
                       ) : null}
                     </section>
                   ) : null}

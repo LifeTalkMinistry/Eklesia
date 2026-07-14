@@ -77,14 +77,14 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
         <header className="why-eklesia-header">
           <div>
             <p className="why-eklesia-eyebrow">The heart behind the app</p>
-            <h2 id="why-eklesia-title">Why Eklesia?</h2>
+            <h2 id="why-eklesia-title">Why Ekklesia Pulse?</h2>
           </div>
           <button
             className="why-eklesia-close"
             type="button"
             onClick={onClose}
             ref={closeButtonRef}
-            aria-label="Close Why Eklesia?"
+            aria-label="Close Why Ekklesia Pulse?"
           >
             <span aria-hidden="true">×</span>
           </button>
@@ -92,13 +92,13 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
 
         <div className="why-eklesia-content">
           <p className="why-eklesia-intro" id="why-eklesia-intro">
-            Eklesia was created to help people build a consistent devotional life and help church communities recognize when someone may need encouragement.
+            Ekklesia Pulse was created to help people build a consistent devotional life and help church communities recognize when someone may need encouragement.
           </p>
 
           <section className="why-eklesia-section" aria-labelledby="why-eklesia-mission">
             <p className="why-eklesia-label">Our mission</p>
             <h3 id="why-eklesia-mission">Help people make room for God consistently.</h3>
-            <p>Eklesia helps church members develop a meaningful devotional rhythm through Scripture, reflection, and gentle accountability—without turning spiritual growth into pressure, competition, or performance.</p>
+            <p>Ekklesia Pulse helps church members develop a meaningful devotional rhythm through Scripture, reflection, and gentle accountability—without turning spiritual growth into pressure, competition, or performance.</p>
           </section>
 
           <section className="why-eklesia-section" aria-labelledby="why-eklesia-vision">
@@ -111,20 +111,20 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
             <p className="why-eklesia-label">A note from the creator</p>
             <h3 className="visually-hidden" id="why-eklesia-creator">Creator’s intent</h3>
             <div className="why-eklesia-note">
-              <p>I created Eklesia because spiritual growth should never feel like pressure.</p>
+              <p>I created Ekklesia Pulse because spiritual growth should never feel like pressure.</p>
               <p>Sometimes people do not need to be confronted. They need to be remembered, encouraged, and gently invited to begin again.</p>
-              <p>Eklesia helps leaders encourage consistently and helps members build a rhythm without feeling condemned.</p>
+              <p>Ekklesia Pulse helps leaders encourage consistently and helps members build a rhythm without feeling condemned.</p>
               <p>You are not being measured by your streak. The streak is only a reminder that you continue to make room for God.</p>
               <div className="why-eklesia-signature">
                 <strong>Max Emorej</strong>
-                <span>Creator of Eklesia</span>
+                <span>Creator of Ekklesia Pulse</span>
               </div>
             </div>
           </section>
 
           <aside className="why-eklesia-reminder" aria-label="Final reminder">
             <strong>Your relationship with God cannot be reduced to a score.</strong>
-            <p>Eklesia does not measure the depth of your faith. It simply helps you keep showing up, reflect honestly, and stay connected to a community that cares.</p>
+            <p>Ekklesia Pulse does not measure the depth of your faith. It simply helps you keep showing up, reflect honestly, and stay connected to a community that cares.</p>
           </aside>
 
           <button className="primary-button why-eklesia-continue" type="button" onClick={onClose}>
