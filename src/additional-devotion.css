@@ -1,7 +1,6 @@
 .additional-devotion-actions { position: relative; z-index: 1; display: grid; gap: 12px; margin-top: 26px; }
 .additional-devotion-actions .card-button { margin-top: 0; }
 .spend-more-button { width: 100%; min-height: 48px; }
-.completion-support { margin: 2px 0 0; color: rgba(244,245,239,.64); font-size: .9rem; line-height: 1.6; }
 
 .additional-devotion-overlay { position: fixed; inset: 0; z-index: 100; display: grid; align-items: end; padding: 14px; background: rgba(1,7,4,.76); backdrop-filter: blur(10px); }
 .additional-devotion-dialog { overflow: auto; width: min(100%, 940px); max-height: min(90vh, 820px); margin: 0 auto; padding: clamp(22px, 4vw, 34px); border: 1px solid rgba(255,255,255,.11); border-radius: 28px 28px 20px 20px; background: linear-gradient(160deg,#102019,#09140f); box-shadow: 0 30px 90px rgba(0,0,0,.55); }
