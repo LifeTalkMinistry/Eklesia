@@ -1,53 +1,152 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { MANILA_TIME_ZONE } from '../lib/manilaTime.js';
 import { getEcosystemMembers, getJoinedEcosystem } from '../services/ecosystemService.js';
 import './DailyCheckInPortal.css';
 
+const WEEKDAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const WEEKDAY_INDEX = {
+  Mon: 0,
+  Tue: 1,
+  Wed: 2,
+  Thu: 3,
+  Fri: 4,
+  Sat: 5,
+  Sun: 6,
+};
+
+function getTodayIndex() {
+  const weekday = new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    timeZone: MANILA_TIME_ZONE,
+  }).format(new Date());
+
+  return WEEKDAY_INDEX[weekday] ?? 0;
+}
+
+function getMemberWeek(member, todayIndex) {
+  if (Array.isArray(member.weeklyCheckIns)) {
+    return Array.from({ length: 7 }, (_, index) => Boolean(member.weeklyCheckIns[index]));
+  }
+
+  return Array.from(
+    { length: 7 },
+    (_, index) => index === todayIndex && Boolean(member.devotionCompletedWithin24Hours),
+  );
+}
+
+function getCurrentStreak(checkIns, todayIndex) {
+  let streak = 0;
+
+  for (let index = todayIndex; index >= 0; index -= 1) {
+    if (!checkIns[index]) break;
+    streak += 1;
+  }
+
+  return streak;
+}
+
+function prepareRankedMembers(members, todayIndex) {
+  const elapsedDays = todayIndex + 1;
+
+  return members
+    .map((member, originalIndex) => {
+      const checkIns = getMemberWeek(member, todayIndex);
+      const completedCount = checkIns.slice(0, elapsedDays).filter(Boolean).length;
+      const currentStreak = getCurrentStreak(checkIns, todayIndex);
+
+      return {
+        ...member,
+        checkIns,
+        completedCount,
+        currentStreak,
+        originalIndex,
+      };
+    })
+    .sort((first, second) => (
+      first.completedCount - second.completedCount
+      || first.currentStreak - second.currentStreak
+      || first.originalIndex - second.originalIndex
+    ));
+}
+
+function getRhythmLabel(member, elapsedDays) {
+  if (member.completedCount === elapsedDays) return 'Perfect rhythm so far';
+  if (member.completedCount === 0) return 'No completed day yet';
+  if (member.currentStreak === 1) return '1-day streak';
+  return `${member.currentStreak}-day streak`;
+}
+
 function DailyCheckIn({ members, loading, error }) {
+  const todayIndex = getTodayIndex();
+  const elapsedDays = todayIndex + 1;
   const checkedInCount = members.filter((member) => member.devotionCompletedWithin24Hours).length;
+  const rankedMembers = prepareRankedMembers(members, todayIndex);
 
   return (
     <section className="together-card daily-checkin-card" aria-labelledby="daily-checkin-heading">
       <div className="daily-checkin-heading">
         <div>
           <p className="dashboard-eyebrow">Daily accountability</p>
-          <h3 id="daily-checkin-heading">Today’s devotion check-in</h3>
+          <h3 id="daily-checkin-heading">This week</h3>
         </div>
         {!loading && !error ? (
-          <span className="daily-checkin-count" aria-label={`${checkedInCount} of ${members.length} displayed members checked in`}>
-            {checkedInCount} of {members.length}
+          <span className="daily-checkin-count" aria-label={`${checkedInCount} of ${members.length} displayed members checked in today`}>
+            {checkedInCount} of {members.length} today
           </span>
         ) : null}
       </div>
 
       <p className="daily-checkin-intro">
-        See who completed a devotion within the last 24 hours.
+        Members who may need attention appear first. Stronger and perfect rhythms appear lower in the list.
       </p>
 
       {loading ? (
-        <p className="daily-checkin-loading" role="status">Loading today’s check-ins…</p>
+        <p className="daily-checkin-loading" role="status">Loading this week’s rhythms…</p>
       ) : null}
 
       {error ? (
-        <p className="daily-checkin-error" role="alert">Today’s prototype check-ins could not be loaded.</p>
+        <p className="daily-checkin-error" role="alert">This week’s prototype rhythms could not be loaded.</p>
       ) : null}
 
       {!loading && !error ? (
-        <div className="daily-checkin-list" role="list" aria-label="Daily devotion check-in status">
-          {members.map((member) => {
-            const checkedIn = Boolean(member.devotionCompletedWithin24Hours);
+        <div className="daily-checkin-list" role="list" aria-label="Weekly devotion accountability ranking">
+          {rankedMembers.map((member, rankingIndex) => {
+            const perfect = member.completedCount === elapsedDays;
 
             return (
-              <article className={`daily-checkin-row ${checkedIn ? 'is-checked-in' : 'is-waiting'}`} key={member.id} role="listitem">
-                <span className="daily-checkin-avatar" aria-hidden="true">{member.name.charAt(0)}</span>
-                <div className="daily-checkin-member">
-                  <strong>{member.name}</strong>
-                  <small>{member.devotionCheckInLabel || (checkedIn ? 'Completed within the last 24 hours' : 'No check-in yet in this 24-hour window')}</small>
+              <article
+                className={`daily-rhythm-row ${perfect ? 'is-perfect' : ''}`}
+                key={member.id}
+                role="listitem"
+                aria-label={`${member.name}, rank ${rankingIndex + 1}, ${member.completedCount} of ${elapsedDays} elapsed days completed`}
+              >
+                <div className="daily-rhythm-member-line">
+                  <span className="daily-rhythm-rank" aria-hidden="true">{rankingIndex + 1}</span>
+                  <span className="daily-checkin-avatar" aria-hidden="true">{member.name.charAt(0)}</span>
+                  <div className="daily-checkin-member">
+                    <strong>{member.name}</strong>
+                    <small>{getRhythmLabel(member, elapsedDays)}</small>
+                  </div>
+                  <span className="daily-rhythm-score">{member.completedCount} of {elapsedDays}</span>
                 </div>
-                <span className="daily-checkin-status">
-                  <span aria-hidden="true">{checkedIn ? '✓' : '○'}</span>
-                  {checkedIn ? 'Checked in' : 'Not yet'}
-                </span>
+
+                <div className="daily-rhythm-week" aria-hidden="true">
+                  {WEEKDAY_LABELS.map((label, dayIndex) => {
+                    const future = dayIndex > todayIndex;
+                    const completed = !future && member.checkIns[dayIndex];
+                    const today = dayIndex === todayIndex;
+
+                    return (
+                      <div className="daily-rhythm-day" key={`${member.id}-${dayIndex}`}>
+                        <span className={`daily-rhythm-circle ${completed ? 'is-complete' : ''} ${today ? 'is-today' : ''} ${future ? 'is-future' : ''}`}>
+                          {completed ? '✓' : label}
+                        </span>
+                        <small>{label}</small>
+                      </div>
+                    );
+                  })}
+                </div>
               </article>
             );
           })}
@@ -55,7 +154,7 @@ function DailyCheckIn({ members, loading, error }) {
       ) : null}
 
       <p className="daily-checkin-principle">
-        No rankings and no scores. This is simply a clear daily accountability signal.
+        Ordered from the lowest weekly completion count to the strongest rhythm. Prototype data only.
       </p>
     </section>
   );
