@@ -33,7 +33,10 @@ jobs:
         with:
           node-version: 20
 
-      - name: Apply controlled branding changes
+      - name: Install dependencies
+        run: npm install
+
+      - name: Apply and validate controlled branding changes
         id: apply_migration
         continue-on-error: true
         run: node scripts/apply-brand-migration.mjs 2>&1 | tee migration-output.log
@@ -48,12 +51,6 @@ jobs:
       - name: Stop after migration failure
         if: steps.apply_migration.outcome == 'failure'
         run: exit 1
-
-      - name: Install dependencies and refresh lock metadata
-        run: npm install
-
-      - name: Validate repository-wide branding
-        run: node scripts/apply-brand-migration.mjs --check
 
       - name: Validate Bible data
         run: npm run validate:bible
@@ -139,8 +136,8 @@ jobs:
           Path('.github/workflows/deploy.yml').write_text('\n'.join(line[10:] if line.startswith('          ') else line for line in workflow.splitlines()) + '\n')
           PY
 
-      - name: Remove one-time migration automation
-        run: rm scripts/apply-brand-migration.mjs .github/workflows/brand-migration.yml
+      - name: Remove one-time migration automation and diagnostics
+        run: rm scripts/apply-brand-migration.mjs .github/workflows/brand-migration.yml migration-output.log
 
       - name: Commit validated migration
         run: |
