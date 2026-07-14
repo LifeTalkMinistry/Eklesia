@@ -96,7 +96,6 @@ export default function TodayDevotionCard({
           <div className="today-card-topline">
             <span className="soft-badge">Today&apos;s devotion</span>
             <div className="daily-suggestion-tools">
-              <span className="reading-time">5 min read</span>
               <button
                 className={`daily-suggestion-refresh ${refreshing ? 'is-refreshing' : ''}`}
                 type="button"
