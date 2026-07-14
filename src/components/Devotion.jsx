@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getBibleVerse } from '../lib/bible.js';
 
 const WGAP_FIELDS = [
   {
@@ -39,6 +40,43 @@ export default function Devotion({
   onReadChapter,
 }) {
   const [message, setMessage] = useState('');
+  const [reviewVerseText, setReviewVerseText] = useState('');
+  const [reviewVerseError, setReviewVerseError] = useState('');
+
+  const isAdditional = devotion?.flowType === 'additional' || completionType === 'additional';
+  const devotionLabel = isAdditional ? 'Additional devotion' : 'Today’s devotion';
+  const verseStart = devotion?.verseStart ?? devotion?.startVerse ?? devotion?.verse;
+  const verseEnd = devotion?.verseEnd ?? devotion?.endVerse ?? verseStart;
+  const isSelectedPassage = Boolean(verseStart && verseEnd > verseStart);
+  const shouldCompactCompletedPassage = Boolean(completed && isSelectedPassage);
+
+  useEffect(() => {
+    let cancelled = false;
+    setReviewVerseText('');
+    setReviewVerseError('');
+
+    if (
+      !shouldCompactCompletedPassage
+      || !devotion?.bookSlug
+      || !devotion?.chapter
+      || !verseStart
+    ) {
+      return () => { cancelled = true; };
+    }
+
+    getBibleVerse(devotion.bookSlug, devotion.chapter, verseStart)
+      .then(({ verse }) => {
+        if (!cancelled) setReviewVerseText(verse.text);
+      })
+      .catch((error) => {
+        console.error('Completed devotion verse preview could not be loaded', error);
+        if (!cancelled) {
+          setReviewVerseError('The verse preview could not be loaded here. Open the highlighted passage below.');
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, [shouldCompactCompletedPassage, devotion?.bookSlug, devotion?.chapter, verseStart]);
 
   function updateField(field, value) {
     setWgap((current) => ({ ...current, [field]: value }));
@@ -60,12 +98,13 @@ export default function Devotion({
     return <main className="devotion-shell"><div className="devotion-frame"><header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>Personal devotion</p><strong>Scripture unavailable</strong></div></header><p className="page-error" role="alert">The selected Scripture could not be loaded. Please return and choose a verse again.</p></div></main>;
   }
 
-  const isAdditional = devotion.flowType === 'additional' || completionType === 'additional';
-  const devotionLabel = isAdditional ? 'Additional devotion' : 'Today’s devotion';
-  const verseStart = devotion.verseStart ?? devotion.startVerse ?? devotion.verse;
-  const verseEnd = devotion.verseEnd ?? devotion.endVerse ?? verseStart;
-  const isSelectedPassage = verseEnd > verseStart;
-  const scripturePreview = devotion.scriptureText || devotion.fullText || devotion.previewText || devotion.text;
+  const savedScriptureText = devotion.scriptureText || devotion.fullText || devotion.previewText || devotion.text;
+  const scripturePreview = shouldCompactCompletedPassage
+    ? reviewVerseText || devotion.previewText || ''
+    : savedScriptureText;
+  const passageButtonLabel = shouldCompactCompletedPassage
+    ? 'View highlighted verses'
+    : isSelectedPassage ? 'Read selected passage' : 'Read full chapter';
 
   return (
     <main className="devotion-shell">
@@ -84,11 +123,16 @@ export default function Devotion({
               <p className="dashboard-eyebrow">{devotion.reference} · BSB</p>
             </div>
           </div>
-          <blockquote>“{scripturePreview}”</blockquote>
+          {scripturePreview ? (
+            <blockquote>“{scripturePreview}”</blockquote>
+          ) : shouldCompactCompletedPassage && !reviewVerseError ? (
+            <p className="status-message" role="status">Loading the starting verse…</p>
+          ) : null}
+          {reviewVerseError && <p className="status-message error-message" role="alert">{reviewVerseError}</p>}
           {devotion.title && <h2 className="devotion-passage-title">{devotion.title}</h2>}
           {devotion.theme && <p className="devotion-theme">{devotion.theme}</p>}
           {devotion.prompt && <p className="devotion-prompt">{devotion.prompt}</p>}
-          <button className="secondary-button" type="button" onClick={onReadChapter}>{isSelectedPassage ? 'Read selected passage' : 'Read full chapter'}</button>
+          <button className="secondary-button" type="button" onClick={onReadChapter}>{passageButtonLabel}</button>
         </article>
 
         <form className="wgap-form" onSubmit={submitDevotion}>
