@@ -31,6 +31,7 @@ export default function TodayDevotionCard({
   const dateKey = getManilaDateKey();
   const reminder = getDailyDevotionReminder(dateKey);
   const [revealed, setRevealed] = useState(() => wasRevealedToday(dateKey));
+  const verseText = dailyVerse?.scriptureText || dailyVerse?.text || '';
 
   function revealDevotion() {
     setRevealed(true);
@@ -116,8 +117,7 @@ export default function TodayDevotionCard({
           {dailyVerse && (
             <>
               <p className="verse-reference">{dailyVerse.reference} · BSB</p>
-              <h3>{dailyVerse.title}</h3>
-              <p>{dailyVerse.theme} — {dailyVerse.prompt}</p>
+              {verseText && <blockquote className="daily-verse-preview">“{verseText}”</blockquote>}
               <button className="card-button" type="button" onClick={onStart} tabIndex={revealed ? 0 : -1}>
                 Choose today’s devotion
                 <span aria-hidden="true">→</span>
