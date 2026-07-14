@@ -6,7 +6,8 @@ function copyComputedStyles(source, clone) {
   if (!(source instanceof Element) || !(clone instanceof Element)) return;
 
   const computed = window.getComputedStyle(source);
-  for (const property of computed) {
+  for (let index = 0; index < computed.length; index += 1) {
+    const property = computed.item(index);
     clone.style.setProperty(
       property,
       computed.getPropertyValue(property),
@@ -166,6 +167,18 @@ function downloadBlob(blob, filename) {
   window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
 
+function browserCanShareFile(file) {
+  if (!file || typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') {
+    return false;
+  }
+
+  try {
+    return navigator.canShare({ files: [file] });
+  } catch {
+    return false;
+  }
+}
+
 export async function shareOrDownloadElementImage(element, options = {}) {
   const filename = options.filename || 'ekklesia-pulse-devotion.png';
   const blob = await renderElementAsPng(element, options);
@@ -173,12 +186,7 @@ export async function shareOrDownloadElementImage(element, options = {}) {
     ? new File([blob], filename, { type: 'image/png' })
     : null;
 
-  if (
-    file
-    && typeof navigator.share === 'function'
-    && typeof navigator.canShare === 'function'
-    && navigator.canShare({ files: [file] })
-  ) {
+  if (browserCanShareFile(file)) {
     try {
       await navigator.share({
         files: [file],
