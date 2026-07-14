@@ -10,6 +10,7 @@ import './journey-history.css';
 import './devotion-complete.css';
 import './rhythm-sync.css';
 import './additional-devotion.css';
+import './devotion-flip.css';
 
 runBrandMigration();
 
