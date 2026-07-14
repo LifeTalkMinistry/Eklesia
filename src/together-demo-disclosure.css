@@ -1,0 +1,97 @@
+.together-alpha-notice {
+  overflow: hidden;
+  margin-bottom: 18px;
+  padding: 0;
+  border: 1px solid rgba(232, 217, 170, 0.2);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(232, 217, 170, 0.075), rgba(104, 169, 123, 0.045));
+}
+
+.together-alpha-disclosure {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 14px;
+  color: #fffdf5;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.together-alpha-disclosure-label {
+  color: rgba(244, 245, 239, 0.62);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.together-alpha-disclosure-icon {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  color: #eadfb8;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.together-alpha-disclosure:focus-visible {
+  outline: 3px solid rgba(232, 217, 170, 0.65);
+  outline-offset: -3px;
+}
+
+.together-alpha-notice-details {
+  padding: 0 15px 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.together-alpha-notice-details strong {
+  display: block;
+  margin-top: 14px;
+  color: #fffdf5;
+  line-height: 1.4;
+}
+
+.together-alpha-notice-details p {
+  margin: 8px 0 0;
+  color: rgba(244, 245, 239, 0.62);
+  font-size: 0.84rem;
+  line-height: 1.65;
+}
+
+/* Keep one clear demo disclosure at the top instead of repeating labels throughout Together. */
+.together-prototype-label,
+.together-connected-badge {
+  display: none !important;
+}
+
+.together-member-card {
+  padding-top: 20px !important;
+}
+
+.together-member-card::before {
+  display: none !important;
+  content: none !important;
+}
+
+@media (max-width: 480px) {
+  .together-alpha-disclosure {
+    gap: 9px;
+    padding: 12px;
+  }
+
+  .together-alpha-disclosure-label {
+    font-size: 0.72rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .together-alpha-disclosure,
+  .together-alpha-disclosure-icon {
+    transition: none !important;
+  }
+}
