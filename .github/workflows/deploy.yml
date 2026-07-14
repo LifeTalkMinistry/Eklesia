@@ -1,62 +1,138 @@
-name: Deploy Eklesia to GitHub Pages
+name: Apply Ekklesia Pulse Migration and Validate
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 concurrency:
-  group: github-pages
+  group: ekklesia-pulse-migration-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
 jobs:
-  build:
+  migrate-and-validate:
+    if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository
+      - name: Check out migration branch
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies
+      - name: Apply controlled branding changes
+        run: node scripts/apply-brand-migration.mjs
+
+      - name: Install dependencies and refresh lock metadata
         run: npm install
 
-      - name: Build Eklesia
+      - name: Validate repository-wide branding
+        run: node scripts/apply-brand-migration.mjs --check
+
+      - name: Validate Bible data
+        run: npm run validate:bible
+
+      - name: Build GitHub Pages production bundle
         run: npm run build -- --base=/Eklesia/
 
-      - name: Configure GitHub Pages
-        if: github.event_name != 'pull_request'
-        uses: actions/configure-pages@v5
+      - name: Confirm Bible source data is unchanged
+        run: git diff --exit-code -- src/data/bible
 
-      - name: Upload website files
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
+      - name: Check patch formatting
+        run: git diff --check
 
-  deploy:
-    if: github.event_name != 'pull_request'
-    needs: build
-    runs-on: ubuntu-latest
+      - name: Restore permanent deployment workflow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+          marker = '$' + '{{ steps.deployment.outputs.page_url }}'
+          workflow = f'''name: Deploy Ekklesia Pulse to GitHub Pages
 
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          on:
+            push:
+              branches:
+                - main
+            pull_request:
+              branches:
+                - main
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+            pages: write
+            id-token: write
+
+          concurrency:
+            group: github-pages
+            cancel-in-progress: false
+
+          jobs:
+            build:
+              runs-on: ubuntu-latest
+
+              steps:
+                - name: Check out repository
+                  uses: actions/checkout@v4
+
+                - name: Set up Node.js
+                  uses: actions/setup-node@v4
+                  with:
+                    node-version: 20
+
+                - name: Install dependencies
+                  run: npm install
+
+                - name: Build Ekklesia Pulse
+                  run: npm run build -- --base=/Eklesia/
+
+                - name: Configure GitHub Pages
+                  if: github.event_name != 'pull_request'
+                  uses: actions/configure-pages@v5
+
+                - name: Upload website files
+                  if: github.event_name != 'pull_request'
+                  uses: actions/upload-pages-artifact@v3
+                  with:
+                    path: ./dist
+
+            deploy:
+              if: github.event_name != 'pull_request'
+              needs: build
+              runs-on: ubuntu-latest
+
+              environment:
+                name: github-pages
+                url: {marker}
+
+              steps:
+                - name: Deploy to GitHub Pages
+                  id: deployment
+                  uses: actions/deploy-pages@v4
+          '''
+          Path('.github/workflows/deploy.yml').write_text('\n'.join(line[10:] if line.startswith('          ') else line for line in workflow.splitlines()) + '\n')
+          PY
+
+      - name: Remove one-time migration automation
+        run: rm scripts/apply-brand-migration.mjs .github/workflows/brand-migration.yml
+
+      - name: Commit validated migration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Rename Eklesia to Ekklesia Pulse"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
