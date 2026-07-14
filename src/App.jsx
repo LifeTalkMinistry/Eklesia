@@ -235,11 +235,12 @@ export default function App() {
 
   function acceptAlphaInformation() {
     const acceptance = acceptAlphaNotice();
-    setOnboardingComplete();
+    const onboarding = setOnboardingComplete();
     const currentProfile = getLocalProfile();
     if (currentProfile.ok) setProfile(currentProfile.data);
-    setStorageAvailable(acceptance.persisted !== false && isLocalStorageAvailable());
-    setAppMessage(acceptance.persisted ? '' : 'Your alpha acknowledgement is available only during this session.');
+    const persisted = acceptance.persisted !== false && onboarding.persisted !== false;
+    setStorageAvailable(persisted && isLocalStorageAvailable());
+    setAppMessage(persisted ? '' : 'Your alpha acknowledgement is available only during this session.');
     setScreen('dashboard');
   }
 
