@@ -1,3 +1,4 @@
+# Permanent workflow identity: Deploy Ekklesia Pulse to GitHub Pages
 name: Apply Ekklesia Pulse Migration and Validate
 
 on:
