@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import AlphaBadge from './AlphaBadge.jsx';
 import './WhyEklesia.css';
 
 export default function WhyEklesia({ open, onClose, triggerRef }) {
@@ -94,6 +95,11 @@ export default function WhyEklesia({ open, onClose, triggerRef }) {
           <p className="why-eklesia-intro" id="why-eklesia-intro">
             Ekklesia Pulse was created to help people build a consistent devotional life and help church communities recognize when someone may need encouragement.
           </p>
+
+          <aside className="why-alpha-note" aria-label="Private Alpha information">
+            <AlphaBadge />
+            <p>Ekklesia Pulse is currently being tested as a local prototype. Secure church accounts and live accountability synchronization are still in development.</p>
+          </aside>
 
           <section className="why-eklesia-section" aria-labelledby="why-eklesia-mission">
             <p className="why-eklesia-label">Our mission</p>
