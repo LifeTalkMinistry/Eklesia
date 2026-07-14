@@ -4,6 +4,7 @@ import AdditionalDevotionChooser from './components/AdditionalDevotionChooser.js
 import AlphaInformation from './components/AlphaInformation.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Devotion from './components/Devotion.jsx';
+import DevotionChoice from './components/DevotionChoice.jsx';
 import PersonalSetup from './components/PersonalSetup.jsx';
 import { getAdditionalVerseForSession, getDailyVerseForDate } from './lib/dailyVerse.js';
 import { getManilaDateKey } from './lib/manilaTime.js';
@@ -147,6 +148,7 @@ export default function App() {
   const [returnFromBible, setReturnFromBible] = useState(false);
   const [bibleSelectionMode, setBibleSelectionMode] = useState(false);
   const [bibleSelectionSource, setBibleSelectionSource] = useState('bible-selection');
+  const [bibleSelectionOrigin, setBibleSelectionOrigin] = useState('additional');
   const [additionalChooserOpen, setAdditionalChooserOpen] = useState(false);
   const [additionalSuggestion, setAdditionalSuggestion] = useState(null);
   const [additionalSuggestionLoading, setAdditionalSuggestionLoading] = useState(false);
@@ -376,6 +378,11 @@ export default function App() {
     setScreen('devotion');
   }
 
+  function openDailyDevotionChoice() {
+    if (completedToday) return;
+    setScreen('devotion-choice');
+  }
+
   function openOfficialDevotion() {
     if (!dailyVerse || completedToday) return;
     beginDevotion({ ...dailyVerse, source: 'daily-suggestion', flowType: 'daily' });
@@ -397,7 +404,19 @@ export default function App() {
 
   function openBibleForAdditional(source = 'bible-selection', target = null) {
     setBibleSelectionSource(source);
+    setBibleSelectionOrigin('additional');
     setBibleTarget(target);
+    setReturnFromBible(false);
+    setBibleSelectionMode(true);
+    setAdditionalChooserOpen(false);
+    setActiveTab('bible');
+    setScreen('dashboard');
+  }
+
+  function openBibleForDaily() {
+    setBibleSelectionSource('bible-selection');
+    setBibleSelectionOrigin('daily');
+    setBibleTarget(null);
     setReturnFromBible(false);
     setBibleSelectionMode(true);
     setAdditionalChooserOpen(false);
@@ -419,7 +438,11 @@ export default function App() {
   }
 
   function openPersonalDevotion(selection) {
-    beginDevotion(createPersonalDevotion(selection, bibleSelectionSource));
+    const personalDevotion = createPersonalDevotion(selection, bibleSelectionSource);
+    beginDevotion({
+      ...personalDevotion,
+      flowType: bibleSelectionOrigin === 'daily' ? 'daily' : 'additional',
+    });
   }
 
   function completeDevotion() {
@@ -487,6 +510,19 @@ export default function App() {
     );
   }
 
+  if (screen === 'devotion-choice') {
+    return (
+      <DevotionChoice
+        dailyVerse={dailyVerse}
+        loading={dailyLoading}
+        error={dailyError}
+        onBack={returnHome}
+        onUseSuggested={openOfficialDevotion}
+        onChooseVerse={openBibleForDaily}
+      />
+    );
+  }
+
   if (screen === 'devotion') {
     return (
       <>
@@ -541,7 +577,7 @@ export default function App() {
         }}
         completed={completedToday}
         officialDevotion={todayOfficial}
-        onStartDaily={openOfficialDevotion}
+        onStartDaily={openDailyDevotionChoice}
         onReviewDaily={reviewTodayDevotion}
         onSpendMore={openAdditionalChooser}
         onExit={() => {
@@ -570,8 +606,14 @@ export default function App() {
         onCancelBibleSelection={() => {
           setBibleSelectionMode(false);
           setActiveTab('home');
-          setScreen('dashboard');
           setLastBibleLocation(safelyGetLastBibleLocation());
+
+          if (bibleSelectionOrigin === 'daily') {
+            setScreen('devotion-choice');
+            return;
+          }
+
+          setScreen('dashboard');
           setAdditionalChooserOpen(true);
         }}
         onReturnFromBible={returnFromBible ? () => {
