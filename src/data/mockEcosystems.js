@@ -1,14 +1,14 @@
 export const mockEcosystems = [
   {
     id: 'lifetalk-yp',
-    name: 'LifeTalk Young Professionals',
-    code: 'LIFETALK30',
-    ownerName: 'Max Emorej',
+    name: 'Amazing Hope',
+    code: 'AMAZING12',
+    ownerName: '',
     planName: 'Circle',
     memberLimit: 30,
     memberCount: 24,
     description:
-      'A devotional accountability circle for the LifeTalk Young Professionals ministry.',
+      'A devotional accountability circle for the Amazing Hope community.',
     members: [
       {
         id: 'member-max',
