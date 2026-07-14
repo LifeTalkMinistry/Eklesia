@@ -174,7 +174,7 @@ function Profile({
       <section className="alpha-data-controls" aria-labelledby="data-controls-heading">
         <p className="dashboard-eyebrow">Data controls</p>
         <h3 id="data-controls-heading">Information saved by Ekklesia Pulse</h3>
-        <p>Devotions, WGAP reflections, Journey history, Bible position, profile details, and the Together demo state remain in this browser. There is no cloud backup.</p>
+        <p>Devotions, WGAP reflections, notebook photos, Journey history, Bible position, profile details, and the Together demo state remain in this browser. There is no cloud backup.</p>
         <button ref={deleteRef} className="alpha-delete-trigger" type="button" onClick={() => setDialog('delete')}>Delete my local data</button>
       </section>
 
@@ -242,6 +242,7 @@ export default function Dashboard({
   selectedHistoryId,
   onSelectHistoryEntry,
   onCloseHistoryEntry,
+  onHistoryEntryUpdated,
 }) {
   const [showWhyEklesia, setShowWhyEklesia] = useState(false);
   const whyEklesiaButtonRef = useRef(null);
@@ -249,7 +250,7 @@ export default function Dashboard({
 
   const content = {
     home: <HomeDashboard profile={profile} dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} dailyRefreshing={dailyRefreshing} dailyRefreshError={dailyRefreshError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onRefreshDaily={onRefreshDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} />,
-    journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} />,
+    journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} onEntryUpdated={onHistoryEntryUpdated} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
     community: <><TogetherDemoNotice /><Together /><DailyCheckInPortal /></>,
     profile: <Profile profile={profile} storageAvailable={storageAvailable} onProfileUpdated={onProfileUpdated} onRestartIntroduction={onRestartIntroduction} onDeleteLocalData={onDeleteLocalData} />,

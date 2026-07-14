@@ -97,7 +97,7 @@ export default function FeedbackDialog({ open, onClose, triggerRef, currentSecti
         <button className="alpha-dialog-close" type="button" onClick={onClose} aria-label="Close feedback form">×</button>
       </div>
 
-      <p id="feedback-privacy-note" className="alpha-privacy-note">Your private reflections and prayers are never added to this feedback automatically.</p>
+      <p id="feedback-privacy-note" className="alpha-privacy-note">Your private reflections, notebook images, Scripture references, titles, and notes are never added to this feedback automatically.</p>
 
       <div className="alpha-form alpha-dialog-form">
         <div className="alpha-field">

@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard.jsx';
 import Devotion from './components/Devotion.jsx';
 import DevotionChoice from './components/DevotionChoice.jsx';
 import PersonalSetup from './components/PersonalSetup.jsx';
+import NotebookDevotionFlow from './components/NotebookDevotionFlow.jsx';
 import { getAdditionalVerseForSession, getDailyVerseForDate } from './lib/dailyVerse.js';
 import { getManilaDateKey } from './lib/manilaTime.js';
 import {
@@ -154,6 +155,7 @@ export default function App() {
   const [additionalSuggestionLoading, setAdditionalSuggestionLoading] = useState(false);
   const [additionalSuggestionError, setAdditionalSuggestionError] = useState('');
   const [lastBibleLocation, setLastBibleLocation] = useState(safelyGetLastBibleLocation);
+  const [notebookInitialFile, setNotebookInitialFile] = useState(null);
 
   const submissionKeyRef = useRef('');
   const additionalTriggerRef = useRef(null);
@@ -260,9 +262,9 @@ export default function App() {
     return result;
   }
 
-  function deleteLocalData() {
-    const result = deleteAllEkklesiaPulseLocalData();
-    if (!result.ok) return result;
+  async function deleteLocalData() {
+    const result = await deleteAllEkklesiaPulseLocalData();
+    if (!result.localDataRemoved) return result;
 
     setProfile(null);
     setDevotions([]);
@@ -272,6 +274,7 @@ export default function App() {
     setCompletionType(null);
     setSelectedHistoryId(null);
     setLastBibleLocation(null);
+    setNotebookInitialFile(null);
     setBibleTarget(null);
     setBibleSelectionMode(false);
     setReturnFromBible(false);
@@ -388,8 +391,42 @@ export default function App() {
     beginDevotion({ ...dailyVerse, source: 'daily-suggestion', flowType: 'daily' });
   }
 
+  function openNotebookCapture(file) {
+    if (!file) return;
+    setAdditionalChooserOpen(false);
+    setNotebookInitialFile(file);
+    setScreen('notebook-capture');
+  }
+
+  function handleNotebookSaved(result) {
+    const refreshed = safelyGetAllDevotions();
+    setDevotions(refreshed);
+    setSelectedHistoryId(result.entry.id);
+    setStorageAvailable(isLocalStorageAvailable());
+  }
+
+  function openNotebookJourney(entryId) {
+    if (!entryId) return;
+    setSelectedHistoryId(entryId);
+    setActiveTab('journey');
+    setNotebookInitialFile(null);
+    setScreen('dashboard');
+  }
+
+  function refreshDevotionHistory(updatedEntry) {
+    const refreshed = safelyGetAllDevotions();
+    setDevotions(refreshed);
+    if (updatedEntry?.id) setSelectedHistoryId(updatedEntry.id);
+  }
+
   function reviewTodayDevotion() {
     if (!todayOfficial) return;
+    if (todayOfficial.devotionFormat === 'notebook') {
+      setSelectedHistoryId(todayOfficial.id);
+      setActiveTab('journey');
+      setScreen('dashboard');
+      return;
+    }
     setActiveDevotion(entryToDevotion(todayOfficial));
     setWgap(todayOfficial.wgap || createEmptyWgap());
     setActiveSavedEntryId(todayOfficial.id);
@@ -519,6 +556,25 @@ export default function App() {
         onBack={returnHome}
         onUseSuggested={openOfficialDevotion}
         onChooseVerse={openBibleForDaily}
+        onCaptureNotebook={openNotebookCapture}
+      />
+    );
+  }
+
+  if (screen === 'notebook-capture') {
+    return (
+      <NotebookDevotionFlow
+        initialFile={notebookInitialFile}
+        onCancel={() => {
+          setNotebookInitialFile(null);
+          setScreen(completedToday ? 'dashboard' : 'devotion-choice');
+        }}
+        onSaved={handleNotebookSaved}
+        onReturnHome={() => {
+          setNotebookInitialFile(null);
+          returnHome();
+        }}
+        onViewJourney={openNotebookJourney}
       />
     );
   }
@@ -624,6 +680,7 @@ export default function App() {
         selectedHistoryId={selectedHistoryId}
         onSelectHistoryEntry={setSelectedHistoryId}
         onCloseHistoryEntry={() => setSelectedHistoryId(null)}
+        onHistoryEntryUpdated={refreshDevotionHistory}
       />
       <AdditionalDevotionChooser
         open={additionalChooserOpen}
@@ -635,6 +692,7 @@ export default function App() {
         onShowAnother={showAnotherSuggestion}
         onChooseBible={() => openBibleForAdditional('bible-selection', null)}
         onContinueReading={continueReading}
+        onCaptureNotebook={openNotebookCapture}
         onClose={closeAdditionalChooser}
         triggerRef={additionalTriggerRef}
       />

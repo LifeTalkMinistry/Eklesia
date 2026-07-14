@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import NotebookCapture from './NotebookCapture.jsx';
 
 export default function AdditionalDevotionChooser({
   open,
@@ -10,6 +11,7 @@ export default function AdditionalDevotionChooser({
   onShowAnother,
   onChooseBible,
   onContinueReading,
+  onCaptureNotebook,
   onClose,
   triggerRef,
 }) {
@@ -115,6 +117,18 @@ export default function AdditionalDevotionChooser({
                 <button className="secondary-button chooser-action" type="button" onClick={onChooseBible}>Open the Bible</button>
               </>
             )}
+          </article>
+
+          <article className="additional-choice-card additional-notebook-choice">
+            <span className="option-icon" aria-hidden="true">▤</span>
+            <p className="additional-choice-eyebrow">WRITTEN DEVOTION</p>
+            <h3>Capture my notebook</h3>
+            <p>Take a photo of your handwritten devotion and save it privately in Journey.</p>
+            <NotebookCapture
+              onFileSelected={onCaptureNotebook}
+              buttonClassName="secondary-button chooser-action"
+            />
+            <small className="additional-notebook-privacy">Your notebook photo stays private on this device and will not appear in Together.</small>
           </article>
         </div>
       </section>

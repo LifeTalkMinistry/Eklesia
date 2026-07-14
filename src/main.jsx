@@ -16,6 +16,7 @@ import './devotion-complete.css';
 import './rhythm-sync.css';
 import './additional-devotion.css';
 import './devotion-flip.css';
+import './notebook-devotion.css';
 
 runBrandMigration();
 

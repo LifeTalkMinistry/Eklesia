@@ -10,6 +10,15 @@ export const STORAGE_KEYS = Object.freeze({
   legacyWgapHistory: 'ekklesiaPulse-wgap-history-v1',
 });
 
+
+export const INDEXED_DB_STORAGE_AREAS = Object.freeze([
+  Object.freeze({
+    database: 'ekklesia-pulse',
+    store: 'notebookImages',
+    purpose: 'Private notebook devotion images',
+  }),
+]);
+
 export const CONFIRMED_LEGACY_STORAGE_KEYS = Object.freeze([
   'eklesia.devotions',
   'eklesia.joinedEcosystemId',

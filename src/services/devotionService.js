@@ -11,11 +11,11 @@ import {
 export const DEVOTIONS_STORAGE_KEY = 'ekklesiaPulse.devotions';
 export const LAST_BIBLE_LOCATION_KEY = 'ekklesiaPulse.lastBibleLocation';
 export const DEVOTION_DATA_VERSION_KEY = 'ekklesiaPulse.devotionDataVersion';
-export const DEVOTION_DATA_VERSION = 2;
+export const DEVOTION_DATA_VERSION = 3;
 
 const LEGACY_HISTORY_KEY = 'ekklesiaPulse-wgap-history-v1';
 const WEEKDAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-const VALID_SOURCES = new Set(['daily-suggestion', 'additional-suggestion', 'bible-selection', 'continue-reading']);
+const VALID_SOURCES = new Set(['daily-suggestion', 'additional-suggestion', 'bible-selection', 'continue-reading', 'notebook-capture']);
 
 function safeParse(raw, fallback) {
   if (!raw) return fallback;
@@ -57,6 +57,10 @@ function normalizeStoredEntry(entry, dailyDates = new Set()) {
   const dateKey = inferDateKey(entry);
   if (!dateKey) return null;
 
+  const devotionFormat = entry.devotionFormat === 'notebook' || devotion.devotionFormat === 'notebook'
+    ? 'notebook'
+    : 'digital';
+  const isNotebook = devotionFormat === 'notebook';
   const verseStart = Number(devotion.verseStart ?? devotion.startVerse ?? devotion.verse);
   const verseEnd = Number(devotion.verseEnd ?? devotion.endVerse ?? verseStart);
   const completedAtDate = new Date(entry.completedAt || Date.now());
@@ -64,6 +68,10 @@ function normalizeStoredEntry(entry, dailyDates = new Set()) {
   const requestedType = entry.type === 'additional' ? 'additional' : 'daily';
   const type = requestedType === 'daily' && dailyDates.has(dateKey) ? 'additional' : requestedType;
   if (type === 'daily') dailyDates.add(dateKey);
+
+  const imageId = typeof entry.imageId === 'string' && entry.imageId.trim()
+    ? entry.imageId.trim()
+    : typeof devotion.imageId === 'string' && devotion.imageId.trim() ? devotion.imageId.trim() : null;
 
   return {
     id: typeof entry.id === 'string' && entry.id ? entry.id : createUniqueId(dateKey),
@@ -73,19 +81,31 @@ function normalizeStoredEntry(entry, dailyDates = new Set()) {
     type,
     source: VALID_SOURCES.has(entry.source)
       ? entry.source
-      : devotion.devotionType === 'personal' ? 'bible-selection' : 'daily-suggestion',
-    bookId: devotion.bookId || '',
-    bookSlug: devotion.bookSlug || '',
-    bookName: devotion.bookName || '',
-    chapter: Number(devotion.chapter) || 1,
-    verseStart: Number.isFinite(verseStart) ? verseStart : 1,
-    verseEnd: Number.isFinite(verseEnd) ? verseEnd : Number.isFinite(verseStart) ? verseStart : 1,
-    reference: devotion.reference || 'Scripture reflection',
-    translation: devotion.translation || 'BSB',
-    title: devotion.title || 'Personal Scripture reflection',
-    theme: devotion.theme || (devotion.devotionType === 'personal' ? 'Selected from the Bible' : ''),
-    prompt: devotion.prompt || (devotion.devotionType === 'personal' ? 'What is God showing you through this passage?' : ''),
-    scriptureText: devotion.scriptureText || devotion.fullText || devotion.text || devotion.previewText || '',
+      : VALID_SOURCES.has(devotion.source)
+        ? devotion.source
+        : isNotebook ? 'notebook-capture' : devotion.devotionType === 'personal' ? 'bible-selection' : 'daily-suggestion',
+    devotionFormat,
+    imageId,
+    imageCount: imageId ? 1 : 0,
+    note: typeof entry.note === 'string'
+      ? entry.note.trim()
+      : typeof devotion.note === 'string' ? devotion.note.trim() : '',
+    bookId: isNotebook ? '' : devotion.bookId || '',
+    bookSlug: isNotebook ? '' : devotion.bookSlug || '',
+    bookName: isNotebook ? '' : devotion.bookName || '',
+    chapter: isNotebook ? 0 : Number(devotion.chapter) || 1,
+    verseStart: isNotebook ? 0 : Number.isFinite(verseStart) ? verseStart : 1,
+    verseEnd: isNotebook ? 0 : Number.isFinite(verseEnd) ? verseEnd : Number.isFinite(verseStart) ? verseStart : 1,
+    reference: isNotebook
+      ? String(devotion.reference || '').trim()
+      : devotion.reference || 'Scripture reflection',
+    translation: isNotebook ? '' : devotion.translation || 'BSB',
+    title: isNotebook
+      ? String(devotion.title || '').trim()
+      : devotion.title || 'Personal Scripture reflection',
+    theme: isNotebook ? 'Handwritten reflection' : devotion.theme || (devotion.devotionType === 'personal' ? 'Selected from the Bible' : ''),
+    prompt: isNotebook ? '' : devotion.prompt || (devotion.devotionType === 'personal' ? 'What is God showing you through this passage?' : ''),
+    scriptureText: isNotebook ? '' : devotion.scriptureText || devotion.fullText || devotion.text || devotion.previewText || '',
     reflection: typeof entry.reflection === 'string' ? entry.reflection : '',
     wgap: normalizeWgap(entry.wgap),
   };
@@ -187,6 +207,10 @@ export function saveCompletedDevotion(devotion, wgap, options = {}) {
     completedAt: completedAt.toISOString(),
     type: finalType,
     source,
+    devotionFormat: 'digital',
+    imageId: null,
+    imageCount: 0,
+    note: '',
     bookId: devotion.bookId || '',
     bookSlug: devotion.bookSlug || '',
     bookName: devotion.bookName || '',
@@ -205,6 +229,78 @@ export function saveCompletedDevotion(devotion, wgap, options = {}) {
 
   writeDevotions([entry, ...currentEntries]);
   return { entry, type: finalType, isDuplicate: false };
+}
+
+
+export function saveNotebookDevotion(notebookDetails, options = {}) {
+  if (!notebookDetails || typeof notebookDetails !== 'object') {
+    throw new Error('Notebook devotion details are required.');
+  }
+
+  const imageId = typeof notebookDetails.imageId === 'string' ? notebookDetails.imageId.trim() : '';
+  if (!imageId) throw new Error('A saved notebook image is required.');
+
+  const currentEntries = getAllDevotions();
+  const submissionKey = typeof options.submissionKey === 'string' ? options.submissionKey : '';
+  const duplicate = submissionKey
+    ? currentEntries.find((entry) => entry.submissionKey === submissionKey)
+    : null;
+  if (duplicate) return { entry: duplicate, type: duplicate.type, isDuplicate: true };
+
+  const completedAt = options.completedAt instanceof Date ? options.completedAt : new Date();
+  const dateKey = getManilaDateKey(completedAt);
+  const officialExists = currentEntries.some((entry) => entry.dateKey === dateKey && entry.type === 'daily');
+  const finalType = officialExists ? 'additional' : 'daily';
+
+  const entry = {
+    id: createUniqueId(dateKey),
+    submissionKey,
+    dateKey,
+    completedAt: completedAt.toISOString(),
+    type: finalType,
+    source: 'notebook-capture',
+    devotionFormat: 'notebook',
+    imageId,
+    imageCount: 1,
+    note: String(notebookDetails.note || '').trim().slice(0, 300),
+    bookId: '',
+    bookSlug: '',
+    bookName: '',
+    chapter: 0,
+    verseStart: 0,
+    verseEnd: 0,
+    reference: String(notebookDetails.reference || '').trim().slice(0, 80),
+    translation: '',
+    title: String(notebookDetails.title || '').trim().slice(0, 100),
+    theme: 'Handwritten reflection',
+    prompt: '',
+    scriptureText: '',
+    reflection: '',
+    wgap: normalizeWgap(),
+  };
+
+  writeDevotions([entry, ...currentEntries]);
+  return { entry, type: finalType, isDuplicate: false };
+}
+
+export function updateNotebookImageReference(entryId, imageId) {
+  const currentEntries = getAllDevotions();
+  const targetIndex = currentEntries.findIndex((entry) => entry.id === entryId);
+  if (targetIndex < 0) throw new Error('The notebook devotion could not be found.');
+
+  const target = currentEntries[targetIndex];
+  if (target.devotionFormat !== 'notebook') throw new Error('The selected devotion is not a notebook devotion.');
+
+  const nextImageId = typeof imageId === 'string' && imageId.trim() ? imageId.trim() : null;
+  const updated = {
+    ...target,
+    imageId: nextImageId,
+    imageCount: nextImageId ? 1 : 0,
+  };
+  const nextEntries = [...currentEntries];
+  nextEntries[targetIndex] = updated;
+  writeDevotions(nextEntries);
+  return updated;
 }
 
 export function getJourneyEntries(entries = getAllDevotions()) {

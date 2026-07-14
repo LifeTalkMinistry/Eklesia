@@ -15,14 +15,14 @@ function InformationContent({ detailed = false }) {
         <AlphaBadge />
       </div>
       <p className="alpha-information-intro">
-        Ekklesia Pulse is currently an early test version. Your devotion history, WGAP reflections, profile, and Bible reading position are stored only on this device.
+        Ekklesia Pulse is currently an early test version. Your devotion history, WGAP reflections, notebook photos, profile, and Bible reading position are stored only on this device.
       </p>
 
       <div className="alpha-information-grid">
         <article>
           <span aria-hidden="true">♡</span>
           <h3>Your reflections stay on this device</h3>
-          <p>Your WGAP entries are not currently uploaded to an Ekklesia Pulse server.</p>
+          <p>Notebook photos are saved only in this browser using device storage. They are not uploaded or synchronized.</p>
         </article>
         <article>
           <span aria-hidden="true">◎</span>
@@ -32,7 +32,7 @@ function InformationContent({ detailed = false }) {
         <article>
           <span aria-hidden="true">⌫</span>
           <h3>Browser data can be removed</h3>
-          <p>Clearing browser storage or using “Delete my local data” will remove information saved by Ekklesia Pulse on this device.</p>
+          <p>Clearing browser or site data, or using “Delete my local data,” may permanently remove notebook photos and other information saved by Ekklesia Pulse on this device.</p>
         </article>
       </div>
 
@@ -48,6 +48,7 @@ function InformationContent({ detailed = false }) {
             <ul>
               <li>Daily devotion</li>
               <li>WGAP reflection</li>
+              <li>Private notebook devotion capture</li>
               <li>Additional devotion</li>
               <li>Bible reader</li>
               <li>Journey history</li>
@@ -59,6 +60,7 @@ function InformationContent({ detailed = false }) {
             <ul>
               <li>Real church-member accounts</li>
               <li>Cross-device synchronization</li>
+              <li>Notebook-photo cloud backup</li>
               <li>Live accountability data</li>
               <li>Password recovery</li>
               <li>Owner management</li>
