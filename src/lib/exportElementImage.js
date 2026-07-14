@@ -47,17 +47,26 @@ function prepareExportClone(element, width) {
   return clone;
 }
 
-function loadSvgImage(svgBlob) {
+function createSvgDataUrl(serializedSvg) {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(serializedSvg)}`;
+}
+
+function loadSvgImage(serializedSvg) {
   return new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(svgBlob);
     const image = new Image();
 
-    image.onload = () => resolve({ image, objectUrl });
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error('The devotion image could not be rendered.'));
+    image.crossOrigin = 'anonymous';
+    image.decoding = 'async';
+    image.onload = async () => {
+      try {
+        await image.decode?.();
+      } catch {
+        // The load event already confirms the SVG is ready to draw.
+      }
+      resolve(image);
     };
-    image.src = objectUrl;
+    image.onerror = () => reject(new Error('The devotion image could not be rendered.'));
+    image.src = createSvgDataUrl(serializedSvg);
   });
 }
 
@@ -130,26 +139,20 @@ export async function renderElementAsPng(element, options = {}) {
     svg.appendChild(foreignObject);
 
     const serializedSvg = new XMLSerializer().serializeToString(svg);
-    const svgBlob = new Blob([serializedSvg], { type: 'image/svg+xml;charset=utf-8' });
-    const { image, objectUrl } = await loadSvgImage(svgBlob);
+    const image = await loadSvgImage(serializedSvg);
+    const desiredScale = Math.max(2, 1080 / width);
+    const safeScale = Math.sqrt(MAX_CANVAS_PIXELS / (width * height));
+    const scale = Math.max(0.75, Math.min(4, desiredScale, safeScale));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(width * scale));
+    canvas.height = Math.max(1, Math.round(height * scale));
 
-    try {
-      const desiredScale = Math.max(2, 1080 / width);
-      const safeScale = Math.sqrt(MAX_CANVAS_PIXELS / (width * height));
-      const scale = Math.max(0.75, Math.min(4, desiredScale, safeScale));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(width * scale));
-      canvas.height = Math.max(1, Math.round(height * scale));
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Your browser could not prepare the devotion image.');
 
-      const context = canvas.getContext('2d');
-      if (!context) throw new Error('Your browser could not prepare the devotion image.');
-
-      context.setTransform(scale, 0, 0, scale, 0, 0);
-      context.drawImage(image, 0, 0, width, height);
-      return await canvasToPngBlob(canvas);
-    } finally {
-      URL.revokeObjectURL(objectUrl);
-    }
+    context.setTransform(scale, 0, 0, scale, 0, 0);
+    context.drawImage(image, 0, 0, width, height);
+    return await canvasToPngBlob(canvas);
   } finally {
     measureHost.remove();
   }
