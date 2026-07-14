@@ -1,17 +1,14 @@
 import dailyVersePool from '../data/dailyVersePool.js';
 import { getBibleVerse } from './bible.js';
+import {
+  formatManilaDate,
+  getManilaDateKey,
+  getManilaGreeting,
+  parseDateKey,
+} from './manilaTime.js';
 
 export const DAILY_VERSE_EPOCH = '2026-07-13';
-const MANILA_TIME_ZONE = 'Asia/Manila';
-
-function parseDateKey(dateKey) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) throw new Error(`Invalid date key: ${dateKey}`);
-  const [year, month, day] = dateKey.split('-').map(Number);
-  const timestamp = Date.UTC(year, month - 1, day);
-  const date = new Date(timestamp);
-  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) throw new Error(`Invalid calendar date: ${dateKey}`);
-  return timestamp;
-}
+export { formatManilaDate, getManilaDateKey, getManilaGreeting };
 
 function hashSeed(input) {
   let hash = 2166136261;
@@ -43,36 +40,16 @@ function shuffledPool(cycle) {
   return items;
 }
 
-export function getManilaDateKey(date = new Date()) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: MANILA_TIME_ZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(date);
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${values.year}-${values.month}-${values.day}`;
-}
-
-export function formatManilaDate(date = new Date()) {
-  return new Intl.DateTimeFormat('en-US', {
-    timeZone: MANILA_TIME_ZONE,
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  }).format(date);
-}
-
-export function getManilaGreeting(date = new Date()) {
-  const hour = Number(new Intl.DateTimeFormat('en-US', { timeZone: MANILA_TIME_ZONE, hour: '2-digit', hourCycle: 'h23' }).format(date));
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
+function referenceFor(item) {
+  return `${item.bookName} ${item.chapter}:${item.verse}`;
 }
 
 export function getDailyVerseSelection(dateKey = getManilaDateKey()) {
   if (!dailyVersePool.length) throw new Error('The daily verse pool is empty.');
-  const daysSinceEpoch = Math.floor((parseDateKey(dateKey) - parseDateKey(DAILY_VERSE_EPOCH)) / 86400000);
+  const selectedDate = parseDateKey(dateKey);
+  const epoch = parseDateKey(DAILY_VERSE_EPOCH);
+  if (!selectedDate || !epoch) throw new Error(`Invalid date key: ${dateKey}`);
+  const daysSinceEpoch = Math.floor((selectedDate.timestamp - epoch.timestamp) / 86400000);
   const safeDay = Math.max(0, daysSinceEpoch);
   const cycle = Math.floor(safeDay / dailyVersePool.length);
   const position = safeDay % dailyVersePool.length;
@@ -82,5 +59,45 @@ export function getDailyVerseSelection(dateKey = getManilaDateKey()) {
 export async function getDailyVerseForDate(dateKey = getManilaDateKey()) {
   const selection = getDailyVerseSelection(dateKey);
   const { verse } = await getBibleVerse(selection.bookSlug, selection.chapter, selection.verse);
-  return { ...selection, text: verse.text, reference: `${selection.bookName} ${selection.chapter}:${selection.verse}` };
+  return {
+    ...selection,
+    text: verse.text,
+    scriptureText: verse.text,
+    reference: referenceFor(selection),
+    source: 'daily-suggestion',
+  };
+}
+
+export function getEligibleAdditionalVerses({ officialReference = '', recentReferences = [] } = {}) {
+  const recent = new Set(recentReferences);
+  const withoutOfficial = dailyVersePool.filter((item) => referenceFor(item) !== officialReference);
+  const withoutRecent = withoutOfficial.filter((item) => !recent.has(referenceFor(item)));
+  return withoutRecent.length ? withoutRecent : withoutOfficial;
+}
+
+export function getAdditionalVerseSuggestion({
+  dateKey = getManilaDateKey(),
+  officialReference = '',
+  recentReferences = [],
+  sessionSeed = '0',
+} = {}) {
+  const eligible = getEligibleAdditionalVerses({ officialReference, recentReferences });
+  if (!eligible.length) return null;
+  const numericSeed = Number.parseInt(sessionSeed, 10);
+  const offset = Number.isFinite(numericSeed) ? numericSeed : hashSeed(String(sessionSeed));
+  const index = (hashSeed(`eklesia-additional:${dateKey}`) + offset) % eligible.length;
+  const selected = eligible[index];
+  return {
+    ...selected,
+    dateKey,
+    reference: referenceFor(selected),
+    source: 'additional-suggestion',
+  };
+}
+
+export async function getAdditionalVerseForSession(options = {}) {
+  const selection = getAdditionalVerseSuggestion(options);
+  if (!selection) return null;
+  const { verse } = await getBibleVerse(selection.bookSlug, selection.chapter, selection.verse);
+  return { ...selection, text: verse.text, scriptureText: verse.text };
 }
