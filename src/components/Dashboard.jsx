@@ -1,7 +1,14 @@
 import { useCallback, useRef, useState } from 'react';
+import { APP_NAME } from '../config/appConfig.js';
+import AlphaBadge from './AlphaBadge.jsx';
+import AlphaInformation from './AlphaInformation.jsx';
 import BibleReader from './BibleReader.jsx';
 import DailyCheckInPortal from './DailyCheckInPortal.jsx';
+import DeleteLocalDataDialog from './DeleteLocalDataDialog.jsx';
+import EditProfileDialog from './EditProfileDialog.jsx';
+import FeedbackDialog from './FeedbackDialog.jsx';
 import Journey from './Journey.jsx';
+import RestartIntroductionDialog from './RestartIntroductionDialog.jsx';
 import TodayDevotionCard from './TodayDevotionCard.jsx';
 import Together from './Together.jsx';
 import WhyEklesia from './WhyEklesia.jsx';
@@ -9,6 +16,7 @@ import { formatManilaDate, getManilaGreeting } from '../lib/manilaTime.js';
 import { getDevotionMetrics } from '../services/devotionService.js';
 
 function HomeDashboard({
+  profile,
   dailyVerse,
   dailyLoading,
   dailyError,
@@ -23,12 +31,13 @@ function HomeDashboard({
   devotionHistory,
 }) {
   const rhythm = getDevotionMetrics(devotionHistory);
+  const displayName = profile?.displayName || 'Friend';
 
   return (
     <>
       <section className="greeting-block">
         <p className="dashboard-eyebrow">{formatManilaDate()}</p>
-        <h2>{getManilaGreeting()}, Max.</h2>
+        <h2>{getManilaGreeting()}, {displayName}.</h2>
       </section>
       <TodayDevotionCard
         dailyVerse={dailyVerse}
@@ -73,11 +82,125 @@ function HomeDashboard({
   );
 }
 
-function Profile() {
-  return <section className="panel-page"><p className="dashboard-eyebrow">Your account</p><h2>Max Emorej</h2><p className="panel-intro">Member · LifeTalk Ministry</p><div className="settings-list"><button type="button"><span><b>Bible translation</b><small>Berean Standard Bible</small></span><span aria-hidden="true">›</span></button><button type="button"><span><b>Devotional reminder</b><small>Every day at 7:00 AM</small></span><span aria-hidden="true">›</span></button><button type="button"><span><b>Church connection</b><small>LifeTalk Ministry</small></span><span aria-hidden="true">›</span></button></div></section>;
+function TogetherDemoNotice() {
+  return (
+    <aside className="together-alpha-notice" aria-label="Together demonstration notice">
+      <div className="together-alpha-notice-heading">
+        <span className="alpha-badge">DEMO DATA</span>
+        <strong>Together is not connected to live church members.</strong>
+      </div>
+      <p>This section currently uses demonstration information. The connected version will require secure personal accounts and the Ekklesia Pulse backend.</p>
+    </aside>
+  );
+}
+
+function Profile({
+  profile,
+  storageAvailable,
+  onProfileUpdated,
+  onRestartIntroduction,
+  onDeleteLocalData,
+}) {
+  const [dialog, setDialog] = useState('');
+  const editRef = useRef(null);
+  const alphaRef = useRef(null);
+  const feedbackRef = useRef(null);
+  const restartRef = useRef(null);
+  const deleteRef = useRef(null);
+  const displayName = profile?.displayName || 'Friend';
+  const churchName = profile?.churchName || '';
+  const ministryName = profile?.ministryName || '';
+
+  return (
+    <section className="panel-page alpha-profile-page">
+      <div className="alpha-profile-heading">
+        <div>
+          <p className="dashboard-eyebrow">Personal setup for this device</p>
+          <h2>{displayName}</h2>
+          <p className="panel-intro">{churchName ? `Member · ${churchName}` : 'Ekklesia Pulse member'}</p>
+          {ministryName ? <p className="alpha-ministry-label">{ministryName}</p> : null}
+        </div>
+        <AlphaBadge />
+      </div>
+
+      {!storageAvailable ? (
+        <p className="alpha-storage-warning" role="status">
+          This browser is currently preventing Ekklesia Pulse from saving information. Changes may remain only during this session.
+        </p>
+      ) : null}
+
+      <section className="alpha-profile-card" aria-labelledby="device-profile-heading">
+        <p className="dashboard-eyebrow">Local identity</p>
+        <h3 id="device-profile-heading">About this device profile</h3>
+        <dl className="alpha-profile-details">
+          <div><dt>Name</dt><dd>{displayName}</dd></div>
+          <div><dt>Church</dt><dd>{churchName || 'Not added'}</dd></div>
+          <div><dt>Ministry or group</dt><dd>{ministryName || 'Not added'}</dd></div>
+          <div><dt>App stage</dt><dd>Private Alpha</dd></div>
+          <div><dt>Storage</dt><dd>{storageAvailable ? 'Local to this browser' : 'Temporary session storage'}</dd></div>
+        </dl>
+      </section>
+
+      <div className="settings-list alpha-settings-list">
+        <button ref={editRef} type="button" onClick={() => setDialog('edit')}>
+          <span><b>Edit profile</b><small>Change the name, church, or ministry used on this device</small></span><span aria-hidden="true">›</span>
+        </button>
+        <button ref={alphaRef} type="button" onClick={() => setDialog('alpha')}>
+          <span><b>About the Private Alpha</b><small>Review local storage, test scope, and current limitations</small></span><span aria-hidden="true">›</span>
+        </button>
+        <button ref={feedbackRef} type="button" onClick={() => setDialog('feedback')}>
+          <span><b>Send alpha feedback</b><small>Share or copy a privacy-safe diagnostic message</small></span><span aria-hidden="true">›</span>
+        </button>
+        <button ref={restartRef} type="button" onClick={() => setDialog('restart')}>
+          <span><b>Restart introduction</b><small>Show the welcome and alpha information screens again without deleting your devotions</small></span><span aria-hidden="true">›</span>
+        </button>
+      </div>
+
+      <section className="alpha-data-controls" aria-labelledby="data-controls-heading">
+        <p className="dashboard-eyebrow">Data controls</p>
+        <h3 id="data-controls-heading">Information saved by Ekklesia Pulse</h3>
+        <p>Devotions, WGAP reflections, Journey history, Bible position, profile details, and the Together demo state remain in this browser. There is no cloud backup.</p>
+        <button ref={deleteRef} className="alpha-delete-trigger" type="button" onClick={() => setDialog('delete')}>Delete my local data</button>
+      </section>
+
+      <EditProfileDialog
+        open={dialog === 'edit'}
+        profile={profile}
+        onClose={() => setDialog('')}
+        onSaved={onProfileUpdated}
+        triggerRef={editRef}
+      />
+      <AlphaInformation
+        mode="dialog"
+        open={dialog === 'alpha'}
+        onClose={() => setDialog('')}
+        triggerRef={alphaRef}
+      />
+      <FeedbackDialog
+        open={dialog === 'feedback'}
+        onClose={() => setDialog('')}
+        triggerRef={feedbackRef}
+        currentSection="Profile"
+      />
+      <RestartIntroductionDialog
+        open={dialog === 'restart'}
+        onClose={() => setDialog('')}
+        onRestart={onRestartIntroduction}
+        triggerRef={restartRef}
+      />
+      <DeleteLocalDataDialog
+        open={dialog === 'delete'}
+        onClose={() => setDialog('')}
+        onDelete={onDeleteLocalData}
+        triggerRef={deleteRef}
+      />
+    </section>
+  );
 }
 
 export default function Dashboard({
+  profile,
+  storageAvailable,
   activeTab,
   setActiveTab,
   completed,
@@ -86,6 +209,9 @@ export default function Dashboard({
   onReviewDaily,
   onSpendMore,
   onExit,
+  onProfileUpdated,
+  onRestartIntroduction,
+  onDeleteLocalData,
   dailyVerse,
   dailyLoading,
   dailyError,
@@ -107,23 +233,33 @@ export default function Dashboard({
   const closeWhyEklesia = useCallback(() => setShowWhyEklesia(false), []);
 
   const content = {
-    home: <HomeDashboard dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} dailyRefreshing={dailyRefreshing} dailyRefreshError={dailyRefreshError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onRefreshDaily={onRefreshDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} />,
+    home: <HomeDashboard profile={profile} dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} dailyRefreshing={dailyRefreshing} dailyRefreshError={dailyRefreshError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onRefreshDaily={onRefreshDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} />,
     journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
-    community: <><Together /><DailyCheckInPortal /></>,
-    profile: <Profile />,
+    community: <><TogetherDemoNotice /><Together /><DailyCheckInPortal /></>,
+    profile: <Profile profile={profile} storageAvailable={storageAvailable} onProfileUpdated={onProfileUpdated} onRestartIntroduction={onRestartIntroduction} onDeleteLocalData={onDeleteLocalData} />,
   }[activeTab];
 
   return (
     <main className="dashboard-shell">
       <div className="dashboard-frame">
         <header className="dashboard-header">
-          <button className="brand-button" type="button" onClick={onExit} aria-label="Return to welcome screen"><span className="brand-mark">E</span><span>Ekklesia Pulse</span></button>
+          <div className="alpha-brand-cluster">
+            <button className="brand-button" type="button" onClick={onExit} aria-label="Return to welcome screen"><span className="brand-mark">E</span><span>{APP_NAME}</span></button>
+            <AlphaBadge compact />
+          </div>
           <button className="notification-button why-eklesia-trigger" type="button" aria-label="Why Ekklesia Pulse?" onClick={() => setShowWhyEklesia(true)} ref={whyEklesiaButtonRef}>
             <span className="information-glyph" aria-hidden="true">i</span>
           </button>
         </header>
-        <div className="dashboard-content">{content}</div>
+        <div className="dashboard-content">
+          {!storageAvailable ? (
+            <p className="alpha-storage-warning alpha-dashboard-storage-warning" role="status">
+              This browser is currently preventing Ekklesia Pulse from saving information. You may explore the app, but your progress may not remain after closing it.
+            </p>
+          ) : null}
+          {content}
+        </div>
         <nav className="bottom-nav" aria-label="Main navigation">
           {[
             ['home', '⌂', 'Home'], ['journey', '◔', 'Journey'], ['bible', '✦', 'Bible'], ['community', '♧', 'Together'], ['profile', '○', 'Profile'],
