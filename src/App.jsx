@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { APP_NAME, APP_TAGLINE } from './config/appConfig.js';
 import AdditionalDevotionChooser from './components/AdditionalDevotionChooser.jsx';
+import AlphaInformation from './components/AlphaInformation.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Devotion from './components/Devotion.jsx';
+import PersonalSetup from './components/PersonalSetup.jsx';
 import { getAdditionalVerseForSession, getDailyVerseForDate } from './lib/dailyVerse.js';
 import { getManilaDateKey } from './lib/manilaTime.js';
 import {
@@ -11,9 +14,42 @@ import {
   getRecentlyCompletedReferences,
   saveCompletedDevotion,
 } from './services/devotionService.js';
+import {
+  acceptAlphaNotice,
+  getLocalProfile,
+  hasAcceptedAlphaNotice,
+  hasCompletedOnboarding,
+  saveLocalProfile,
+  setOnboardingComplete,
+} from './services/profileService.js';
+import { isLocalStorageAvailable } from './services/storageRegistry.js';
+import {
+  deleteAllEkklesiaPulseLocalData,
+  restartIntroductionState,
+} from './services/testerToolsService.js';
 
-function Welcome({ onBegin }) {
-  return <main className="app-shell welcome-shell"><section className="welcome-card"><p className="eyebrow">A healthier way to grow together</p><h1>Ekklesia Pulse</h1><p className="tagline">Build your rhythm. Strengthen the church.</p><p className="description">Build a consistent devotional life, reflect on Scripture through WGAP, and stay connected to a church community that knows when encouragement may be needed.</p><button className="primary-button" type="button" onClick={onBegin}>Begin your journey</button></section></main>;
+function StorageWarning() {
+  return (
+    <p className="alpha-global-warning" role="status">
+      This browser is currently preventing Ekklesia Pulse from saving information. You may explore the app, but your progress may not remain after closing it.
+    </p>
+  );
+}
+
+function Welcome({ onBegin, statusMessage, storageAvailable }) {
+  return (
+    <main className="app-shell welcome-shell">
+      <section className="welcome-card">
+        <p className="eyebrow">A healthier way to grow together</p>
+        <h1>{APP_NAME}</h1>
+        <p className="tagline">{APP_TAGLINE}</p>
+        <p className="description">Build a consistent devotional life, reflect on Scripture through WGAP, and stay connected to a church community that knows when encouragement may be needed.</p>
+        {!storageAvailable ? <StorageWarning /> : null}
+        {statusMessage ? <p className="alpha-success-message" role="status">{statusMessage}</p> : null}
+        <button className="primary-button" type="button" onClick={onBegin}>Begin your journey</button>
+      </section>
+    </main>
+  );
 }
 
 function createEmptyWgap() {
@@ -64,15 +100,42 @@ function entryToDevotion(entry) {
   };
 }
 
+function safelyGetAllDevotions() {
+  try {
+    return getAllDevotions();
+  } catch (error) {
+    console.warn('Ekklesia Pulse could not restore local devotion history.', error);
+    return [];
+  }
+}
+
+function safelyGetLastBibleLocation() {
+  try {
+    return getLastBibleLocation();
+  } catch (error) {
+    console.warn('Ekklesia Pulse could not restore the Bible reading position.', error);
+    return null;
+  }
+}
+
+function loadInitialProfile() {
+  const result = getLocalProfile();
+  return result.ok ? result.data : null;
+}
+
 export default function App() {
   const [screen, setScreen] = useState('welcome');
   const [activeTab, setActiveTab] = useState('home');
+  const [profile, setProfile] = useState(loadInitialProfile);
+  const [storageAvailable, setStorageAvailable] = useState(isLocalStorageAvailable);
+  const [appMessage, setAppMessage] = useState('');
+  const [sessionKey, setSessionKey] = useState(0);
   const [wgap, setWgap] = useState(createEmptyWgap);
   const [activeDevotion, setActiveDevotion] = useState(null);
   const [activeSavedEntryId, setActiveSavedEntryId] = useState(null);
   const [completionType, setCompletionType] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [devotions, setDevotions] = useState(getAllDevotions);
+  const [devotions, setDevotions] = useState(safelyGetAllDevotions);
   const [selectedHistoryId, setSelectedHistoryId] = useState(null);
   const [manilaDateKey, setManilaDateKey] = useState(getManilaDateKey);
   const [dailyVerse, setDailyVerse] = useState(null);
@@ -88,7 +151,7 @@ export default function App() {
   const [additionalSuggestion, setAdditionalSuggestion] = useState(null);
   const [additionalSuggestionLoading, setAdditionalSuggestionLoading] = useState(false);
   const [additionalSuggestionError, setAdditionalSuggestionError] = useState('');
-  const [lastBibleLocation, setLastBibleLocation] = useState(getLastBibleLocation);
+  const [lastBibleLocation, setLastBibleLocation] = useState(safelyGetLastBibleLocation);
 
   const submissionKeyRef = useRef('');
   const additionalTriggerRef = useRef(null);
@@ -145,6 +208,79 @@ export default function App() {
   const closeAdditionalChooser = useCallback(() => {
     setAdditionalChooserOpen(false);
   }, []);
+
+  function beginJourney() {
+    setAppMessage('');
+    const storedProfile = getLocalProfile();
+    const nextProfile = storedProfile.ok ? storedProfile.data : profile;
+    setProfile(nextProfile);
+    setStorageAvailable(isLocalStorageAvailable());
+
+    if (nextProfile && hasCompletedOnboarding() && hasAcceptedAlphaNotice()) {
+      setScreen('dashboard');
+      return;
+    }
+
+    setScreen('personal-setup');
+  }
+
+  function completePersonalSetup(values) {
+    const result = saveLocalProfile(values);
+    if (!result.ok) return result;
+    setProfile(result.data);
+    setStorageAvailable(result.persisted !== false && isLocalStorageAvailable());
+    setScreen('alpha-information');
+    return result;
+  }
+
+  function acceptAlphaInformation() {
+    const acceptance = acceptAlphaNotice();
+    setOnboardingComplete();
+    const currentProfile = getLocalProfile();
+    if (currentProfile.ok) setProfile(currentProfile.data);
+    setStorageAvailable(acceptance.persisted !== false && isLocalStorageAvailable());
+    setAppMessage(acceptance.persisted ? '' : 'Your alpha acknowledgement is available only during this session.');
+    setScreen('dashboard');
+  }
+
+  function restartIntroduction() {
+    const result = restartIntroductionState();
+    if (!result.ok) return result;
+
+    setActiveTab('home');
+    setSelectedHistoryId(null);
+    setBibleSelectionMode(false);
+    setReturnFromBible(false);
+    setAdditionalChooserOpen(false);
+    setAppMessage('');
+    setScreen('welcome');
+    return result;
+  }
+
+  function deleteLocalData() {
+    const result = deleteAllEkklesiaPulseLocalData();
+    if (!result.ok) return result;
+
+    setProfile(null);
+    setDevotions([]);
+    setWgap(createEmptyWgap());
+    setActiveDevotion(null);
+    setActiveSavedEntryId(null);
+    setCompletionType(null);
+    setSelectedHistoryId(null);
+    setLastBibleLocation(null);
+    setBibleTarget(null);
+    setBibleSelectionMode(false);
+    setReturnFromBible(false);
+    setAdditionalChooserOpen(false);
+    setAdditionalSuggestion(null);
+    setActiveTab('home');
+    setSessionKey((current) => current + 1);
+    setStorageAvailable(isLocalStorageAvailable());
+    setAppMessage(result.message);
+    setScreen('welcome');
+    return result;
+  }
 
   async function refreshDailySuggestion() {
     if (completedToday || dailyLoading || dailyRefreshing) return;
@@ -213,7 +349,7 @@ export default function App() {
 
   function openAdditionalChooser(event) {
     if (event?.currentTarget) additionalTriggerRef.current = event.currentTarget;
-    setLastBibleLocation(getLastBibleLocation());
+    setLastBibleLocation(safelyGetLastBibleLocation());
     setAdditionalChooserOpen(true);
     if (!additionalSuggestion) {
       suggestionIndexRef.current = 0;
@@ -269,7 +405,7 @@ export default function App() {
   }
 
   function continueReading() {
-    const location = getLastBibleLocation();
+    const location = safelyGetLastBibleLocation();
     setLastBibleLocation(location);
     if (!location) {
       openBibleForAdditional('bible-selection', null);
@@ -290,15 +426,17 @@ export default function App() {
     setIsSaving(true);
     try {
       const result = saveCompletedDevotion(activeDevotion, wgap, { submissionKey: submissionKeyRef.current });
-      const refreshed = getAllDevotions();
+      const refreshed = safelyGetAllDevotions();
       setDevotions(refreshed);
       setActiveSavedEntryId(result.entry.id);
       setSelectedHistoryId(result.entry.id);
       setCompletionType(result.type);
       setActiveDevotion(entryToDevotion(result.entry));
       setWgap(result.entry.wgap);
+      setStorageAvailable(isLocalStorageAvailable());
     } catch (error) {
       console.error('Devotion save failed', error);
+      setStorageAvailable(false);
     } finally {
       setIsSaving(false);
     }
@@ -324,45 +462,73 @@ export default function App() {
     window.requestAnimationFrame(() => openAdditionalChooser());
   }
 
-  if (screen === 'welcome') return <Welcome onBegin={() => setScreen('dashboard')} />;
+  if (screen === 'welcome') {
+    return <Welcome onBegin={beginJourney} statusMessage={appMessage} storageAvailable={storageAvailable} />;
+  }
+
+  if (screen === 'personal-setup') {
+    return (
+      <PersonalSetup
+        profile={profile}
+        storageAvailable={storageAvailable}
+        onContinue={completePersonalSetup}
+        onBack={() => setScreen('welcome')}
+      />
+    );
+  }
+
+  if (screen === 'alpha-information') {
+    return (
+      <AlphaInformation
+        storageAvailable={storageAvailable}
+        onContinue={acceptAlphaInformation}
+      />
+    );
+  }
 
   if (screen === 'devotion') {
     return (
-      <Devotion
-        devotion={activeDevotion}
-        wgap={wgap}
-        setWgap={setWgap}
-        completed={activeEntryCompleted}
-        completionType={completionType}
-        isSaving={isSaving}
-        onComplete={completeDevotion}
-        onViewSaved={viewSavedDevotion}
-        onReturnHome={returnHome}
-        onSpendMore={spendMoreFromDevotion}
-        onBack={returnHome}
-        onReadChapter={() => {
-          if (!activeDevotion) return;
-          const startVerse = activeDevotion.verseStart ?? activeDevotion.startVerse ?? activeDevotion.verse;
-          const endVerse = activeDevotion.verseEnd ?? activeDevotion.endVerse ?? startVerse;
-          setBibleTarget({
-            bookSlug: activeDevotion.bookSlug,
-            chapter: activeDevotion.chapter,
-            verse: startVerse,
-            endVerse,
-            label: endVerse > startVerse ? 'Selected passage' : completionType === 'additional' ? 'Additional devotion' : 'Today’s verse',
-          });
-          setBibleSelectionMode(false);
-          setReturnFromBible(true);
-          setActiveTab('bible');
-          setScreen('dashboard');
-        }}
-      />
+      <>
+        {!storageAvailable ? <StorageWarning /> : null}
+        <Devotion
+          devotion={activeDevotion}
+          wgap={wgap}
+          setWgap={setWgap}
+          completed={activeEntryCompleted}
+          completionType={completionType}
+          isSaving={isSaving}
+          onComplete={completeDevotion}
+          onViewSaved={viewSavedDevotion}
+          onReturnHome={returnHome}
+          onSpendMore={spendMoreFromDevotion}
+          onBack={returnHome}
+          onReadChapter={() => {
+            if (!activeDevotion) return;
+            const startVerse = activeDevotion.verseStart ?? activeDevotion.startVerse ?? activeDevotion.verse;
+            const endVerse = activeDevotion.verseEnd ?? activeDevotion.endVerse ?? startVerse;
+            setBibleTarget({
+              bookSlug: activeDevotion.bookSlug,
+              chapter: activeDevotion.chapter,
+              verse: startVerse,
+              endVerse,
+              label: endVerse > startVerse ? 'Selected passage' : completionType === 'additional' ? 'Additional devotion' : 'Today’s verse',
+            });
+            setBibleSelectionMode(false);
+            setReturnFromBible(true);
+            setActiveTab('bible');
+            setScreen('dashboard');
+          }}
+        />
+      </>
     );
   }
 
   return (
     <>
       <Dashboard
+        key={sessionKey}
+        profile={profile}
+        storageAvailable={storageAvailable}
         activeTab={activeTab}
         setActiveTab={(tab) => {
           setActiveTab(tab);
@@ -385,6 +551,12 @@ export default function App() {
           setReturnFromBible(false);
           setAdditionalChooserOpen(false);
         }}
+        onProfileUpdated={(nextProfile, result) => {
+          setProfile(nextProfile);
+          setStorageAvailable(result?.persisted !== false && isLocalStorageAvailable());
+        }}
+        onRestartIntroduction={restartIntroduction}
+        onDeleteLocalData={deleteLocalData}
         dailyVerse={dailyVerse}
         dailyLoading={dailyLoading}
         dailyError={dailyError}
@@ -398,7 +570,7 @@ export default function App() {
           setBibleSelectionMode(false);
           setActiveTab('home');
           setScreen('dashboard');
-          setLastBibleLocation(getLastBibleLocation());
+          setLastBibleLocation(safelyGetLastBibleLocation());
           setAdditionalChooserOpen(true);
         }}
         onReturnFromBible={returnFromBible ? () => {
