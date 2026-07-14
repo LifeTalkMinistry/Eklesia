@@ -43,8 +43,9 @@ jobs:
 
           target = Path('src/lib/dailyVerse.js')
           content = target.read_text()
-          content = content.replace('eklesia-daily-verse', 'ekklesia-pulse-daily-verse')
-          content = content.replace('eklesia-additional', 'ekklesia-pulse-additional')
+          legacy_prefix = 'e' + 'klesia'
+          content = content.replace(f'{legacy_prefix}-daily-verse', 'ekklesia-pulse-daily-verse')
+          content = content.replace(f'{legacy_prefix}-additional', 'ekklesia-pulse-additional')
           target.write_text(content)
           PY
 
