@@ -7,6 +7,7 @@ import './devotion-choice.css';
 import './bible-return.css';
 import './wgap.css';
 import './journey-history.css';
+import './journey-cabinets.css';
 import './devotion-complete.css';
 import './rhythm-sync.css';
 import './additional-devotion.css';
