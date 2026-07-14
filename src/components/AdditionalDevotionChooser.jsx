@@ -71,7 +71,7 @@ export default function AdditionalDevotionChooser({
           <div>
             <p className="dashboard-eyebrow">Continue in Scripture</p>
             <h2 id="additional-devotion-title">Spend more time in the Word</h2>
-            <p>Your daily rhythm is complete. Choose a private personal devotion without pressure.</p>
+            <p>Your daily rhythm is complete. Choose how you would like to continue in Scripture.</p>
           </div>
           <button ref={closeButtonRef} className="icon-button" type="button" onClick={onClose} aria-label="Close additional devotion choices">×</button>
         </header>

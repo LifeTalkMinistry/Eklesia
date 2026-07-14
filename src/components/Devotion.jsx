@@ -109,10 +109,10 @@ export default function Devotion({
   return (
     <main className="devotion-shell">
       <div className="devotion-frame">
-        <header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>{devotionLabel}</p><strong>WGAP Devotion</strong></div><span className="soft-badge">Private</span></header>
+        <header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>{devotionLabel}</p><strong>WGAP Devotion</strong></div></header>
 
         {isAdditional && !completed && (
-          <p className="devotion-context-note">Your daily rhythm is already complete. This devotion will be saved privately in Journey.</p>
+          <p className="devotion-context-note">Your daily rhythm is already complete. This devotion will be added to Journey.</p>
         )}
 
         <article className="scripture-card wgap-word-card">
@@ -136,7 +136,6 @@ export default function Devotion({
         </article>
 
         <form className="wgap-form" onSubmit={submitDevotion}>
-          <p className="wgap-private-note">Your reflection, prayer, and personal responses stay private in your Journey.</p>
           {WGAP_FIELDS.map((field) => (
             <section className="wgap-field" key={field.key}>
               <div className="wgap-section-title">
@@ -163,8 +162,8 @@ export default function Devotion({
                 <div>
                   <strong>{completionType === 'additional' ? 'Additional devotion saved' : 'Daily rhythm complete'}</strong>
                   <p>{completionType === 'additional'
-                    ? 'Your daily rhythm was already complete. This reflection has been added privately to your Journey.'
-                    : 'You made room for God today. Your reflection has been saved privately.'}</p>
+                    ? 'Your daily rhythm was already complete. This reflection has been added to your Journey.'
+                    : 'You made room for God today. Your reflection has been saved.'}</p>
                 </div>
               </div>
               <div className="devotion-complete-actions">

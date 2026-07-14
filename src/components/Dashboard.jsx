@@ -60,7 +60,7 @@ function HomeDashboard({
       </section>
       <section className="stats-grid">
         <article className="stat-card"><span className="stat-icon" aria-hidden="true">🔥</span><strong>{rhythm.currentStreak}</strong><p>day rhythm</p></article>
-        <article className="stat-card"><span className="stat-icon" aria-hidden="true">✦</span><strong>{rhythm.savedCount}</strong><p>private devotions</p></article>
+        <article className="stat-card"><span className="stat-icon" aria-hidden="true">✦</span><strong>{rhythm.savedCount}</strong><p>saved devotions</p></article>
         <article className="stat-card"><span className="stat-icon" aria-hidden="true">♡</span><strong>{rhythm.growthSignal}</strong><p>growth signal</p></article>
       </section>
       <section className="encouragement-card"><span className="quote-mark" aria-hidden="true">“</span><p>Consistency is not about proving your faith. It is about making room to hear God again and again.</p><small>Eklesia reminder</small></section>
@@ -69,7 +69,7 @@ function HomeDashboard({
 }
 
 function Profile() {
-  return <section className="panel-page"><p className="dashboard-eyebrow">Your account</p><h2>Max Emorej</h2><p className="panel-intro">Member · LifeTalk Ministry</p><div className="settings-list"><button type="button"><span><b>Reflection privacy</b><small>Private by default</small></span><span aria-hidden="true">›</span></button><button type="button"><span><b>Devotional reminder</b><small>Every day at 7:00 AM</small></span><span aria-hidden="true">›</span></button><button type="button"><span><b>Church connection</b><small>LifeTalk Ministry</small></span><span aria-hidden="true">›</span></button></div></section>;
+  return <section className="panel-page"><p className="dashboard-eyebrow">Your account</p><h2>Max Emorej</h2><p className="panel-intro">Member · LifeTalk Ministry</p><div className="settings-list"><button type="button"><span><b>Bible translation</b><small>Berean Standard Bible</small></span><span aria-hidden="true">›</span></button><button type="button"><span><b>Devotional reminder</b><small>Every day at 7:00 AM</small></span><span aria-hidden="true">›</span></button><button type="button"><span><b>Church connection</b><small>LifeTalk Ministry</small></span><span aria-hidden="true">›</span></button></div></section>;
 }
 
 export default function Dashboard({

@@ -26,31 +26,6 @@ const ENCOURAGEMENT_MESSAGES = [
   'Praying that you find strength for today.',
 ];
 
-function PrivacyLists() {
-  return (
-    <div className="together-privacy-grid">
-      <section aria-labelledby="members-may-see-heading">
-        <h4 id="members-may-see-heading">Members may see</h4>
-        <ul>
-          <li>Your devotional consistency</li>
-          <li>Your general growth signal</li>
-          <li>When you were most recently active</li>
-          <li>Whether you may appreciate encouragement</li>
-        </ul>
-      </section>
-      <section aria-labelledby="members-do-not-see-heading">
-        <h4 id="members-do-not-see-heading">Members do not automatically see</h4>
-        <ul>
-          <li>Your private reflections</li>
-          <li>Your personal prayers</li>
-          <li>Your journal entries</li>
-          <li>The details behind your activity</li>
-        </ul>
-      </section>
-    </div>
-  );
-}
-
 function CircleDetailsDialog({ ecosystem, onClose }) {
   const closeButtonRef = useRef(null);
 
@@ -59,9 +34,12 @@ function CircleDetailsDialog({ ecosystem, onClose }) {
   }, []);
 
   return (
-    <div className="together-dialog-backdrop" onMouseDown={(event) => {
-      if (event.target === event.currentTarget) onClose();
-    }}>
+    <div
+      className="together-dialog-backdrop"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
       <section className="together-dialog" role="dialog" aria-modal="true" aria-labelledby="circle-details-title">
         <div className="together-dialog-heading">
           <div>
@@ -78,8 +56,8 @@ function CircleDetailsDialog({ ecosystem, onClose }) {
           <div><dt>Joined status</dt><dd>Connected on this device</dd></div>
         </dl>
         <div className="together-dialog-note">
-          <strong>Track the habit. Protect the heart.</strong>
-          <p>Members can see healthy consistency and activity signals. Private reflections, personal prayers, journal entries, and devotion contents stay protected.</p>
+          <strong>Grow together with consistency.</strong>
+          <p>This circle helps members notice progress and offer timely encouragement.</p>
         </div>
       </section>
     </div>
@@ -98,7 +76,7 @@ function LeaveCircleDialog({ ecosystem, leaving, error, onStay, onConfirm }) {
       <section className="together-dialog together-dialog-small" role="dialog" aria-modal="true" aria-labelledby="leave-circle-title">
         <p className="dashboard-eyebrow">Connection settings</p>
         <h3 id="leave-circle-title">Leave {ecosystem.name}?</h3>
-        <p className="together-dialog-copy">You will stop seeing this accountability circle on this device. Your personal devotion and reflection data will remain unchanged.</p>
+        <p className="together-dialog-copy">You will stop seeing this accountability circle on this device. You can reconnect later using an ecosystem code.</p>
         {error ? <p className="together-inline-error" role="alert">{error}</p> : null}
         <div className="together-dialog-actions">
           <button ref={stayButtonRef} className="secondary-button" type="button" onClick={onStay} disabled={leaving}>Stay connected</button>
@@ -321,14 +299,6 @@ export default function Together() {
           <span className="together-connected-badge"><span aria-hidden="true">✓</span> Connected</span>
         </div>
 
-        <section className="together-card together-compact-privacy-card">
-          <span className="together-privacy-icon" aria-hidden="true">◇</span>
-          <div>
-            <h3>Your private reflections stay private.</h3>
-            <p>Members can see your consistency and general activity signals, but not what you personally write.</p>
-          </div>
-        </section>
-
         <section className="together-circle-section" aria-labelledby="your-circle-heading">
           <div className="together-section-heading">
             <div>
@@ -356,7 +326,12 @@ export default function Together() {
                   {member.lastActiveLabel !== 'Today' ? <small>Last active {member.lastActiveLabel.toLowerCase()}</small> : null}
 
                   {member.canEncourage ? (
-                    <button className="together-text-button" type="button" onClick={() => isEncouragementOpen ? setEncouragementMemberId(null) : openEncouragement(member.id)} aria-expanded={isEncouragementOpen}>
+                    <button
+                      className="together-text-button"
+                      type="button"
+                      onClick={() => isEncouragementOpen ? setEncouragementMemberId(null) : openEncouragement(member.id)}
+                      aria-expanded={isEncouragementOpen}
+                    >
                       {isEncouragementOpen ? 'Close encouragement' : 'Send encouragement'}
                     </button>
                   ) : null}
@@ -417,15 +392,6 @@ export default function Together() {
           </dl>
         </section>
 
-        <section className="together-card together-sharing-card">
-          <div className="together-sharing-heading">
-            <p className="dashboard-eyebrow">Before you connect</p>
-            <h3>Track the habit. Protect the heart.</h3>
-          </div>
-          <PrivacyLists />
-          <p className="together-control-note">You remain in control of what you choose to share.</p>
-        </section>
-
         <div className="together-preview-actions" aria-live="polite">
           <button className="primary-button together-primary-button" type="button" onClick={confirmJoin} disabled={viewState === VIEW_STATES.JOINING}>
             {viewState === VIEW_STATES.JOINING ? <><span className="together-spinner together-spinner-dark" aria-hidden="true" /> Joining circle…</> : 'Join this circle'}
@@ -473,7 +439,7 @@ export default function Together() {
     <section className="panel-page together-page">
       <p className="dashboard-eyebrow">Healthy accountability</p>
       <h2>Grow with people who care.</h2>
-      <p className="panel-intro">Join the church, ministry, or accountability community you belong to. You will be able to see healthy progress signals while everyone’s private reflections remain protected.</p>
+      <p className="panel-intro">Join the church, ministry, or accountability community you belong to and see healthy progress signals.</p>
 
       <form className="together-card together-join-card" onSubmit={handleSubmit} noValidate>
         <div>
@@ -495,7 +461,7 @@ export default function Together() {
           onChange={handleCodeChange}
           disabled={validating}
           aria-invalid={invalidCode}
-          aria-describedby={invalidCode ? 'ecosystem-code-error ecosystem-code-privacy' : 'ecosystem-code-privacy'}
+          aria-describedby={invalidCode ? 'ecosystem-code-error' : undefined}
         />
         <div className="together-validation-slot" aria-live="polite" aria-atomic="true">
           {validating ? <p className="together-checking-message"><span className="together-spinner" aria-hidden="true" /> Checking the code shared with you…</p> : null}
@@ -509,7 +475,6 @@ export default function Together() {
         <button className="primary-button together-primary-button" type="submit" disabled={!code.trim() || validating}>
           {validating ? 'Checking code…' : 'Find my circle'}
         </button>
-        <p id="ecosystem-code-privacy" className="together-form-privacy"><strong>This code connects your account to a shared accountability circle.</strong> Your private reflections, prayers, and journal entries will not be shown to other members.</p>
         <p className="together-secondary-note">Don’t have a code? Ask your church, ministry, or accountability-circle owner.</p>
       </form>
     </section>
