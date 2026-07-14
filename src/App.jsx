@@ -78,6 +78,8 @@ export default function App() {
   const [dailyVerse, setDailyVerse] = useState(null);
   const [dailyLoading, setDailyLoading] = useState(true);
   const [dailyError, setDailyError] = useState('');
+  const [dailyRefreshing, setDailyRefreshing] = useState(false);
+  const [dailyRefreshError, setDailyRefreshError] = useState('');
   const [bibleTarget, setBibleTarget] = useState(null);
   const [returnFromBible, setReturnFromBible] = useState(false);
   const [bibleSelectionMode, setBibleSelectionMode] = useState(false);
@@ -92,6 +94,9 @@ export default function App() {
   const additionalTriggerRef = useRef(null);
   const suggestionIndexRef = useRef(0);
   const suggestionRequestRef = useRef(0);
+  const dailyBaseReferenceRef = useRef('');
+  const dailySuggestionIndexRef = useRef(-1);
+  const dailySuggestionRequestRef = useRef(0);
 
   const todayOfficial = getOfficialDailyDevotion(manilaDateKey, devotions);
   const completedToday = Boolean(todayOfficial);
@@ -107,10 +112,20 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
+    dailySuggestionRequestRef.current += 1;
+    dailySuggestionIndexRef.current = -1;
+    dailyBaseReferenceRef.current = '';
     setDailyLoading(true);
     setDailyError('');
+    setDailyRefreshing(false);
+    setDailyRefreshError('');
     getDailyVerseForDate(manilaDateKey)
-      .then((verse) => { if (!cancelled) setDailyVerse({ ...verse, flowType: 'daily' }); })
+      .then((verse) => {
+        if (!cancelled) {
+          dailyBaseReferenceRef.current = verse.reference;
+          setDailyVerse({ ...verse, flowType: 'daily' });
+        }
+      })
       .catch((error) => {
         console.error('Daily verse load failed', error);
         if (!cancelled) {
@@ -130,6 +145,41 @@ export default function App() {
   const closeAdditionalChooser = useCallback(() => {
     setAdditionalChooserOpen(false);
   }, []);
+
+  async function refreshDailySuggestion() {
+    if (completedToday || dailyLoading || dailyRefreshing) return;
+
+    const nextIndex = dailySuggestionIndexRef.current + 1;
+    const requestId = dailySuggestionRequestRef.current + 1;
+    dailySuggestionRequestRef.current = requestId;
+    setDailyRefreshing(true);
+    setDailyRefreshError('');
+
+    try {
+      const suggestion = await getAdditionalVerseForSession({
+        dateKey: manilaDateKey,
+        officialReference: dailyBaseReferenceRef.current || dailyVerse?.reference || '',
+        recentReferences: getRecentlyCompletedReferences(30, new Date(), devotions),
+        sessionSeed: String(nextIndex),
+      });
+
+      if (dailySuggestionRequestRef.current !== requestId) return;
+      if (!suggestion) {
+        setDailyRefreshError('Another curated suggestion is not available right now.');
+        return;
+      }
+
+      dailySuggestionIndexRef.current = nextIndex;
+      setDailyVerse({ ...suggestion, source: 'daily-suggestion', flowType: 'daily' });
+    } catch (error) {
+      console.error('Daily suggestion refresh failed', error);
+      if (dailySuggestionRequestRef.current === requestId) {
+        setDailyRefreshError('Another suggestion could not be loaded. Please try again.');
+      }
+    } finally {
+      if (dailySuggestionRequestRef.current === requestId) setDailyRefreshing(false);
+    }
+  }
 
   async function prepareAdditionalSuggestion(index) {
     const requestId = suggestionRequestRef.current + 1;
@@ -338,6 +388,9 @@ export default function App() {
         dailyVerse={dailyVerse}
         dailyLoading={dailyLoading}
         dailyError={dailyError}
+        dailyRefreshing={dailyRefreshing}
+        dailyRefreshError={dailyRefreshError}
+        onRefreshDaily={refreshDailySuggestion}
         bibleTarget={bibleTarget}
         bibleSelectionMode={bibleSelectionMode}
         onSelectBibleVerse={openPersonalDevotion}
