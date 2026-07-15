@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import './ChurchWorkspaceHome.css';
 
 export default function ChurchAnnouncementBillboard({ announcements, onViewDetails, onAddToCalendar }) {
   const featured = announcements.filter((announcement) => announcement.featured);
