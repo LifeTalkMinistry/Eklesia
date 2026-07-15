@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { MANILA_TIME_ZONE } from '../lib/manilaTime.js';
 import './DailyCheckInPortal.css';
 import './GroupWorkspace.css';
+import './GroupRhythmSimplified.css';
 
 const GROUP_SECTIONS = [
   ['rhythm', 'Our Rhythm'],
@@ -114,7 +115,7 @@ function WeeklyRhythm({ member, todayIndex, accessible = false }) {
   );
 }
 
-function SharedMemberSummary({ member, ranking, memberCount, elapsedDays, todayIndex, onBack }) {
+function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack }) {
   const backButtonRef = useRef(null);
   const completedToday = Boolean(member.checkIns[todayIndex]);
 
@@ -146,7 +147,6 @@ function SharedMemberSummary({ member, ranking, memberCount, elapsedDays, todayI
       </section>
 
       <div className="group-member-stats">
-        <article><span>Attention order</span><strong>{ranking} of {memberCount}</strong><small>Lower weekly completion appears first</small></article>
         <article><span>Current streak</span><strong>{member.currentStreak} {member.currentStreak === 1 ? 'day' : 'days'}</strong><small>Based on this week</small></article>
         <article><span>Today</span><strong>{completedToday ? 'Completed' : 'Not yet'}</strong><small>{member.devotionCheckInLabel || member.status}</small></article>
       </div>
@@ -169,18 +169,15 @@ function RhythmView({ members }) {
   const [selectedMemberId, setSelectedMemberId] = useState('');
   const todayIndex = getTodayIndex();
   const elapsedDays = todayIndex + 1;
-  const rankedMembers = useMemo(() => prepareMembers(members, todayIndex), [members, todayIndex]);
-  const checkedInToday = rankedMembers.filter((member) => member.checkIns[todayIndex]).length;
-  const selectedMemberIndex = rankedMembers.findIndex((member) => member.id === selectedMemberId);
-  const selectedMember = selectedMemberIndex >= 0 ? rankedMembers[selectedMemberIndex] : null;
+  const orderedMembers = useMemo(() => prepareMembers(members, todayIndex), [members, todayIndex]);
+  const checkedInToday = orderedMembers.filter((member) => member.checkIns[todayIndex]).length;
+  const selectedMember = orderedMembers.find((member) => member.id === selectedMemberId) || null;
 
   if (selectedMember) {
     return (
       <section className="daily-checkin-card group-rhythm-card">
         <SharedMemberSummary
           member={selectedMember}
-          ranking={selectedMemberIndex + 1}
-          memberCount={rankedMembers.length}
           elapsedDays={elapsedDays}
           todayIndex={todayIndex}
           onBack={() => setSelectedMemberId('')}
@@ -193,16 +190,16 @@ function RhythmView({ members }) {
     <section className="daily-checkin-card group-rhythm-card" aria-labelledby="group-rhythm-heading">
       <div className="daily-checkin-heading">
         <div><p className="dashboard-eyebrow">Group accountability</p><h3 id="group-rhythm-heading">This week</h3></div>
-        <span className="daily-checkin-count" aria-label={`${checkedInToday} of ${rankedMembers.length} displayed group members completed today`}>
-          {checkedInToday} of {rankedMembers.length} today
+        <span className="daily-checkin-count" aria-label={`${checkedInToday} of ${orderedMembers.length} displayed group members completed today`}>
+          {checkedInToday} of {orderedMembers.length} today
         </span>
       </div>
 
       <p className="daily-checkin-intro">Members who may need attention appear first. Tap a member to view the progress summary they share with this group.</p>
 
-      {rankedMembers.length ? (
+      {orderedMembers.length ? (
         <div className="daily-checkin-list" role="list" aria-label="Weekly group devotion accountability">
-          {rankedMembers.map((member, rankingIndex) => {
+          {orderedMembers.map((member) => {
             const perfect = member.completedCount === elapsedDays;
 
             return (
@@ -214,7 +211,6 @@ function RhythmView({ members }) {
                   aria-label={`View ${member.name}'s shared progress summary. ${member.completedCount} of ${elapsedDays} elapsed days completed.`}
                 >
                   <div className="daily-rhythm-member-line">
-                    <span className="daily-rhythm-rank" aria-hidden="true">{rankingIndex + 1}</span>
                     <span className="daily-checkin-avatar" aria-hidden="true">{member.name.charAt(0)}</span>
                     <div className="daily-checkin-member"><strong>{member.name}</strong><small>{getRhythmLabel(member, elapsedDays)}</small></div>
                     <span className="group-rhythm-meta"><span className="daily-rhythm-score">{member.completedCount} of {elapsedDays}</span><span aria-hidden="true">›</span></span>
@@ -227,7 +223,7 @@ function RhythmView({ members }) {
         </div>
       ) : <p className="group-workspace-empty">No shared member rhythm is available in this prototype group yet.</p>}
 
-      <p className="daily-checkin-principle">This is an accountability order, not a spiritual score. It helps the appointed leader notice who may appreciate encouragement first.</p>
+      <p className="daily-checkin-principle">Members who may appreciate encouragement appear first. This order is not a spiritual score.</p>
     </section>
   );
 }
