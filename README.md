@@ -10,9 +10,10 @@ Ekklesia Pulse is a devotional accountability ecosystem that helps church member
 - **Built-in Bible:** The complete Berean Standard Bible (BSB) is available with Old and New Testament filters, chapter navigation, and highlighted passages.
 - **Private reflections:** WGAP reflections, prayers, and journal content stay on the member’s current device unless the member chooses to share them elsewhere.
 - **Journey history:** Daily and additional devotions remain available in a private date-grouped archive.
-- **Accountability circles:** Members can use a prototype circle code to preview healthy accountability and encouragement flows.
-- **Church pulse overview:** The Together experience demonstrates privacy-safe activity signals that can help a church notice when encouragement may be useful.
-- **Privacy-first monitoring:** Circle views show healthy consistency signals without exposing Scripture selections, reflection text, personal prayers, or journal contents.
+- **Official ministry membership:** Members select a published church ministry and enter the ministry code provided by its appointed manager.
+- **Leader-created groups:** Appointed Group Leaders may create purpose-driven groups for missions, projects, life stages, care needs, and specific communities.
+- **Church pulse overview:** The Church Workspace demonstrates privacy-safe activity signals that can help a church notice when encouragement may be useful.
+- **Privacy-first monitoring:** Ministry and group views show healthy consistency signals without exposing Scripture selections, reflection text, personal prayers, or journal contents.
 
 ## Personal and Church Workspaces
 
@@ -20,13 +21,46 @@ Ekklesia Pulse has two interface environments inside the same application.
 
 **Personal Space** includes Home, Journey, Bible, Together, Profile, personal devotions, private reflections, and the member’s personal rhythm. Together is the place to discover a church organization, enter an organization code, review membership, and launch the church environment.
 
-**Church Workspace** includes Church Pulse, ministries, accountability circles, people and scoped roles, and organization privacy controls. Entering this workspace removes the personal header and bottom navigation so the church name and church navigation become the primary interface.
+**Church Workspace** includes Church Pulse, official ministries, leader-created groups, people and scoped roles, and organization privacy controls. Entering this workspace removes the personal header and bottom navigation so the church name and church navigation become the primary interface.
 
 - **My personal space** exits the Church Workspace and returns to Together without removing organization membership.
 - **Leave organization** is a separate destructive action that requires confirmation and removes the local membership connection.
 - Membership and active-workspace state are stored separately in the current browser.
-- The current organization, roles, ministries, codes, privacy settings, and Church Pulse are local demonstration data.
+- The current organization, roles, ministries, groups, codes, privacy settings, and Church Pulse are local demonstration data.
 - Real member accounts, backend permissions, live synchronization, and live church information are not implemented.
+
+## Access-Code Hierarchy
+
+The prototype uses three clearly separated code types:
+
+- **Church organization code:** joins the member to the whole church organization.
+- **Ministry code:** joins an official ministry that is already published in the Ministries section. The code is provided and managed by that ministry’s appointed manager.
+- **Group code:** identifies a flexible group created by an appointed Group Leader. The member enters the code, reviews the group’s purpose and leader, and either joins immediately or sends a leader-approval request.
+
+Rotating a code does not remove members who already belong to the church, ministry, or group.
+
+## Official Ministries
+
+Official ministries are defined and published by the church. A member does not create a ministry by entering a code. Instead, the member opens the Ministries section, chooses a listed ministry, and enters the code provided by that ministry’s manager.
+
+Ministry Leaders receive authority only within their assigned ministry. They can manage the ministry access code without receiving organization-wide administration or access to members’ private devotional content.
+
+## Leader-Created Groups
+
+Groups are separate from official ministries. They are flexible spaces created by qualified people who were appointed by the church as **Group Leaders**.
+
+A group may be:
+
+- church-wide or cross-ministry,
+- optionally connected to one official ministry,
+- intended for a specific age, life stage, mission, project, or care need,
+- temporary, project-based, or ongoing,
+- invitation-only, private, or visible to church members,
+- automatic-join or leader-approval based.
+
+Creating a group requires the Group Leader role or organization-management authority. Group creation does not grant ministry-manager authority, organization administration, or access to WGAP responses, prayers, journals, notes, exact Scripture selections, or notebook photos.
+
+Legacy local Circle data is migrated into the new Group structure so existing prototype information is not silently lost.
 
 ## Daily Rhythm and Additional Devotions
 
@@ -44,14 +78,6 @@ Notebook photos remain only in the current browser. They are not uploaded, synch
 
 A notebook devotion may complete the official daily rhythm when it is the first devotion saved on a Manila calendar date. Any later notebook or digital devotion on that date is saved as an additional devotion, so multiple devotions still count as only one rhythm day. The current version supports exactly one image per notebook devotion.
 
-## Accountability Circle Prototype
-
-Members can enter an ecosystem code, review the accountability circle and its privacy boundaries, and confirm joining before the circle overview appears. The current implementation uses local prototype data rather than live church records.
-
-Joined-circle state is stored only on the current device. The interface displays healthy progress signals while keeping private reflections, personal prayers, journal entries, devotion passages, and additional-devotion totals out of the circle view.
-
-Prototype code: `LIFETALK30`
-
 ## Private Alpha Testing
 
 Ekklesia Pulse is ready for a small private test.
@@ -59,7 +85,8 @@ Ekklesia Pulse is ready for a small private test.
 - Testers create a personal profile for the current device.
 - No password or online account is created.
 - Devotions, WGAP reflections, Journey history, profile details, Bible reading position, and notebook photos remain in browser storage.
-- Together currently uses demonstration information and is not connected to live church members.
+- Together and the Church Workspace currently use demonstration information and are not connected to live church members.
+- Ministry joining, group joining, role assignment, and group creation are local prototype interactions.
 - Data does not synchronize across devices. Notebook photos currently have no cloud backup.
 - Clearing browser storage may remove local information.
 - Testers can delete Ekklesia Pulse-owned local data from Profile without clearing unrelated browser storage.
@@ -78,21 +105,25 @@ Recommended testing areas:
 - Journey review
 - Additional devotion
 - Bible reader
-- Refresh persistence
+- Church Workspace entry and exit
+- Ministry code joining
+- Group-code preview and join requests
+- Appointed Group Leader creation flow
+- Refresh persistence and legacy Circle migration
 - Profile editing
 - Feedback sharing
 - Local-data deletion
 
-Do not use the current Together demo as an official church attendance or devotion-monitoring record.
+Do not use the current prototype as an official church membership, ministry roster, group roster, attendance, or devotion-monitoring record.
 
 ## Prototype Limitations
 
 Ekklesia Pulse is currently a frontend prototype. A production-connected release still requires:
 
-- Real member and ecosystem-owner accounts
+- Real member, organization-owner, ministry-manager, and Group Leader accounts
 - Secure server persistence and code validation
-- Rotating circle codes and subscription enforcement
-- Role-based permissions and member-capacity controls
+- Server-enforced role and scope permissions
+- Approval queues and member-capacity controls
 - Cross-device synchronization
 - Notebook-photo cloud backup
 - Live multi-user activity and Church Pulse data
