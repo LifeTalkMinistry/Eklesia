@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import AlphaBadge from './AlphaBadge.jsx';
+import GroupWorkspace from './GroupWorkspace.jsx';
 import OrganizationHub from './OrganizationHub.jsx';
 import { getOrganizationPrototypeState } from '../services/organizationPrototypeService.js';
 import './ChurchWorkspace.css';
@@ -36,8 +37,8 @@ function OrganizationDetailsDialog({ ecosystem, onClose }) {
           <div><dt>Joined status</dt><dd>Connected on this device</dd></div>
         </dl>
         <div className="church-workspace-dialog-note">
-          <strong>One church. Official ministries. Purpose-driven groups.</strong>
-          <p>Ministry managers receive scoped authority for an official ministry. Appointed Group Leaders may create mission-specific groups without receiving access to private devotional content.</p>
+          <strong>One church. Many ministries and purpose-driven groups.</strong>
+          <p>Ministry and appointed Group Leaders receive authority only within the areas assigned to them. Private devotional content remains protected.</p>
         </div>
       </section>
     </div>
@@ -57,7 +58,7 @@ function LeaveOrganizationDialog({ ecosystem, leaving, error, onStay, onConfirm 
         <p className="dashboard-eyebrow">Connection settings</p>
         <h2 id="church-workspace-leave-title">Leave {ecosystem.name}?</h2>
         <p className="church-workspace-dialog-copy">
-          You will no longer have access to this church organization, its official ministries, or its leader-created groups on this device. Your personal devotions, WGAP reflections, Journey history, Bible position, and notebook photos will remain unchanged.
+          You will no longer have access to this church organization, its ministries, or its leader-created groups on this device. Your personal devotions, WGAP reflections, Journey history, Bible position, and notebook photos will remain unchanged.
         </p>
         {error ? <p className="church-workspace-error" role="alert">{error}</p> : null}
         <div className="church-workspace-dialog-actions">
@@ -71,18 +72,68 @@ function LeaveOrganizationDialog({ ecosystem, leaving, error, onStay, onConfirm 
   );
 }
 
+function JoinedGroupsLauncher({ groups, workspace, profile, onOpenGroup }) {
+  const currentMemberName = profile?.displayName || 'Current member';
+  const ministries = workspace?.ministries || [];
+  const members = workspace?.members || [];
+
+  function leaderName(group) {
+    if (group.leaderId === 'current-member') return currentMemberName;
+    return members.find((member) => member.id === group.leaderId)?.name || 'Appointed leader';
+  }
+
+  function ministryName(group) {
+    return ministries.find((ministry) => ministry.id === group.connectedMinistryId)?.name || 'Church-wide group';
+  }
+
+  return (
+    <section className="church-joined-groups-launcher" aria-labelledby="joined-groups-launcher-title">
+      <div className="church-joined-groups-heading">
+        <div><p className="dashboard-eyebrow">Your joined groups</p><h2 id="joined-groups-launcher-title">Continue to your group space</h2></div>
+        <span>{groups.length} joined</span>
+      </div>
+      <div className="church-joined-groups-list">
+        {groups.map((group) => (
+          <button className="church-joined-group-button" key={group.id} type="button" onClick={() => onOpenGroup(group.id)}>
+            <span>{group.name}</span>
+            <small>{ministryName(group)} · Led by {leaderName(group)}</small>
+            <b>Open group →</b>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function ChurchWorkspace({ organization, profile, onExit, onLeaveOrganization }) {
+  const initialWorkspace = organization ? getOrganizationPrototypeState(organization) : null;
+  const [workspaceSnapshot, setWorkspaceSnapshot] = useState(initialWorkspace);
+  const [activeGroupId, setActiveGroupId] = useState('');
   const [showDetails, setShowDetails] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState('');
   const [demoExpanded, setDemoExpanded] = useState(false);
   const headingRef = useRef(null);
+  const contentRef = useRef(null);
+  const workspaceSignatureRef = useRef(JSON.stringify(initialWorkspace));
+  const previousJoinedGroupIdsRef = useRef(new Set(initialWorkspace?.currentMember?.groupIds || []));
 
-  const currentRole = useMemo(() => {
-    if (!organization) return 'Church Member';
-    return getOrganizationPrototypeState(organization).currentMember?.organizationRole || 'Church Member';
-  }, [organization]);
+  const currentRole = workspaceSnapshot?.currentMember?.organizationRole || 'Church Member';
+  const joinedGroups = useMemo(() => {
+    const joinedIds = new Set(workspaceSnapshot?.currentMember?.groupIds || []);
+    return (workspaceSnapshot?.groups || []).filter((group) => joinedIds.has(group.id));
+  }, [workspaceSnapshot]);
+  const activeGroup = joinedGroups.find((group) => group.id === activeGroupId) || null;
+
+  useEffect(() => {
+    if (!organization) return;
+    const nextWorkspace = getOrganizationPrototypeState(organization);
+    setWorkspaceSnapshot(nextWorkspace);
+    workspaceSignatureRef.current = JSON.stringify(nextWorkspace);
+    previousJoinedGroupIdsRef.current = new Set(nextWorkspace.currentMember?.groupIds || []);
+    setActiveGroupId('');
+  }, [organization?.id]);
 
   useEffect(() => {
     headingRef.current?.focus();
@@ -104,18 +155,54 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
     const observer = new MutationObserver(syncAccessibleSectionState);
     observer.observe(nav, { attributes: true, subtree: true, attributeFilter: ['class'] });
     return () => observer.disconnect();
+  }, [organization?.id, activeGroupId]);
+
+  useEffect(() => {
+    if (!organization || !contentRef.current) return undefined;
+    let frame = 0;
+
+    function syncWorkspaceFromStorage() {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const nextWorkspace = getOrganizationPrototypeState(organization);
+        const nextSignature = JSON.stringify(nextWorkspace);
+        const nextJoinedIds = new Set(nextWorkspace.currentMember?.groupIds || []);
+        const previousJoinedIds = previousJoinedGroupIdsRef.current;
+        const newlyJoinedGroupId = [...nextJoinedIds].find((groupId) => !previousJoinedIds.has(groupId));
+
+        previousJoinedGroupIdsRef.current = nextJoinedIds;
+        if (nextSignature !== workspaceSignatureRef.current) {
+          workspaceSignatureRef.current = nextSignature;
+          setWorkspaceSnapshot(nextWorkspace);
+        }
+        if (newlyJoinedGroupId) setActiveGroupId(newlyJoinedGroupId);
+      });
+    }
+
+    const observer = new MutationObserver(syncWorkspaceFromStorage);
+    observer.observe(contentRef.current, { childList: true, subtree: true, characterData: true });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
   }, [organization?.id]);
+
+  useEffect(() => {
+    if (activeGroupId && !joinedGroups.some((group) => group.id === activeGroupId)) setActiveGroupId('');
+  }, [activeGroupId, joinedGroups]);
 
   useEffect(() => {
     function handleEscape(event) {
       if (event.key !== 'Escape') return;
       if (showLeaveDialog && !leaving) setShowLeaveDialog(false);
       else if (showDetails) setShowDetails(false);
+      else if (activeGroupId) setActiveGroupId('');
     }
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [showDetails, showLeaveDialog, leaving]);
+  }, [showDetails, showLeaveDialog, leaving, activeGroupId]);
 
   function exitToPersonalSpace() {
     if (typeof window !== 'undefined' && window.history.state?.ekklesiaWorkspaceId) {
@@ -193,22 +280,42 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
 
           {demoExpanded ? (
             <div className="church-workspace-demo-details" id={demoDetailsId}>
-              The church organization, official ministries, appointed leader roles, groups, access codes, privacy settings, and Church Pulse shown here are local prototype information. No live church-member accounts are connected.
+              The church organization, ministries, groups, roles, codes, privacy settings, and Church Pulse shown here are local prototype information. No live church-member accounts are connected.
             </div>
           ) : null}
           <p className="church-workspace-announcement" aria-live="polite">Entered {organization.name} workspace.</p>
         </header>
 
-        <div className="church-workspace-content">
-          <OrganizationHub
-            organization={organization}
-            profile={profile}
-            onShowDetails={() => setShowDetails(true)}
-            onRequestLeave={() => {
-              setLeaveError('');
-              setShowLeaveDialog(true);
-            }}
-          />
+        <div className="church-workspace-content" ref={contentRef}>
+          {activeGroup && workspaceSnapshot ? (
+            <GroupWorkspace
+              organization={organization}
+              workspace={workspaceSnapshot}
+              group={activeGroup}
+              profile={profile}
+              onBack={() => setActiveGroupId('')}
+            />
+          ) : (
+            <>
+              {joinedGroups.length && workspaceSnapshot ? (
+                <JoinedGroupsLauncher
+                  groups={joinedGroups}
+                  workspace={workspaceSnapshot}
+                  profile={profile}
+                  onOpenGroup={setActiveGroupId}
+                />
+              ) : null}
+              <OrganizationHub
+                organization={organization}
+                profile={profile}
+                onShowDetails={() => setShowDetails(true)}
+                onRequestLeave={() => {
+                  setLeaveError('');
+                  setShowLeaveDialog(true);
+                }}
+              />
+            </>
+          )}
         </div>
       </div>
 
