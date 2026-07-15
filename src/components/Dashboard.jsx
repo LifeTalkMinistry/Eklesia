@@ -3,7 +3,6 @@ import { APP_NAME } from '../config/appConfig.js';
 import AlphaBadge from './AlphaBadge.jsx';
 import AlphaInformation from './AlphaInformation.jsx';
 import BibleReader from './BibleReader.jsx';
-import DailyCheckInPortal from './DailyCheckInPortal.jsx';
 import DeleteLocalDataDialog from './DeleteLocalDataDialog.jsx';
 import EditProfileDialog from './EditProfileDialog.jsx';
 import FeedbackDialog from './FeedbackDialog.jsx';
@@ -102,7 +101,7 @@ function TogetherDemoNotice() {
       {expanded ? (
         <div className="together-alpha-notice-details" id={detailsId}>
           <strong>Together is not connected to live church members.</strong>
-          <p>This section currently uses demonstration information. The connected version will require secure personal accounts and the Ekklesia Pulse backend.</p>
+          <p>The church organization, ministries, roles, codes, visibility settings, and Church Pulse shown here are a local UI prototype. The connected version will require secure accounts and the Ekklesia Pulse backend.</p>
         </div>
       ) : null}
     </aside>
@@ -252,7 +251,7 @@ export default function Dashboard({
     home: <HomeDashboard profile={profile} dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} dailyRefreshing={dailyRefreshing} dailyRefreshError={dailyRefreshError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onRefreshDaily={onRefreshDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} />,
     journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} onEntryUpdated={onHistoryEntryUpdated} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
-    community: <><TogetherDemoNotice /><Together /><DailyCheckInPortal /></>,
+    community: <><TogetherDemoNotice /><Together profile={profile} /></>,
     profile: <Profile profile={profile} storageAvailable={storageAvailable} onProfileUpdated={onProfileUpdated} onRestartIntroduction={onRestartIntroduction} onDeleteLocalData={onDeleteLocalData} />,
   }[activeTab];
 
