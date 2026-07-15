@@ -242,6 +242,8 @@ export default function Dashboard({
   onSelectHistoryEntry,
   onCloseHistoryEntry,
   onHistoryEntryUpdated,
+  onEnterOrganization,
+  organizationLauncherFocusKey,
 }) {
   const [showWhyEklesia, setShowWhyEklesia] = useState(false);
   const whyEklesiaButtonRef = useRef(null);
@@ -251,7 +253,7 @@ export default function Dashboard({
     home: <HomeDashboard profile={profile} dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} dailyRefreshing={dailyRefreshing} dailyRefreshError={dailyRefreshError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onRefreshDaily={onRefreshDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} />,
     journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} onEntryUpdated={onHistoryEntryUpdated} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
-    community: <><TogetherDemoNotice /><Together profile={profile} /></>,
+    community: <><TogetherDemoNotice /><Together profile={profile} onEnterOrganization={onEnterOrganization} focusKey={organizationLauncherFocusKey} /></>,
     profile: <Profile profile={profile} storageAvailable={storageAvailable} onProfileUpdated={onProfileUpdated} onRestartIntroduction={onRestartIntroduction} onDeleteLocalData={onDeleteLocalData} />,
   }[activeTab];
 
