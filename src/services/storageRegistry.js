@@ -6,6 +6,7 @@ export const STORAGE_KEYS = Object.freeze({
   lastBibleLocation: 'ekklesiaPulse.lastBibleLocation',
   devotionDataVersion: 'ekklesiaPulse.devotionDataVersion',
   joinedEcosystemId: 'ekklesiaPulse.joinedEcosystemId',
+  activeWorkspace: 'ekklesiaPulse.activeWorkspace',
   organizationPrototype: 'ekklesiaPulse.organizationPrototype',
   brandMigrationVersion: 'ekklesiaPulse.brandMigrationVersion',
   legacyWgapHistory: 'ekklesiaPulse-wgap-history-v1',
