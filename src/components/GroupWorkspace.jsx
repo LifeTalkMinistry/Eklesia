@@ -213,11 +213,10 @@ function RhythmView({ members }) {
       {orderedMembers.length ? (
         <div className="daily-checkin-list" role="list" aria-label="Weekly group devotion accountability">
           {orderedMembers.map((member) => {
-            const perfect = member.completedCount === elapsedDays;
             const consistency = getConsistencyStatus(member, elapsedDays);
 
             return (
-              <article className={`daily-rhythm-row ${perfect ? 'is-perfect' : ''}`} key={member.id} role="listitem">
+              <article className={`daily-rhythm-row is-${consistency.tone}`} key={member.id} role="listitem">
                 <button
                   className="group-rhythm-row-button"
                   type="button"
@@ -227,10 +226,7 @@ function RhythmView({ members }) {
                   <div className="daily-rhythm-member-line">
                     <span className="daily-checkin-avatar" aria-hidden="true">{member.name.charAt(0)}</span>
                     <div className="daily-checkin-member">
-                      <span className="group-rhythm-name-line">
-                        <strong>{member.name}</strong>
-                        <span className={`group-rhythm-status is-${consistency.tone}`}>{consistency.label}</span>
-                      </span>
+                      <strong>{member.name}</strong>
                       <small>{getRhythmLabel(member, elapsedDays)}</small>
                     </div>
                     <span className="group-rhythm-meta"><span className="daily-rhythm-score">{member.completedCount} of {elapsedDays}</span><span aria-hidden="true">›</span></span>
@@ -243,7 +239,7 @@ function RhythmView({ members }) {
         </div>
       ) : <p className="group-workspace-empty">No shared member rhythm is available in this prototype group yet.</p>}
 
-      <p className="daily-checkin-principle">Green means consistent, amber means needs consistency, and gray means there is not enough weekly data. These labels reflect this week only and are not a spiritual score.</p>
+      <p className="daily-checkin-principle">Green rows mean consistent, amber rows mean needs consistency, and gray rows mean there is not enough weekly data. The color reflects this week only and is not a spiritual score.</p>
     </section>
   );
 }
