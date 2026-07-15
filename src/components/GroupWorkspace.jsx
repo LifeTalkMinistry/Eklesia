@@ -85,19 +85,6 @@ function getRhythmLabel(member, elapsedDays) {
   return `${member.completedCount} completed ${member.completedCount === 1 ? 'day' : 'days'}`;
 }
 
-function getConsistencyStatus(member, elapsedDays) {
-  if (!Array.isArray(member.weeklyCheckIns) || elapsedDays < 2) {
-    return { label: 'Not enough data', tone: 'neutral' };
-  }
-
-  const completionRate = member.completedCount / elapsedDays;
-  if (completionRate >= 0.75) {
-    return { label: 'Consistent', tone: 'consistent' };
-  }
-
-  return { label: 'Needs consistency', tone: 'needs-consistency' };
-}
-
 function WeeklyRhythm({ member, todayIndex, accessible = false }) {
   return (
     <div
@@ -213,22 +200,19 @@ function RhythmView({ members }) {
       {orderedMembers.length ? (
         <div className="daily-checkin-list" role="list" aria-label="Weekly group devotion accountability">
           {orderedMembers.map((member) => {
-            const consistency = getConsistencyStatus(member, elapsedDays);
+            const perfect = member.completedCount === elapsedDays;
 
             return (
-              <article className={`daily-rhythm-row is-${consistency.tone}`} key={member.id} role="listitem">
+              <article className={`daily-rhythm-row ${perfect ? 'is-perfect' : ''}`} key={member.id} role="listitem">
                 <button
                   className="group-rhythm-row-button"
                   type="button"
                   onClick={() => setSelectedMemberId(member.id)}
-                  aria-label={`View ${member.name}'s shared progress summary. ${consistency.label}. ${member.completedCount} of ${elapsedDays} elapsed days completed.`}
+                  aria-label={`View ${member.name}'s shared progress summary. ${member.completedCount} of ${elapsedDays} elapsed days completed.`}
                 >
                   <div className="daily-rhythm-member-line">
                     <span className="daily-checkin-avatar" aria-hidden="true">{member.name.charAt(0)}</span>
-                    <div className="daily-checkin-member">
-                      <strong>{member.name}</strong>
-                      <small>{getRhythmLabel(member, elapsedDays)}</small>
-                    </div>
+                    <div className="daily-checkin-member"><strong>{member.name}</strong><small>{getRhythmLabel(member, elapsedDays)}</small></div>
                     <span className="group-rhythm-meta"><span className="daily-rhythm-score">{member.completedCount} of {elapsedDays}</span><span aria-hidden="true">›</span></span>
                   </div>
                   <WeeklyRhythm member={member} todayIndex={todayIndex} />
@@ -239,7 +223,7 @@ function RhythmView({ members }) {
         </div>
       ) : <p className="group-workspace-empty">No shared member rhythm is available in this prototype group yet.</p>}
 
-      <p className="daily-checkin-principle">Green rows mean consistent, amber rows mean needs consistency, and gray rows mean there is not enough weekly data. The color reflects this week only and is not a spiritual score.</p>
+      <p className="daily-checkin-principle">Members who may appreciate encouragement appear first. This order is not a spiritual score.</p>
     </section>
   );
 }
