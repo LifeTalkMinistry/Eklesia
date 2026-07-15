@@ -1,8 +1,10 @@
 import { mockEcosystems } from '../data/mockEcosystems.js';
+import { clearActiveWorkspace } from './organizationPrototypeService.js';
+import { getBrowserStorage, STORAGE_KEYS } from './storageRegistry.js';
 
 // Replace this local prototype adapter with a real API client when Ekklesia Pulse adds
 // accounts, memberships, rotating codes, plan limits, permissions, and synchronization.
-const JOINED_ECOSYSTEM_STORAGE_KEY = 'ekklesiaPulse.joinedEcosystemId';
+const JOINED_ECOSYSTEM_STORAGE_KEY = STORAGE_KEYS.joinedEcosystemId;
 const VALIDATION_DELAY_MS = 550;
 const JOIN_DELAY_MS = 650;
 const LEAVE_DELAY_MS = 250;
@@ -62,12 +64,16 @@ export async function findEcosystemByCode(code) {
 
 export async function getJoinedEcosystem() {
   try {
-    const joinedEcosystemId = window.localStorage.getItem(JOINED_ECOSYSTEM_STORAGE_KEY);
+    const storage = getBrowserStorage();
+    if (!storage) return { ok: true, data: null, persisted: false };
+
+    const joinedEcosystemId = storage.getItem(JOINED_ECOSYSTEM_STORAGE_KEY);
     if (!joinedEcosystemId) return { ok: true, data: null };
 
     const ecosystem = mockEcosystems.find((item) => item.id === joinedEcosystemId);
     if (!ecosystem) {
-      window.localStorage.removeItem(JOINED_ECOSYSTEM_STORAGE_KEY);
+      storage.removeItem(JOINED_ECOSYSTEM_STORAGE_KEY);
+      clearActiveWorkspace();
       return { ok: true, data: null };
     }
 
@@ -97,8 +103,13 @@ export async function joinEcosystem(ecosystemId) {
       );
     }
 
-    window.localStorage.setItem(JOINED_ECOSYSTEM_STORAGE_KEY, ecosystem.id);
-    return { ok: true, data: copyEcosystem(ecosystem) };
+    const storage = getBrowserStorage();
+    if (!storage) {
+      return { ok: true, data: copyEcosystem(ecosystem), persisted: false };
+    }
+
+    storage.setItem(JOINED_ECOSYSTEM_STORAGE_KEY, ecosystem.id);
+    return { ok: true, data: copyEcosystem(ecosystem), persisted: true };
   } catch (error) {
     console.error('Organization join failed', error);
     return resultError(
@@ -112,8 +123,10 @@ export async function leaveEcosystem() {
   await wait(LEAVE_DELAY_MS);
 
   try {
-    window.localStorage.removeItem(JOINED_ECOSYSTEM_STORAGE_KEY);
-    return { ok: true, data: null };
+    const storage = getBrowserStorage();
+    if (storage) storage.removeItem(JOINED_ECOSYSTEM_STORAGE_KEY);
+    clearActiveWorkspace();
+    return { ok: true, data: null, persisted: Boolean(storage) };
   } catch (error) {
     console.error('Organization leave failed', error);
     return resultError(

@@ -14,12 +14,25 @@ Ekklesia Pulse is a devotional accountability ecosystem that helps church member
 - **Church pulse overview:** The Together experience demonstrates privacy-safe activity signals that can help a church notice when encouragement may be useful.
 - **Privacy-first monitoring:** Circle views show healthy consistency signals without exposing Scripture selections, reflection text, personal prayers, or journal contents.
 
+## Personal and Church Workspaces
+
+Ekklesia Pulse has two interface environments inside the same application.
+
+**Personal Space** includes Home, Journey, Bible, Together, Profile, personal devotions, private reflections, and the member’s personal rhythm. Together is the place to discover a church organization, enter an organization code, review membership, and launch the church environment.
+
+**Church Workspace** includes Church Pulse, ministries, accountability circles, people and scoped roles, and organization privacy controls. Entering this workspace removes the personal header and bottom navigation so the church name and church navigation become the primary interface.
+
+- **My personal space** exits the Church Workspace and returns to Together without removing organization membership.
+- **Leave organization** is a separate destructive action that requires confirmation and removes the local membership connection.
+- Membership and active-workspace state are stored separately in the current browser.
+- The current organization, roles, ministries, codes, privacy settings, and Church Pulse are local demonstration data.
+- Real member accounts, backend permissions, live synchronization, and live church information are not implemented.
+
 ## Daily Rhythm and Additional Devotions
 
 The first completed devotion on a Manila calendar date is saved as that date’s **Daily devotion**. It marks one completed day in the weekly rhythm and can increase the rhythm streak only once for that date.
 
 After the daily rhythm is complete, members may complete unlimited **Additional devotions** through another curated suggestion, a passage selected from the built-in Bible, the most recently opened Bible chapter, or a private notebook capture. Additional devotions are saved privately in Journey and do not create another daily check mark, streak day, or accountability completion for the same date.
-
 
 ## Notebook Devotions
 

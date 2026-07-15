@@ -5,6 +5,7 @@ import {
   resetOnboarding,
 } from './profileService.js';
 import { isNotebookImageStorageAvailable, deleteAllNotebookImages } from './notebookImageService.js';
+import { clearActiveWorkspace } from './organizationPrototypeService.js';
 import {
   getBrowserStorage,
   isLocalStorageAvailable,
@@ -68,11 +69,12 @@ export function createSafeDiagnosticSummary({
 }
 
 export function restartIntroductionState() {
+  const workspaceResult = clearActiveWorkspace();
   const onboardingResult = resetOnboarding();
   const alphaResult = resetAlphaNotice();
   return {
-    ok: onboardingResult.ok && alphaResult.ok,
-    persisted: onboardingResult.persisted !== false && alphaResult.persisted !== false,
+    ok: workspaceResult.ok && onboardingResult.ok && alphaResult.ok,
+    persisted: workspaceResult.persisted !== false && onboardingResult.persisted !== false && alphaResult.persisted !== false,
     message: onboardingResult.ok && alphaResult.ok
       ? onboardingResult.message || alphaResult.message || ''
       : 'The introduction could not be restarted completely on this device.',

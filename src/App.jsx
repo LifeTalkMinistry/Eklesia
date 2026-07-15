@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { APP_NAME, APP_TAGLINE } from './config/appConfig.js';
 import AdditionalDevotionChooser from './components/AdditionalDevotionChooser.jsx';
 import AlphaInformation from './components/AlphaInformation.jsx';
+import ChurchWorkspace from './components/ChurchWorkspace.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Devotion from './components/Devotion.jsx';
 import DevotionChoice from './components/DevotionChoice.jsx';
@@ -16,6 +17,12 @@ import {
   getRecentlyCompletedReferences,
   saveCompletedDevotion,
 } from './services/devotionService.js';
+import { getJoinedEcosystem, leaveEcosystem } from './services/ecosystemService.js';
+import {
+  clearActiveWorkspace,
+  enterOrganizationWorkspace,
+  restoreActiveOrganizationWorkspace,
+} from './services/organizationPrototypeService.js';
 import {
   acceptAlphaNotice,
   getLocalProfile,
@@ -49,6 +56,18 @@ function Welcome({ onBegin, statusMessage, storageAvailable }) {
         {!storageAvailable ? <StorageWarning /> : null}
         {statusMessage ? <p className="alpha-success-message" role="status">{statusMessage}</p> : null}
         <button className="primary-button" type="button" onClick={onBegin}>Begin your journey</button>
+      </section>
+    </main>
+  );
+}
+
+function WorkspaceRestoring() {
+  return (
+    <main className="app-shell welcome-shell">
+      <section className="welcome-card" aria-live="polite">
+        <p className="eyebrow">Ekklesia Pulse</p>
+        <h1>Restoring your space…</h1>
+        <p className="description">Checking the workspace saved on this device.</p>
       </section>
     </main>
   );
@@ -156,6 +175,10 @@ export default function App() {
   const [additionalSuggestionError, setAdditionalSuggestionError] = useState('');
   const [lastBibleLocation, setLastBibleLocation] = useState(safelyGetLastBibleLocation);
   const [notebookInitialFile, setNotebookInitialFile] = useState(null);
+  const [workspaceMode, setWorkspaceMode] = useState('personal');
+  const [activeOrganization, setActiveOrganization] = useState(null);
+  const [workspaceRestoring, setWorkspaceRestoring] = useState(true);
+  const [organizationLauncherFocusKey, setOrganizationLauncherFocusKey] = useState(0);
 
   const submissionKeyRef = useRef('');
   const additionalTriggerRef = useRef(null);
@@ -164,10 +187,71 @@ export default function App() {
   const dailyBaseReferenceRef = useRef('');
   const dailySuggestionIndexRef = useRef(-1);
   const dailySuggestionRequestRef = useRef(0);
+  const suppressNextPopstateRef = useRef(false);
 
   const todayOfficial = getOfficialDailyDevotion(manilaDateKey, devotions);
   const completedToday = Boolean(todayOfficial);
   const activeEntryCompleted = Boolean(activeSavedEntryId);
+
+  function pushChurchHistoryState(organizationId) {
+    if (typeof window === 'undefined') return;
+    const currentState = window.history.state || {};
+    if (currentState.ekklesiaWorkspaceId === organizationId) return;
+    window.history.replaceState({ ...currentState, ekklesiaWorkspaceId: undefined, ekklesiaPersonalSpace: true }, '');
+    window.history.pushState({ ...currentState, ekklesiaWorkspaceId: organizationId }, '');
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restoreWorkspace() {
+      if (!hasCompletedOnboarding() || !hasAcceptedAlphaNotice()) {
+        clearActiveWorkspace();
+        if (!cancelled) setWorkspaceRestoring(false);
+        return;
+      }
+
+      const activeResult = restoreActiveOrganizationWorkspace();
+      if (!activeResult.data) {
+        if (!cancelled) setWorkspaceRestoring(false);
+        return;
+      }
+
+      const joinedResult = await getJoinedEcosystem();
+      if (cancelled) return;
+
+      if (joinedResult.ok && joinedResult.data?.id === activeResult.data.organizationId) {
+        setActiveOrganization(joinedResult.data);
+        setWorkspaceMode('church');
+        setActiveTab('community');
+        setScreen('dashboard');
+        pushChurchHistoryState(joinedResult.data.id);
+      } else {
+        clearActiveWorkspace();
+        setWorkspaceMode('personal');
+        setActiveOrganization(null);
+      }
+      setWorkspaceRestoring(false);
+    }
+
+    restoreWorkspace();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (workspaceMode !== 'church') return undefined;
+
+    function handlePopState() {
+      if (suppressNextPopstateRef.current) {
+        suppressNextPopstateRef.current = false;
+        return;
+      }
+      exitChurchWorkspace({ fromHistory: true });
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [workspaceMode]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -248,10 +332,62 @@ export default function App() {
     setScreen('dashboard');
   }
 
+  function enterChurchWorkspace(organization) {
+    if (!organization?.id) return;
+    enterOrganizationWorkspace(organization.id);
+    setActiveOrganization(organization);
+    setWorkspaceMode('church');
+    setActiveTab('community');
+    setSelectedHistoryId(null);
+    setBibleSelectionMode(false);
+    setReturnFromBible(false);
+    setAdditionalChooserOpen(false);
+    setScreen('dashboard');
+    pushChurchHistoryState(organization.id);
+  }
+
+  function exitChurchWorkspace({ fromHistory = false } = {}) {
+    clearActiveWorkspace();
+    setWorkspaceMode('personal');
+    setActiveOrganization(null);
+    setActiveTab('community');
+    setSelectedHistoryId(null);
+    setBibleSelectionMode(false);
+    setReturnFromBible(false);
+    setAdditionalChooserOpen(false);
+    setScreen('dashboard');
+    setOrganizationLauncherFocusKey((current) => current + 1);
+
+    if (!fromHistory && typeof window !== 'undefined' && window.history.state?.ekklesiaWorkspaceId) {
+      suppressNextPopstateRef.current = true;
+      window.history.back();
+    }
+  }
+
+  async function leaveOrganizationFromWorkspace() {
+    const result = await leaveEcosystem();
+    if (!result.ok) return result;
+
+    clearActiveWorkspace();
+    setWorkspaceMode('personal');
+    setActiveOrganization(null);
+    setActiveTab('community');
+    setScreen('dashboard');
+    setOrganizationLauncherFocusKey((current) => current + 1);
+
+    if (typeof window !== 'undefined' && window.history.state?.ekklesiaWorkspaceId) {
+      suppressNextPopstateRef.current = true;
+      window.history.back();
+    }
+    return result;
+  }
+
   function restartIntroduction() {
     const result = restartIntroductionState();
     if (!result.ok) return result;
 
+    setWorkspaceMode('personal');
+    setActiveOrganization(null);
     setActiveTab('home');
     setSelectedHistoryId(null);
     setBibleSelectionMode(false);
@@ -280,6 +416,8 @@ export default function App() {
     setReturnFromBible(false);
     setAdditionalChooserOpen(false);
     setAdditionalSuggestion(null);
+    setWorkspaceMode('personal');
+    setActiveOrganization(null);
     setActiveTab('home');
     setSessionKey((current) => current + 1);
     setStorageAvailable(isLocalStorageAvailable());
@@ -523,6 +661,8 @@ export default function App() {
     window.requestAnimationFrame(() => openAdditionalChooser());
   }
 
+  if (workspaceRestoring) return <WorkspaceRestoring />;
+
   if (screen === 'welcome') {
     return <Welcome onBegin={beginJourney} statusMessage={appMessage} storageAvailable={storageAvailable} />;
   }
@@ -616,6 +756,17 @@ export default function App() {
     );
   }
 
+  if (workspaceMode === 'church') {
+    return (
+      <ChurchWorkspace
+        organization={activeOrganization}
+        profile={profile}
+        onExit={() => exitChurchWorkspace()}
+        onLeaveOrganization={leaveOrganizationFromWorkspace}
+      />
+    );
+  }
+
   return (
     <>
       <Dashboard
@@ -681,6 +832,8 @@ export default function App() {
         onSelectHistoryEntry={setSelectedHistoryId}
         onCloseHistoryEntry={() => setSelectedHistoryId(null)}
         onHistoryEntryUpdated={refreshDevotionHistory}
+        onEnterOrganization={enterChurchWorkspace}
+        organizationLauncherFocusKey={organizationLauncherFocusKey}
       />
       <AdditionalDevotionChooser
         open={additionalChooserOpen}

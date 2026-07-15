@@ -102,6 +102,76 @@ export function saveOrganizationPrototypeState(organizationId, workspace) {
   }
 }
 
+export function getActiveWorkspace() {
+  const storage = getBrowserStorage();
+  if (!storage) return { ok: true, persisted: false, data: null };
+
+  try {
+    const raw = storage.getItem(STORAGE_KEYS.activeWorkspace);
+    if (!raw) return { ok: true, persisted: true, data: null };
+
+    const parsed = JSON.parse(raw);
+    if (parsed?.type !== 'church' || typeof parsed.organizationId !== 'string' || !parsed.organizationId.trim()) {
+      storage.removeItem(STORAGE_KEYS.activeWorkspace);
+      return { ok: true, persisted: true, data: null, repaired: true };
+    }
+
+    return {
+      ok: true,
+      persisted: true,
+      data: { type: 'church', organizationId: parsed.organizationId },
+    };
+  } catch (error) {
+    console.warn('Ekklesia Pulse could not restore the active workspace.', error);
+    try {
+      storage.removeItem(STORAGE_KEYS.activeWorkspace);
+    } catch (cleanupError) {
+      console.warn('Ekklesia Pulse could not clear malformed workspace data.', cleanupError);
+    }
+    return { ok: true, persisted: false, data: null, repaired: true };
+  }
+}
+
+export function restoreActiveOrganizationWorkspace() {
+  return getActiveWorkspace();
+}
+
+export function enterOrganizationWorkspace(organizationId) {
+  const normalizedId = String(organizationId || '').trim();
+  if (!normalizedId) {
+    return { ok: false, persisted: false, error: { code: 'INVALID_ORGANIZATION', message: 'This church organization is unavailable.' } };
+  }
+
+  const data = { type: 'church', organizationId: normalizedId };
+  const storage = getBrowserStorage();
+  if (!storage) return { ok: true, persisted: false, data };
+
+  try {
+    storage.setItem(STORAGE_KEYS.activeWorkspace, JSON.stringify(data));
+    return { ok: true, persisted: true, data };
+  } catch (error) {
+    console.warn('Ekklesia Pulse could not persist the active church workspace.', error);
+    return { ok: true, persisted: false, data };
+  }
+}
+
+export function clearActiveWorkspace() {
+  const storage = getBrowserStorage();
+  if (!storage) return { ok: true, persisted: false, data: null };
+
+  try {
+    storage.removeItem(STORAGE_KEYS.activeWorkspace);
+    return { ok: true, persisted: true, data: null };
+  } catch (error) {
+    console.warn('Ekklesia Pulse could not clear the active workspace.', error);
+    return { ok: true, persisted: false, data: null };
+  }
+}
+
+export function exitOrganizationWorkspace() {
+  return clearActiveWorkspace();
+}
+
 export function generatePrototypeCode(label = 'CIRCLE') {
   const prefix = String(label)
     .toUpperCase()
