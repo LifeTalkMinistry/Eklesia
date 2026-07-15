@@ -3,6 +3,7 @@ import AlphaBadge from './AlphaBadge.jsx';
 import OrganizationHub from './OrganizationHub.jsx';
 import { getOrganizationPrototypeState } from '../services/organizationPrototypeService.js';
 import './ChurchWorkspace.css';
+import './TogetherWorkspace.css';
 
 function OrganizationDetailsDialog({ ecosystem, onClose }) {
   const closeButtonRef = useRef(null);
@@ -88,6 +89,24 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
   }, [organization?.id]);
 
   useEffect(() => {
+    const nav = document.querySelector('.church-workspace-content .organization-section-nav');
+    if (!nav) return undefined;
+
+    function syncAccessibleSectionState() {
+      nav.querySelectorAll('button').forEach((button) => {
+        const active = button.classList.contains('is-active');
+        if (active) button.setAttribute('aria-current', 'page');
+        else button.removeAttribute('aria-current');
+      });
+    }
+
+    syncAccessibleSectionState();
+    const observer = new MutationObserver(syncAccessibleSectionState);
+    observer.observe(nav, { attributes: true, subtree: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, [organization?.id]);
+
+  useEffect(() => {
     function handleEscape(event) {
       if (event.key !== 'Escape') return;
       if (showLeaveDialog && !leaving) setShowLeaveDialog(false);
@@ -98,10 +117,24 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
     return () => document.removeEventListener('keydown', handleEscape);
   }, [showDetails, showLeaveDialog, leaving]);
 
+  function exitToPersonalSpace() {
+    if (typeof window !== 'undefined' && window.history.state?.ekklesiaWorkspaceId) {
+      window.history.back();
+      return;
+    }
+    onExit();
+  }
+
   async function confirmLeave() {
     if (leaving) return;
     setLeaving(true);
     setLeaveError('');
+
+    if (typeof window !== 'undefined' && window.history.state?.ekklesiaWorkspaceId) {
+      const currentState = window.history.state || {};
+      window.history.replaceState({ ...currentState, ekklesiaWorkspaceId: undefined, ekklesiaPersonalSpace: true }, '');
+    }
+
     const result = await onLeaveOrganization(organization);
     if (!result?.ok) {
       setLeaveError(result?.error?.message || 'The church organization could not be removed from this device.');
@@ -116,7 +149,7 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
           <p className="dashboard-eyebrow">Church workspace</p>
           <h1>Church space unavailable</h1>
           <p>This church organization could not be restored on this device. Return to your personal space and try entering it again.</p>
-          <button className="primary-button" type="button" onClick={onExit}>Return to my personal space</button>
+          <button className="primary-button" type="button" onClick={exitToPersonalSpace}>Return to my personal space</button>
         </div>
       </main>
     );
@@ -132,7 +165,7 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
             <button
               className="church-workspace-exit"
               type="button"
-              onClick={onExit}
+              onClick={exitToPersonalSpace}
               aria-label={`Exit ${organization.name} and return to my personal space`}
             >
               <span aria-hidden="true">←</span> My personal space
