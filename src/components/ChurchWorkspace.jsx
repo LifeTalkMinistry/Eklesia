@@ -1,10 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import AlphaBadge from './AlphaBadge.jsx';
+import ChurchHome from './ChurchHome.jsx';
 import GroupWorkspace from './GroupWorkspace.jsx';
 import OrganizationHub from './OrganizationHub.jsx';
-import { getOrganizationPrototypeState } from '../services/organizationPrototypeService.js';
+import {
+  getOrganizationPrototypeState,
+  saveOrganizationPrototypeState,
+} from '../services/organizationPrototypeService.js';
 import './ChurchWorkspace.css';
 import './TogetherWorkspace.css';
+
+const CHURCH_SECTIONS = [
+  ['home', 'Home'],
+  ['pulse', 'Pulse'],
+  ['ministries', 'Ministries'],
+  ['groups', 'Groups'],
+  ['people', 'People'],
+  ['privacy', 'Privacy'],
+];
+
+function clone(value) {
+  return value == null ? value : JSON.parse(JSON.stringify(value));
+}
 
 function OrganizationDetailsDialog({ ecosystem, onClose }) {
   const closeButtonRef = useRef(null);
@@ -37,7 +54,7 @@ function OrganizationDetailsDialog({ ecosystem, onClose }) {
           <div><dt>Joined status</dt><dd>Connected on this device</dd></div>
         </dl>
         <div className="church-workspace-dialog-note">
-          <strong>One church. Many ministries and purpose-driven groups.</strong>
+          <strong>One church. Many ministries and purpose-driven Groups.</strong>
           <p>Ministry and appointed Group Leaders receive authority only within the areas assigned to them. Private devotional content remains protected.</p>
         </div>
       </section>
@@ -58,7 +75,7 @@ function LeaveOrganizationDialog({ ecosystem, leaving, error, onStay, onConfirm 
         <p className="dashboard-eyebrow">Connection settings</p>
         <h2 id="church-workspace-leave-title">Leave {ecosystem.name}?</h2>
         <p className="church-workspace-dialog-copy">
-          You will no longer have access to this church organization, its ministries, or its leader-created groups on this device. Your personal devotions, WGAP reflections, Journey history, Bible position, and notebook photos will remain unchanged.
+          You will no longer have access to this church organization, its ministries, or its leader-created Groups on this device. Your personal devotions, WGAP reflections, Journey history, Bible position, and notebook photos will remain unchanged.
         </p>
         {error ? <p className="church-workspace-error" role="alert">{error}</p> : null}
         <div className="church-workspace-dialog-actions">
@@ -72,42 +89,10 @@ function LeaveOrganizationDialog({ ecosystem, leaving, error, onStay, onConfirm 
   );
 }
 
-function JoinedGroupsLauncher({ groups, workspace, profile, onOpenGroup }) {
-  const currentMemberName = profile?.displayName || 'Current member';
-  const ministries = workspace?.ministries || [];
-  const members = workspace?.members || [];
-
-  function leaderName(group) {
-    if (group.leaderId === 'current-member') return currentMemberName;
-    return members.find((member) => member.id === group.leaderId)?.name || 'Appointed leader';
-  }
-
-  function ministryName(group) {
-    return ministries.find((ministry) => ministry.id === group.connectedMinistryId)?.name || 'Church-wide group';
-  }
-
-  return (
-    <section className="church-joined-groups-launcher" aria-labelledby="joined-groups-launcher-title">
-      <div className="church-joined-groups-heading">
-        <div><p className="dashboard-eyebrow">Your joined groups</p><h2 id="joined-groups-launcher-title">Continue to your group space</h2></div>
-        <span>{groups.length} joined</span>
-      </div>
-      <div className="church-joined-groups-list">
-        {groups.map((group) => (
-          <button className="church-joined-group-button" key={group.id} type="button" onClick={() => onOpenGroup(group.id)}>
-            <span>{group.name}</span>
-            <small>{ministryName(group)} · Led by {leaderName(group)}</small>
-            <b>Open group →</b>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export default function ChurchWorkspace({ organization, profile, onExit, onLeaveOrganization }) {
   const initialWorkspace = organization ? getOrganizationPrototypeState(organization) : null;
   const [workspaceSnapshot, setWorkspaceSnapshot] = useState(initialWorkspace);
+  const [churchSection, setChurchSection] = useState('home');
   const [activeGroupId, setActiveGroupId] = useState('');
   const [showDetails, setShowDetails] = useState(false);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
@@ -116,6 +101,8 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
   const [demoExpanded, setDemoExpanded] = useState(false);
   const headingRef = useRef(null);
   const contentRef = useRef(null);
+  const hubHostRef = useRef(null);
+  const workspaceRef = useRef(initialWorkspace);
   const workspaceSignatureRef = useRef(JSON.stringify(initialWorkspace));
   const previousJoinedGroupIdsRef = useRef(new Set(initialWorkspace?.currentMember?.groupIds || []));
 
@@ -125,13 +112,16 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
     return (workspaceSnapshot?.groups || []).filter((group) => joinedIds.has(group.id));
   }, [workspaceSnapshot]);
   const activeGroup = joinedGroups.find((group) => group.id === activeGroupId) || null;
+  const firstName = String(profile?.displayName || '').trim().split(/\s+/)[0] || 'friend';
 
   useEffect(() => {
     if (!organization) return;
     const nextWorkspace = getOrganizationPrototypeState(organization);
     setWorkspaceSnapshot(nextWorkspace);
+    workspaceRef.current = nextWorkspace;
     workspaceSignatureRef.current = JSON.stringify(nextWorkspace);
     previousJoinedGroupIdsRef.current = new Set(nextWorkspace.currentMember?.groupIds || []);
+    setChurchSection('home');
     setActiveGroupId('');
   }, [organization?.id]);
 
@@ -140,22 +130,21 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
   }, [organization?.id]);
 
   useEffect(() => {
-    const nav = document.querySelector('.church-workspace-content .organization-section-nav');
-    if (!nav) return undefined;
-
-    function syncAccessibleSectionState() {
-      nav.querySelectorAll('button').forEach((button) => {
-        const active = button.classList.contains('is-active');
-        if (active) button.setAttribute('aria-current', 'page');
-        else button.removeAttribute('aria-current');
+    if (churchSection === 'home' || activeGroupId || !hubHostRef.current) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const targetButton = [...hubHostRef.current.querySelectorAll('.organization-section-nav button')]
+        .find((button) => button.textContent.trim().toLowerCase() === churchSection);
+      if (targetButton && !targetButton.classList.contains('is-active')) targetButton.click();
+      window.requestAnimationFrame(() => {
+        const heading = hubHostRef.current?.querySelector('.organization-section-stack h3');
+        if (heading) {
+          heading.setAttribute('tabindex', '-1');
+          heading.focus({ preventScroll: true });
+        }
       });
-    }
-
-    syncAccessibleSectionState();
-    const observer = new MutationObserver(syncAccessibleSectionState);
-    observer.observe(nav, { attributes: true, subtree: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, [organization?.id, activeGroupId]);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [churchSection, activeGroupId]);
 
   useEffect(() => {
     if (!organization || !contentRef.current) return undefined;
@@ -173,6 +162,7 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
         previousJoinedGroupIdsRef.current = nextJoinedIds;
         if (nextSignature !== workspaceSignatureRef.current) {
           workspaceSignatureRef.current = nextSignature;
+          workspaceRef.current = nextWorkspace;
           setWorkspaceSnapshot(nextWorkspace);
         }
         if (newlyJoinedGroupId) setActiveGroupId(newlyJoinedGroupId);
@@ -203,6 +193,26 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [showDetails, showLeaveDialog, leaving, activeGroupId]);
+
+  function updateWorkspace(updater) {
+    const current = workspaceRef.current || getOrganizationPrototypeState(organization);
+    const next = typeof updater === 'function' ? updater(clone(current)) : updater;
+    const result = saveOrganizationPrototypeState(organization.id, next);
+    workspaceRef.current = next;
+    workspaceSignatureRef.current = JSON.stringify(next);
+    previousJoinedGroupIdsRef.current = new Set(next.currentMember?.groupIds || []);
+    setWorkspaceSnapshot(next);
+    return result;
+  }
+
+  function navigateToSection(section) {
+    setActiveGroupId('');
+    setChurchSection(section);
+  }
+
+  function openGroup(groupId) {
+    setActiveGroupId(groupId);
+  }
 
   function exitToPersonalSpace() {
     if (typeof window !== 'undefined' && window.history.state?.ekklesiaWorkspaceId) {
@@ -272,15 +282,15 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
           </div>
 
           <div className="church-workspace-identity">
-            <p className="church-workspace-label">CHURCH ORGANIZATION</p>
-            <h1 ref={headingRef} tabIndex="-1">{organization.name}</h1>
-            <p className="church-workspace-role">Church Organization · {currentRole}</p>
-            <p className="church-workspace-platform">Powered by Ekklesia Pulse</p>
+            <p className="church-workspace-label">{organization.name.toUpperCase()}</p>
+            <h1 ref={headingRef} tabIndex="-1">Welcome back, {firstName}</h1>
+            <p className="church-workspace-role">{currentRole}</p>
+            <p className="church-workspace-platform">Church Home · Powered by Ekklesia Pulse</p>
           </div>
 
           {demoExpanded ? (
             <div className="church-workspace-demo-details" id={demoDetailsId}>
-              The church organization, ministries, groups, roles, codes, privacy settings, and Church Pulse shown here are local prototype information. No live church-member accounts are connected.
+              The announcements, acknowledgements, events, ministries, Groups, roles, codes, privacy settings, and Church Pulse shown here are local prototype information. No live church-member accounts are connected.
             </div>
           ) : null}
           <p className="church-workspace-announcement" aria-live="polite">Entered {organization.name} workspace.</p>
@@ -297,23 +307,43 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
             />
           ) : (
             <>
-              {joinedGroups.length && workspaceSnapshot ? (
-                <JoinedGroupsLauncher
-                  groups={joinedGroups}
-                  workspace={workspaceSnapshot}
+              <nav className="church-workspace-primary-nav" aria-label="Church Workspace sections">
+                {CHURCH_SECTIONS.map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={churchSection === id ? 'is-active' : ''}
+                    aria-current={churchSection === id ? 'page' : undefined}
+                    onClick={() => navigateToSection(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </nav>
+
+              {churchSection === 'home' && workspaceSnapshot ? (
+                <ChurchHome
+                  organization={organization}
                   profile={profile}
-                  onOpenGroup={setActiveGroupId}
+                  workspace={workspaceSnapshot}
+                  onWorkspaceChange={updateWorkspace}
+                  onOpenGroup={openGroup}
+                  onNavigate={navigateToSection}
+                  onShowDetails={() => setShowDetails(true)}
                 />
               ) : null}
-              <OrganizationHub
-                organization={organization}
-                profile={profile}
-                onShowDetails={() => setShowDetails(true)}
-                onRequestLeave={() => {
-                  setLeaveError('');
-                  setShowLeaveDialog(true);
-                }}
-              />
+
+              <div ref={hubHostRef} className="church-workspace-hub-host" hidden={churchSection === 'home'}>
+                <OrganizationHub
+                  organization={organization}
+                  profile={profile}
+                  onShowDetails={() => setShowDetails(true)}
+                  onRequestLeave={() => {
+                    setLeaveError('');
+                    setShowLeaveDialog(true);
+                  }}
+                />
+              </div>
             </>
           )}
         </div>
