@@ -5,31 +5,36 @@ import {
   saveOrganizationPrototypeState,
 } from '../services/organizationPrototypeService.js';
 import './OrganizationHub.css';
+import './OrganizationGroups.css';
 
 const SECTIONS = [
   ['pulse', 'Pulse'],
   ['ministries', 'Ministries'],
-  ['circles', 'Circles'],
+  ['groups', 'Groups'],
   ['people', 'People'],
   ['privacy', 'Privacy'],
 ];
 
 const PROFILE_SCOPES = [
   ['private', 'Only me', 'Your profile is hidden from the church directory.'],
-  ['circles', 'My circles', 'Only members of your accountability circles can see your basic profile.'],
+  ['groups', 'My groups', 'Only members of groups you joined can see your basic profile.'],
   ['ministries', 'My ministries', 'Members of ministries you belong to can see your basic profile.'],
   ['church', 'Whole church', 'Members of this church organization can see your basic profile.'],
 ];
 
 const RHYTHM_SCOPES = [
   ['private', 'Private', 'Only you can see your personal rhythm signals.'],
-  ['circles', 'Selected circles', 'Only selected accountability circles can see general rhythm signals.'],
+  ['groups', 'Selected groups', 'Only selected leader-created groups can see general rhythm signals.'],
   ['ministries', 'My ministries', 'Your ministries can see general rhythm signals.'],
   ['church', 'Whole church', 'The church can see your general rhythm status.'],
 ];
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function normalizeCode(value) {
+  return String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
 function DialogShell({ titleId, children, onClose }) {
@@ -78,25 +83,52 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
   const [expandedMinistryId, setExpandedMinistryId] = useState('music');
   const [dialog, setDialog] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
-  const [createCircleForm, setCreateCircleForm] = useState({ name: '', ministryId: 'music', leaderId: 'current-member' });
-  const [roleForm, setRoleForm] = useState({ memberId: 'member-maria', role: 'Ministry Leader', scopeType: 'ministry', scopeId: 'youth' });
+  const [ministryJoin, setMinistryJoin] = useState({ ministryId: '', code: '', verified: false, error: '' });
+  const [groupJoin, setGroupJoin] = useState({ code: '', groupId: '', verified: false, error: '' });
+  const [createGroupForm, setCreateGroupForm] = useState({
+    name: '',
+    purpose: '',
+    intendedMembers: '',
+    ministryId: '',
+    leaderId: 'current-member',
+    visibility: 'Invitation only',
+    approvalMode: 'Leader approval',
+    memberLimit: '20',
+    duration: 'Ongoing',
+  });
+  const [roleForm, setRoleForm] = useState({ memberId: 'member-maria', role: 'Ministry Leader', scopeId: 'youth' });
   const firstDialogButtonRef = useRef(null);
 
   const currentMemberName = profile?.displayName || 'Current member';
   const currentRole = workspace.currentMember?.organizationRole || 'Church Member';
   const isOrganizationManager = ['Organization Owner', 'Organization Admin'].includes(currentRole);
-  const canManageMinistry = (ministryId) => isOrganizationManager || (workspace.currentMember?.roles || []).some((role) => role.role === 'Ministry Leader' && role.scopeId === ministryId);
-  const canCreateAnyCircle = isOrganizationManager || (workspace.currentMember?.roles || []).some((role) => role.role === 'Ministry Leader');
   const ministries = workspace.ministries || [];
   const members = workspace.members || [];
-  const circles = useMemo(
-    () => ministries.flatMap((ministry) => (ministry.circles || []).map((circle) => ({ ...circle, ministryId: ministry.id, ministryName: ministry.name }))),
-    [ministries],
-  );
+  const groups = workspace.groups || [];
+  const currentMemberRoles = workspace.currentMember?.roles || [];
+  const canManageMinistry = (ministryId) => isOrganizationManager || currentMemberRoles.some((role) => role.role === 'Ministry Leader' && role.scopeId === ministryId);
+  const isAppointedGroupLeader = currentMemberRoles.some((role) => role.role === 'Group Leader');
+  const canCreateGroup = isOrganizationManager || isAppointedGroupLeader;
+  const joinedMinistryIds = new Set(workspace.currentMember?.ministryIds || []);
+  const joinedGroupIds = new Set(workspace.currentMember?.groupIds || []);
+  const pendingGroupIds = new Set(workspace.currentMember?.pendingGroupIds || []);
+
+  const appointedGroupLeaders = useMemo(() => {
+    const leaders = [];
+    if (isOrganizationManager || isAppointedGroupLeader) leaders.push({ id: 'current-member', name: currentMemberName });
+    members.forEach((member) => {
+      if ((member.roles || []).some((role) => role.role === 'Group Leader')) leaders.push({ id: member.id, name: member.name });
+    });
+    return leaders.filter((leader, index, collection) => collection.findIndex((item) => item.id === leader.id) === index);
+  }, [isOrganizationManager, isAppointedGroupLeader, currentMemberName, members]);
 
   function memberName(memberId) {
     if (memberId === 'current-member') return currentMemberName;
     return members.find((member) => member.id === memberId)?.name || 'Unassigned';
+  }
+
+  function ministryName(ministryId) {
+    return ministries.find((ministry) => ministry.id === ministryId)?.name || '';
   }
 
   function persist(updater, successMessage = '') {
@@ -122,73 +154,185 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
     persist((current) => ({ ...current, organizationCode: generatePrototypeCode(organization.name) }), 'A new organization code was created for this prototype.');
   }
 
-  function rotateCircleCode(circleId) {
+  function rotateMinistryCode(ministryId) {
     persist((current) => ({
       ...current,
-      ministries: current.ministries.map((ministry) => ({
-        ...ministry,
-        circles: (ministry.circles || []).map((circle) => circle.id === circleId ? { ...circle, code: generatePrototypeCode(circle.name) } : circle),
-      })),
-    }), 'The circle code was rotated for this prototype. Existing members remain connected.');
+      ministries: current.ministries.map((ministry) => ministry.id === ministryId
+        ? { ...ministry, code: generatePrototypeCode(ministry.name) }
+        : ministry),
+    }), 'The ministry code was rotated. Existing ministry members remain connected.');
   }
 
-  function openCreateCircle(ministryId = ministries[0]?.id || '') {
-    setCreateCircleForm({ name: '', ministryId, leaderId: 'current-member' });
-    setDialog('create-circle');
+  function rotateGroupCode(groupId) {
+    persist((current) => ({
+      ...current,
+      groups: current.groups.map((group) => group.id === groupId
+        ? { ...group, code: generatePrototypeCode(group.name) }
+        : group),
+    }), 'The group code was rotated. Existing group members remain connected.');
+  }
+
+  function openMinistryJoin(ministryId) {
+    setMinistryJoin({ ministryId, code: '', verified: false, error: '' });
+    setDialog('join-ministry');
     window.requestAnimationFrame(() => firstDialogButtonRef.current?.focus());
   }
 
-  function createCircle(event) {
+  function verifyMinistryCode(event) {
     event.preventDefault();
-    const name = createCircleForm.name.trim();
-    if (!name || !createCircleForm.ministryId) return;
+    const ministry = ministries.find((item) => item.id === ministryJoin.ministryId);
+    if (!ministry) return;
+    if (normalizeCode(ministryJoin.code) !== normalizeCode(ministry.code)) {
+      setMinistryJoin((current) => ({ ...current, verified: false, error: 'That code does not match this ministry. Ask the ministry manager for the current code.' }));
+      return;
+    }
+    setMinistryJoin((current) => ({ ...current, verified: true, error: '' }));
+  }
 
-    const newCircle = {
-      id: `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'circle'}-${Date.now().toString(36)}`,
+  function confirmMinistryJoin() {
+    const ministry = ministries.find((item) => item.id === ministryJoin.ministryId);
+    if (!ministry || !ministryJoin.verified) return;
+    persist((current) => ({
+      ...current,
+      currentMember: {
+        ...current.currentMember,
+        ministryIds: [...new Set([...(current.currentMember.ministryIds || []), ministry.id])],
+      },
+      ministries: current.ministries.map((item) => item.id === ministry.id
+        ? { ...item, memberCount: item.memberCount + (joinedMinistryIds.has(item.id) ? 0 : 1) }
+        : item),
+    }), `You joined ${ministry.name}.`);
+    setDialog('');
+  }
+
+  function openGroupJoin() {
+    setGroupJoin({ code: '', groupId: '', verified: false, error: '' });
+    setDialog('join-group');
+    window.requestAnimationFrame(() => firstDialogButtonRef.current?.focus());
+  }
+
+  function verifyGroupCode(event) {
+    event.preventDefault();
+    const group = groups.find((item) => normalizeCode(item.code) === normalizeCode(groupJoin.code));
+    if (!group) {
+      setGroupJoin((current) => ({ ...current, groupId: '', verified: false, error: 'No group was found using that code. Ask the appointed group leader for the current code.' }));
+      return;
+    }
+    setGroupJoin((current) => ({ ...current, groupId: group.id, verified: true, error: '' }));
+  }
+
+  function confirmGroupJoin() {
+    const group = groups.find((item) => item.id === groupJoin.groupId);
+    if (!group || !groupJoin.verified) return;
+    const alreadyJoined = joinedGroupIds.has(group.id);
+    const alreadyPending = pendingGroupIds.has(group.id);
+
+    if (alreadyJoined || alreadyPending) {
+      setStatusMessage(alreadyJoined ? `You already belong to ${group.name}.` : `Your request to join ${group.name} is already pending.`);
+      setDialog('');
+      return;
+    }
+
+    if (group.approvalRequired) {
+      persist((current) => ({
+        ...current,
+        currentMember: {
+          ...current.currentMember,
+          pendingGroupIds: [...new Set([...(current.currentMember.pendingGroupIds || []), group.id])],
+        },
+      }), `Your request to join ${group.name} was sent to the appointed group leader.`);
+    } else {
+      persist((current) => ({
+        ...current,
+        currentMember: {
+          ...current.currentMember,
+          groupIds: [...new Set([...(current.currentMember.groupIds || []), group.id])],
+        },
+        groups: current.groups.map((item) => item.id === group.id
+          ? { ...item, memberCount: item.memberCount + 1 }
+          : item),
+      }), `You joined ${group.name}.`);
+    }
+    setDialog('');
+  }
+
+  function openCreateGroup() {
+    const leaderId = isOrganizationManager ? appointedGroupLeaders[0]?.id || 'current-member' : 'current-member';
+    setCreateGroupForm({
+      name: '',
+      purpose: '',
+      intendedMembers: '',
+      ministryId: '',
+      leaderId,
+      visibility: 'Invitation only',
+      approvalMode: 'Leader approval',
+      memberLimit: '20',
+      duration: 'Ongoing',
+    });
+    setDialog('create-group');
+    window.requestAnimationFrame(() => firstDialogButtonRef.current?.focus());
+  }
+
+  function createGroup(event) {
+    event.preventDefault();
+    const name = createGroupForm.name.trim();
+    const purpose = createGroupForm.purpose.trim();
+    const intendedMembers = createGroupForm.intendedMembers.trim();
+    const memberLimit = Math.max(2, Number.parseInt(createGroupForm.memberLimit, 10) || 20);
+    if (!name || !purpose || !intendedMembers || !createGroupForm.leaderId) return;
+
+    const newGroup = {
+      id: `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'group'}-${Date.now().toString(36)}`,
       name,
       code: generatePrototypeCode(name),
+      purpose,
+      intendedMembers,
+      connectedMinistryId: createGroupForm.ministryId,
       memberCount: 1,
-      leaderId: createCircleForm.leaderId || 'current-member',
-      visibility: 'Circle members',
-      approvalRequired: true,
+      memberLimit,
+      leaderId: createGroupForm.leaderId,
+      visibility: createGroupForm.visibility,
+      approvalRequired: createGroupForm.approvalMode === 'Leader approval',
+      duration: createGroupForm.duration,
     };
 
     persist((current) => ({
       ...current,
-      ministries: current.ministries.map((ministry) => ministry.id === createCircleForm.ministryId
-        ? { ...ministry, circles: [...(ministry.circles || []), newCircle] }
-        : ministry),
-    }), `${name} was created as a local prototype circle.`);
+      groups: [...(current.groups || []), newGroup],
+      currentMember: createGroupForm.leaderId === 'current-member'
+        ? { ...current.currentMember, groupIds: [...new Set([...(current.currentMember.groupIds || []), newGroup.id])] }
+        : current.currentMember,
+    }), `${name} was created as a leader-created church group.`);
     setDialog('');
   }
 
-  function openRoleDialog(memberId = members[0]?.id || 'member-maria', scopeType = 'ministry', scopeId = ministries[0]?.id || '') {
-    setRoleForm({ memberId, role: scopeType === 'circle' ? 'Circle Leader' : 'Ministry Leader', scopeType, scopeId });
+  function openRoleDialog(memberId = members[0]?.id || 'member-maria', role = 'Ministry Leader', scopeId = ministries[0]?.id || '') {
+    setRoleForm({ memberId, role, scopeId });
     setDialog('assign-role');
     window.requestAnimationFrame(() => firstDialogButtonRef.current?.focus());
   }
 
   function assignRole(event) {
     event.preventDefault();
-    const scopeCollection = roleForm.scopeType === 'circle' ? circles : ministries;
-    const scope = scopeCollection.find((item) => item.id === roleForm.scopeId);
-    if (!roleForm.memberId || !roleForm.role || !scope) return;
+    if (!roleForm.memberId || !roleForm.role) return;
+    const ministry = ministries.find((item) => item.id === roleForm.scopeId);
+    if (roleForm.role === 'Ministry Leader' && !ministry) return;
+
+    const nextRole = roleForm.role === 'Group Leader'
+      ? { role: 'Group Leader', scopeType: 'organization', scopeId: organization.id, scopeName: organization.name }
+      : { role: 'Ministry Leader', scopeType: 'ministry', scopeId: ministry.id, scopeName: ministry.name };
 
     persist((current) => ({
       ...current,
       members: current.members.map((member) => {
         if (member.id !== roleForm.memberId) return member;
         const roles = Array.isArray(member.roles) ? member.roles : [];
-        const nextRole = {
-          role: roleForm.role,
-          scopeType: roleForm.scopeType,
-          scopeId: roleForm.scopeId,
-          scopeName: scope.name,
-        };
         const duplicate = roles.some((item) => item.role === nextRole.role && item.scopeId === nextRole.scopeId);
         return duplicate ? member : { ...member, roles: [...roles, nextRole] };
       }),
-    }), `${memberName(roleForm.memberId)} was assigned as ${roleForm.role} for ${scope.name}.`);
+    }), roleForm.role === 'Group Leader'
+      ? `${memberName(roleForm.memberId)} may now create purpose-driven groups for the church.`
+      : `${memberName(roleForm.memberId)} was assigned as Ministry Leader for ${ministry.name}.`);
     setDialog('');
   }
 
@@ -199,12 +343,12 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
     }), 'Your prototype visibility preference was updated.');
   }
 
-  function toggleSelectedCircle(circleId) {
+  function toggleSelectedGroup(groupId) {
     persist((current) => {
-      const selected = new Set(current.memberVisibility.selectedCircleIds || []);
-      if (selected.has(circleId)) selected.delete(circleId); else selected.add(circleId);
-      return { ...current, memberVisibility: { ...current.memberVisibility, selectedCircleIds: [...selected] } };
-    }, 'Your selected accountability circles were updated.');
+      const selected = new Set(current.memberVisibility.selectedGroupIds || []);
+      if (selected.has(groupId)) selected.delete(groupId); else selected.add(groupId);
+      return { ...current, memberVisibility: { ...current.memberVisibility, selectedGroupIds: [...selected] } };
+    }, 'Your selected groups were updated.');
   }
 
   function updatePolicy(key, checked) {
@@ -223,6 +367,8 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
   const pulsePercent = workspace.pulse.activeMembers
     ? Math.round((workspace.pulse.completedToday / workspace.pulse.activeMembers) * 100)
     : 0;
+  const previewMinistry = ministries.find((item) => item.id === ministryJoin.ministryId);
+  const previewGroup = groups.find((item) => item.id === groupJoin.groupId);
 
   return (
     <section className="panel-page organization-hub">
@@ -242,7 +388,7 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
         <div>
           <p className="dashboard-eyebrow">Organization access</p>
           <h3>Church code</h3>
-          <p>New members use this code to request entry into the whole church organization. It is not a password.</p>
+          <p>New members use this code to request entry into the whole church organization. It is separate from ministry and group codes.</p>
         </div>
         <div className="organization-code-row">
           <code>{workspace.organizationCode}</code>
@@ -308,30 +454,37 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
       {section === 'ministries' ? (
         <div className="organization-section-stack">
           <div className="organization-section-heading organization-page-heading">
-            <div><p className="dashboard-eyebrow">Scoped leadership</p><h3>Ministries inside the church</h3><p>Leaders receive authority only inside the ministry assigned to them.</p></div>
+            <div><p className="dashboard-eyebrow">Official ministries</p><h3>Choose where you serve.</h3><p>Ministries are published by the church. Select one and enter the code provided by its ministry manager.</p></div>
           </div>
           <div className="organization-ministry-grid">
             {ministries.map((ministry) => {
               const expanded = expandedMinistryId === ministry.id;
-              const ministryLeaders = members.flatMap((member) => (member.roles || []).filter((role) => role.role === 'Ministry Leader' && role.scopeId === ministry.id).map(() => memberName(member.id)));
-              if (workspace.currentMember?.roles?.some((role) => role.role === 'Ministry Leader' && role.scopeId === ministry.id)) ministryLeaders.unshift(currentMemberName);
+              const joined = joinedMinistryIds.has(ministry.id);
+              const ministryLeaders = members.flatMap((member) => (member.roles || [])
+                .filter((role) => role.role === 'Ministry Leader' && role.scopeId === ministry.id)
+                .map(() => memberName(member.id)));
+              if (currentMemberRoles.some((role) => role.role === 'Ministry Leader' && role.scopeId === ministry.id)) ministryLeaders.unshift(currentMemberName);
               return (
                 <article className={`organization-ministry-card ${expanded ? 'is-expanded' : ''}`} key={ministry.id}>
                   <button className="organization-ministry-summary" type="button" onClick={() => setExpandedMinistryId(expanded ? '' : ministry.id)} aria-expanded={expanded}>
                     <span className="organization-ministry-icon" aria-hidden="true">{ministry.icon}</span>
-                    <span><strong>{ministry.name}</strong><small>{ministry.memberCount} members · {ministry.circles.length} circle{ministry.circles.length === 1 ? '' : 's'}</small></span>
+                    <span><strong>{ministry.name}</strong><small>{ministry.memberCount} members {joined ? '· Joined' : ''}</small></span>
                     <b aria-hidden="true">{expanded ? '−' : '+'}</b>
                   </button>
                   {expanded ? (
                     <div className="organization-ministry-details">
+                      <p className="organization-ministry-description">{ministry.description}</p>
                       <p><b>Ministry leaders:</b> {ministryLeaders.length ? [...new Set(ministryLeaders)].join(', ') : 'Not assigned'}</p>
-                      <div className="organization-mini-circles">
-                        {ministry.circles.map((circle) => <span key={circle.id}>{circle.name} · {circle.memberCount} members</span>)}
+                      <div className="organization-inline-actions">
+                        {joined ? <span className="organization-membership-chip">✓ You belong to this ministry</span> : <button type="button" onClick={() => openMinistryJoin(ministry.id)}>Join with ministry code</button>}
+                        {isOrganizationManager ? <button type="button" onClick={() => openRoleDialog('member-maria', 'Ministry Leader', ministry.id)}>Assign ministry leader</button> : null}
                       </div>
                       {canManageMinistry(ministry.id) ? (
-                        <div className="organization-inline-actions">
-                          {isOrganizationManager ? <button type="button" onClick={() => openRoleDialog('member-maria', 'ministry', ministry.id)}>Assign ministry leader</button> : null}
-                          <button type="button" onClick={() => openCreateCircle(ministry.id)}>Create circle</button>
+                        <div className="organization-manager-code">
+                          <span><strong>Ministry access code</strong><small>Share this only with approved ministry members.</small></span>
+                          <code>{ministry.code}</code>
+                          <button type="button" onClick={() => copyCode(ministry.code)}>Copy</button>
+                          <button type="button" onClick={() => rotateMinistryCode(ministry.id)}>Rotate</button>
                         </div>
                       ) : null}
                     </div>
@@ -343,26 +496,51 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
         </div>
       ) : null}
 
-      {section === 'circles' ? (
+      {section === 'groups' ? (
         <div className="organization-section-stack">
           <div className="organization-section-heading organization-page-heading">
-            <div><p className="dashboard-eyebrow">Accountability circles</p><h3>Smaller spaces for shared rhythm</h3><p>Circle codes work only for members who already belong to this church organization.</p></div>
-            {canCreateAnyCircle ? <button className="organization-primary-small" type="button" onClick={() => openCreateCircle()}>Create circle</button> : null}
+            <div><p className="dashboard-eyebrow">Leader-created groups</p><h3>Purpose-driven spaces for specific people and missions.</h3><p>Appointed Group Leaders may create church-wide, cross-ministry, ministry-connected, temporary, or ongoing groups.</p></div>
+            <div className="organization-heading-actions">
+              <button className="organization-secondary-small" type="button" onClick={openGroupJoin}>Enter group code</button>
+              {canCreateGroup ? <button className="organization-primary-small" type="button" onClick={openCreateGroup}>Create group</button> : null}
+            </div>
           </div>
+          <section className="organization-group-explainer">
+            <span aria-hidden="true">◎</span>
+            <div><strong>Groups are not official ministries.</strong><p>They are flexible spaces made by qualified church-appointed leaders for a particular mission, life stage, project, care need, or community.</p></div>
+          </section>
           <div className="organization-circle-grid">
-            {circles.map((circle) => (
-              <article className="organization-circle-card" key={circle.id}>
-                <span className="organization-circle-ministry">{circle.ministryName}</span>
-                <h4>{circle.name}</h4>
-                <p>{circle.memberCount} members · Led by {memberName(circle.leaderId)}</p>
-                <dl>
-                  <div><dt>Visibility</dt><dd>{circle.visibility}</dd></div>
-                  <div><dt>Join approval</dt><dd>{circle.approvalRequired ? 'Required' : 'Automatic'}</dd></div>
-                </dl>
-                <div className="organization-circle-code"><code>{circle.code}</code><button type="button" onClick={() => copyCode(circle.code)}>Copy</button></div>
-                <button className="organization-text-action" type="button" onClick={() => rotateCircleCode(circle.id)}>Rotate circle code</button>
-              </article>
-            ))}
+            {groups.map((group) => {
+              const joined = joinedGroupIds.has(group.id);
+              const pending = pendingGroupIds.has(group.id);
+              const connectedMinistry = ministryName(group.connectedMinistryId);
+              const canManageGroup = isOrganizationManager || group.leaderId === 'current-member';
+              return (
+                <article className="organization-circle-card organization-group-card" key={group.id}>
+                  <div className="organization-group-topline">
+                    <span className="organization-circle-ministry">{connectedMinistry || 'Church-wide group'}</span>
+                    {joined ? <span className="organization-membership-chip">✓ Joined</span> : pending ? <span className="organization-pending-chip">Request pending</span> : null}
+                  </div>
+                  <h4>{group.name}</h4>
+                  <p>{group.purpose}</p>
+                  <dl>
+                    <div><dt>Appointed leader</dt><dd>{memberName(group.leaderId)}</dd></div>
+                    <div><dt>Intended members</dt><dd>{group.intendedMembers}</dd></div>
+                    <div><dt>Members</dt><dd>{group.memberCount} of {group.memberLimit}</dd></div>
+                    <div><dt>Duration</dt><dd>{group.duration}</dd></div>
+                    <div><dt>Access</dt><dd>{group.visibility}</dd></div>
+                    <div><dt>Join approval</dt><dd>{group.approvalRequired ? 'Leader approval' : 'Automatic'}</dd></div>
+                  </dl>
+                  {!joined && !pending ? <button className="organization-text-action organization-group-join-action" type="button" onClick={openGroupJoin}>Join using group code</button> : null}
+                  {canManageGroup ? (
+                    <div className="organization-group-code-controls">
+                      <div className="organization-circle-code"><code>{group.code}</code><button type="button" onClick={() => copyCode(group.code)}>Copy</button></div>
+                      <button className="organization-text-action" type="button" onClick={() => rotateGroupCode(group.id)}>Rotate group code</button>
+                    </div>
+                  ) : null}
+                </article>
+              );
+            })}
           </div>
         </div>
       ) : null}
@@ -370,7 +548,7 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
       {section === 'people' ? (
         <div className="organization-section-stack">
           <div className="organization-section-heading organization-page-heading">
-            <div><p className="dashboard-eyebrow">Roles and scope</p><h3>People do not all need the same authority.</h3><p>Billing ownership, administration, ministry leadership, and spiritual-care visibility remain separate.</p></div>
+            <div><p className="dashboard-eyebrow">Roles and scope</p><h3>People do not all need the same authority.</h3><p>Organization administration, ministry management, and permission to create church groups remain separate.</p></div>
           </div>
           <section className="organization-owner-card">
             <span className="organization-avatar" aria-hidden="true">{organization.ownerName.charAt(0)}</span>
@@ -380,7 +558,7 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
           <div className="organization-people-list">
             <article>
               <span className="organization-avatar" aria-hidden="true">{currentMemberName.charAt(0)}</span>
-              <div><strong>{currentMemberName}</strong><small>{currentRole}</small><div className="organization-role-list">{(workspace.currentMember.roles || []).map((role) => <span key={`${role.role}-${role.scopeId}`}>{role.role} · {role.scopeName}</span>)}</div></div>
+              <div><strong>{currentMemberName}</strong><small>{currentRole}</small><div className="organization-role-list">{currentMemberRoles.map((role) => <span key={`${role.role}-${role.scopeId}`}>{role.role} · {role.scopeName}</span>)}</div></div>
               <span className="organization-role-chip">You</span>
             </article>
             {members.filter((member) => member.id !== 'current-member').map((member) => (
@@ -392,8 +570,8 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
             ))}
           </div>
           <section className="organization-permission-note">
-            <strong>Authority is scoped.</strong>
-            <p>A Music Ministry Leader can manage Music Ministry circles without gaining access to Youth Ministry or private devotional content.</p>
+            <strong>Group creation is an appointed responsibility.</strong>
+            <p>A Group Leader may create groups for different missions and people across the church. This permission does not grant organization administration, ministry control, or access to private devotional content.</p>
           </section>
         </div>
       ) : null}
@@ -415,15 +593,15 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
               {RHYTHM_SCOPES.map(([value, title, description]) => {
                 const disabled = (value === 'church' && !workspace.policies.wholeChurchRhythm)
                   || (value === 'ministries' && !workspace.policies.ministryRhythm)
-                  || (value === 'circles' && !workspace.policies.circleRhythm);
+                  || (value === 'groups' && !workspace.policies.groupRhythm);
                 return <ScopeChoice key={value} name="rhythm-scope" value={value} current={workspace.memberVisibility.rhythmScope} title={title} description={description} disabled={disabled} onChange={(next) => updateVisibility('rhythmScope', next)} />;
               })}
             </div>
-            {workspace.memberVisibility.rhythmScope === 'circles' ? (
+            {workspace.memberVisibility.rhythmScope === 'groups' ? (
               <div className="organization-circle-selection">
-                <strong>Selected circles</strong>
-                {circles.map((circle) => (
-                  <label key={circle.id}><input type="checkbox" checked={(workspace.memberVisibility.selectedCircleIds || []).includes(circle.id)} onChange={() => toggleSelectedCircle(circle.id)} /> <span>{circle.name}</span></label>
+                <strong>Selected groups</strong>
+                {groups.filter((group) => joinedGroupIds.has(group.id)).map((group) => (
+                  <label key={group.id}><input type="checkbox" checked={(workspace.memberVisibility.selectedGroupIds || []).includes(group.id)} onChange={() => toggleSelectedGroup(group.id)} /> <span>{group.name}</span></label>
                 ))}
               </div>
             ) : null}
@@ -431,7 +609,7 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
 
           <section className="organization-private-content-card">
             <span aria-hidden="true">🔒</span>
-            <div><p className="dashboard-eyebrow">Always private by default</p><h3>The details of your heart are not organization data.</h3><p>WGAP responses, prayers, journals, notebook photos, personal notes, and exact devotional passages are not automatically visible to leaders or members.</p></div>
+            <div><p className="dashboard-eyebrow">Always private by default</p><h3>The details of your heart are not organization data.</h3><p>WGAP responses, prayers, journals, notebook photos, personal notes, and exact devotional passages are not automatically visible to ministry managers, group leaders, or church administrators.</p></div>
           </section>
 
           {isOrganizationManager ? (
@@ -439,7 +617,7 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
               <p className="dashboard-eyebrow">Organization policy · Prototype admin</p>
               <h3>Choose which sharing options members may voluntarily use.</h3>
               <div className="organization-policy-list">
-                <PolicySwitch checked={workspace.policies.circleRhythm} label="Circle rhythm sharing" description="Members may share general signals with selected accountability circles." onChange={(checked) => updatePolicy('circleRhythm', checked)} />
+                <PolicySwitch checked={workspace.policies.groupRhythm} label="Group rhythm sharing" description="Members may share general signals with selected leader-created groups." onChange={(checked) => updatePolicy('groupRhythm', checked)} />
                 <PolicySwitch checked={workspace.policies.ministryRhythm} label="Ministry rhythm sharing" description="Members may share general signals with ministries they belong to." onChange={(checked) => updatePolicy('ministryRhythm', checked)} />
                 <PolicySwitch checked={workspace.policies.wholeChurchRhythm} label="Whole-church rhythm sharing" description="Members may voluntarily share general rhythm status across the church." onChange={(checked) => updatePolicy('wholeChurchRhythm', checked)} />
                 <PolicySwitch checked label="Private mode" description="Members can always keep personal rhythm signals private." locked onChange={() => {}} />
@@ -455,15 +633,72 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
         <button className="together-leave-link" type="button" onClick={onRequestLeave}>Leave organization</button>
       </footer>
 
-      {dialog === 'create-circle' ? (
-        <DialogShell titleId="create-circle-title" onClose={() => setDialog('')}>
-          <div className="organization-dialog-heading"><div><p className="dashboard-eyebrow">New accountability space</p><h3 id="create-circle-title">Create a circle</h3></div><button type="button" onClick={() => setDialog('')} aria-label="Close">×</button></div>
-          <p className="organization-dialog-intro">The circle will remain inside the selected ministry and can be joined only by church members.</p>
-          <form className="organization-dialog-form" onSubmit={createCircle}>
-            <label>Circle name<input ref={firstDialogButtonRef} value={createCircleForm.name} onChange={(event) => setCreateCircleForm((current) => ({ ...current, name: event.target.value }))} placeholder="Example: Music Team Daily Rhythm" maxLength={80} required /></label>
-            <label>Ministry<select value={createCircleForm.ministryId} onChange={(event) => setCreateCircleForm((current) => ({ ...current, ministryId: event.target.value }))}>{ministries.map((ministry) => <option key={ministry.id} value={ministry.id}>{ministry.name}</option>)}</select></label>
-            <label>Circle leader<select value={createCircleForm.leaderId} onChange={(event) => setCreateCircleForm((current) => ({ ...current, leaderId: event.target.value }))}><option value="current-member">{currentMemberName}</option>{members.filter((member) => member.id !== 'current-member').map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>
-            <div className="organization-dialog-actions"><button className="secondary-button" type="button" onClick={() => setDialog('')}>Cancel</button><button className="primary-button" type="submit" disabled={!createCircleForm.name.trim()}>Create circle</button></div>
+      {dialog === 'join-ministry' && previewMinistry ? (
+        <DialogShell titleId="join-ministry-title" onClose={() => setDialog('')}>
+          <div className="organization-dialog-heading"><div><p className="dashboard-eyebrow">Official ministry access</p><h3 id="join-ministry-title">Join {previewMinistry.name}</h3></div><button type="button" onClick={() => setDialog('')} aria-label="Close">×</button></div>
+          {!ministryJoin.verified ? (
+            <form className="organization-dialog-form" onSubmit={verifyMinistryCode}>
+              <p className="organization-dialog-intro">Enter the ministry code provided by the appointed manager of {previewMinistry.name}.</p>
+              <label>Ministry code<input ref={firstDialogButtonRef} value={ministryJoin.code} onChange={(event) => setMinistryJoin((current) => ({ ...current, code: normalizeCode(event.target.value), error: '' }))} placeholder="Enter ministry code" autoCapitalize="characters" autoComplete="off" required /></label>
+              {ministryJoin.error ? <p className="organization-form-error" role="alert">{ministryJoin.error}</p> : null}
+              <div className="organization-dialog-actions"><button className="secondary-button" type="button" onClick={() => setDialog('')}>Cancel</button><button className="primary-button" type="submit" disabled={!ministryJoin.code}>Verify code</button></div>
+            </form>
+          ) : (
+            <div className="organization-verification-preview">
+              <span className="organization-verification-icon" aria-hidden="true">✓</span>
+              <h4>{previewMinistry.name}</h4>
+              <p>{previewMinistry.description}</p>
+              <small>{previewMinistry.memberCount} current members</small>
+              <div className="organization-dialog-actions"><button className="secondary-button" type="button" onClick={() => setMinistryJoin((current) => ({ ...current, verified: false }))}>Back</button><button className="primary-button" type="button" onClick={confirmMinistryJoin}>Join ministry</button></div>
+            </div>
+          )}
+        </DialogShell>
+      ) : null}
+
+      {dialog === 'join-group' ? (
+        <DialogShell titleId="join-group-title" onClose={() => setDialog('')}>
+          <div className="organization-dialog-heading"><div><p className="dashboard-eyebrow">Leader-created group</p><h3 id="join-group-title">Enter a group code</h3></div><button type="button" onClick={() => setDialog('')} aria-label="Close">×</button></div>
+          {!groupJoin.verified ? (
+            <form className="organization-dialog-form" onSubmit={verifyGroupCode}>
+              <p className="organization-dialog-intro">Enter the code provided by an appointed Group Leader. The code identifies the specific purpose-driven group.</p>
+              <label>Group code<input ref={firstDialogButtonRef} value={groupJoin.code} onChange={(event) => setGroupJoin((current) => ({ ...current, code: normalizeCode(event.target.value), error: '' }))} placeholder="Enter group code" autoCapitalize="characters" autoComplete="off" required /></label>
+              {groupJoin.error ? <p className="organization-form-error" role="alert">{groupJoin.error}</p> : null}
+              <div className="organization-dialog-actions"><button className="secondary-button" type="button" onClick={() => setDialog('')}>Cancel</button><button className="primary-button" type="submit" disabled={!groupJoin.code}>Find group</button></div>
+            </form>
+          ) : previewGroup ? (
+            <div className="organization-verification-preview organization-group-preview">
+              <span className="organization-verification-icon" aria-hidden="true">◎</span>
+              <p className="dashboard-eyebrow">{ministryName(previewGroup.connectedMinistryId) || 'Church-wide group'}</p>
+              <h4>{previewGroup.name}</h4>
+              <p>{previewGroup.purpose}</p>
+              <dl>
+                <div><dt>Appointed leader</dt><dd>{memberName(previewGroup.leaderId)}</dd></div>
+                <div><dt>Intended members</dt><dd>{previewGroup.intendedMembers}</dd></div>
+                <div><dt>Join process</dt><dd>{previewGroup.approvalRequired ? 'Leader approval required' : 'Automatic joining'}</dd></div>
+              </dl>
+              <div className="organization-dialog-actions"><button className="secondary-button" type="button" onClick={() => setGroupJoin((current) => ({ ...current, verified: false, groupId: '' }))}>Back</button><button className="primary-button" type="button" onClick={confirmGroupJoin}>{previewGroup.approvalRequired ? 'Request to join' : 'Join group'}</button></div>
+            </div>
+          ) : null}
+        </DialogShell>
+      ) : null}
+
+      {dialog === 'create-group' ? (
+        <DialogShell titleId="create-group-title" onClose={() => setDialog('')}>
+          <div className="organization-dialog-heading"><div><p className="dashboard-eyebrow">Appointed leadership</p><h3 id="create-group-title">Create a church group</h3></div><button type="button" onClick={() => setDialog('')} aria-label="Close">×</button></div>
+          <p className="organization-dialog-intro">Groups can serve a mission, life stage, project, care need, or specific community. A ministry connection is optional.</p>
+          <form className="organization-dialog-form" onSubmit={createGroup}>
+            <label>Group name<input ref={firstDialogButtonRef} value={createGroupForm.name} onChange={(event) => setCreateGroupForm((current) => ({ ...current, name: event.target.value }))} placeholder="Example: New Believers Path" maxLength={80} required /></label>
+            <label>Purpose or mission<textarea value={createGroupForm.purpose} onChange={(event) => setCreateGroupForm((current) => ({ ...current, purpose: event.target.value }))} placeholder="What is this group created to accomplish?" rows="3" maxLength={260} required /></label>
+            <label>Intended members<input value={createGroupForm.intendedMembers} onChange={(event) => setCreateGroupForm((current) => ({ ...current, intendedMembers: event.target.value }))} placeholder="Example: Members beginning their faith journey" maxLength={140} required /></label>
+            <label>Connected ministry · Optional<select value={createGroupForm.ministryId} onChange={(event) => setCreateGroupForm((current) => ({ ...current, ministryId: event.target.value }))}><option value="">No ministry · Church-wide or cross-ministry</option>{ministries.map((ministry) => <option key={ministry.id} value={ministry.id}>{ministry.name}</option>)}</select></label>
+            <label>Appointed group leader<select value={createGroupForm.leaderId} disabled={!isOrganizationManager} onChange={(event) => setCreateGroupForm((current) => ({ ...current, leaderId: event.target.value }))}>{appointedGroupLeaders.map((leader) => <option key={leader.id} value={leader.id}>{leader.name}</option>)}</select></label>
+            <div className="organization-dialog-form-grid">
+              <label>Visibility<select value={createGroupForm.visibility} onChange={(event) => setCreateGroupForm((current) => ({ ...current, visibility: event.target.value }))}><option>Invitation only</option><option>Visible to church members</option><option>Private group</option></select></label>
+              <label>Joining<select value={createGroupForm.approvalMode} onChange={(event) => setCreateGroupForm((current) => ({ ...current, approvalMode: event.target.value }))}><option>Leader approval</option><option>Automatic joining</option></select></label>
+              <label>Member limit<input type="number" min="2" max="500" value={createGroupForm.memberLimit} onChange={(event) => setCreateGroupForm((current) => ({ ...current, memberLimit: event.target.value }))} /></label>
+              <label>Duration<select value={createGroupForm.duration} onChange={(event) => setCreateGroupForm((current) => ({ ...current, duration: event.target.value }))}><option>Ongoing</option><option>4 weeks</option><option>8 weeks</option><option>12 weeks</option><option>Project based</option></select></label>
+            </div>
+            <div className="organization-dialog-actions"><button className="secondary-button" type="button" onClick={() => setDialog('')}>Cancel</button><button className="primary-button" type="submit" disabled={!createGroupForm.name.trim() || !createGroupForm.purpose.trim() || !createGroupForm.intendedMembers.trim()}>Create group</button></div>
           </form>
         </DialogShell>
       ) : null}
@@ -471,11 +706,11 @@ export default function OrganizationHub({ organization, profile, onShowDetails, 
       {dialog === 'assign-role' ? (
         <DialogShell titleId="assign-role-title" onClose={() => setDialog('')}>
           <div className="organization-dialog-heading"><div><p className="dashboard-eyebrow">Scoped authority</p><h3 id="assign-role-title">Assign a leadership role</h3></div><button type="button" onClick={() => setDialog('')} aria-label="Close">×</button></div>
-          <p className="organization-dialog-intro">This prototype assignment grants authority only inside the selected scope. It does not reveal private reflections.</p>
+          <p className="organization-dialog-intro">Ministry Leaders manage one official ministry. Group Leaders are appointed church-wide and may create purpose-driven groups without receiving access to private reflections.</p>
           <form className="organization-dialog-form" onSubmit={assignRole}>
             <label>Member<select ref={firstDialogButtonRef} value={roleForm.memberId} onChange={(event) => setRoleForm((current) => ({ ...current, memberId: event.target.value }))}>{members.filter((member) => member.id !== 'current-member').map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>
-            <label>Role<select value={roleForm.role} onChange={(event) => setRoleForm((current) => ({ ...current, role: event.target.value, scopeType: event.target.value === 'Circle Leader' ? 'circle' : 'ministry', scopeId: event.target.value === 'Circle Leader' ? circles[0]?.id || '' : ministries[0]?.id || '' }))}><option>Ministry Leader</option><option>Circle Leader</option></select></label>
-            <label>Scope<select value={roleForm.scopeId} onChange={(event) => setRoleForm((current) => ({ ...current, scopeId: event.target.value }))}>{(roleForm.scopeType === 'circle' ? circles : ministries).map((scope) => <option key={scope.id} value={scope.id}>{scope.name}</option>)}</select></label>
+            <label>Role<select value={roleForm.role} onChange={(event) => setRoleForm((current) => ({ ...current, role: event.target.value }))}><option>Ministry Leader</option><option>Group Leader</option></select></label>
+            {roleForm.role === 'Ministry Leader' ? <label>Ministry scope<select value={roleForm.scopeId} onChange={(event) => setRoleForm((current) => ({ ...current, scopeId: event.target.value }))}>{ministries.map((ministry) => <option key={ministry.id} value={ministry.id}>{ministry.name}</option>)}</select></label> : <div className="organization-role-explanation"><strong>Church-wide group permission</strong><p>This person may create and lead groups for different missions and people. They do not receive organization-admin or ministry-manager authority.</p></div>}
             <div className="organization-dialog-actions"><button className="secondary-button" type="button" onClick={() => setDialog('')}>Cancel</button><button className="primary-button" type="submit">Assign role</button></div>
           </form>
         </DialogShell>

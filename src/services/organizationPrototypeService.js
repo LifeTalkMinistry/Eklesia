@@ -1,6 +1,6 @@
 import { getBrowserStorage, STORAGE_KEYS } from './storageRegistry.js';
 
-const PROTOTYPE_VERSION = 1;
+const PROTOTYPE_VERSION = 2;
 
 function clone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -16,7 +16,129 @@ function safeParse(raw, fallback) {
   }
 }
 
+function deterministicCode(label = 'ACCESS') {
+  const prefix = String(label)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 7) || 'ACCESS';
+  return `${prefix}1`;
+}
+
+function normalizeRole(role, organization) {
+  if (!role) return null;
+  if (role.role === 'Circle Leader') {
+    return {
+      role: 'Group Leader',
+      scopeType: 'organization',
+      scopeId: organization.id,
+      scopeName: organization.name,
+    };
+  }
+  return clone(role);
+}
+
+function normalizeMembers(members, organization) {
+  return (Array.isArray(members) ? members : []).map((member) => ({
+    ...clone(member),
+    roles: (member.roles || []).map((role) => normalizeRole(role, organization)).filter(Boolean),
+  }));
+}
+
+function normalizeMinistries(ministries) {
+  return (Array.isArray(ministries) ? ministries : []).map((ministry) => {
+    const { circles, ...rest } = clone(ministry);
+    return {
+      ...rest,
+      code: ministry.code || deterministicCode(ministry.name),
+      description: ministry.description || `An official ministry of the church serving within the mission of ${ministry.name}.`,
+      pulse: { completedToday: 0, activeThisWeek: 0, ...(ministry.pulse || {}) },
+    };
+  });
+}
+
+function migrateLegacyGroups(ministries) {
+  return (Array.isArray(ministries) ? ministries : []).flatMap((ministry) => (
+    Array.isArray(ministry.circles) ? ministry.circles.map((circle) => ({
+      ...clone(circle),
+      connectedMinistryId: ministry.id,
+      purpose: circle.purpose || `A leader-created group helping ${ministry.name} members grow and serve together.`,
+      intendedMembers: circle.intendedMembers || `${ministry.name} members`,
+      duration: circle.duration || 'Ongoing',
+      memberLimit: circle.memberLimit || Math.max(20, circle.memberCount || 0),
+      visibility: circle.visibility === 'Circle members' ? 'Invitation only' : circle.visibility,
+    })) : []
+  ));
+}
+
+function normalizeGroups(groups, ministries) {
+  const ministryIds = new Set(ministries.map((ministry) => ministry.id));
+  return (Array.isArray(groups) ? groups : []).map((group) => ({
+    ...clone(group),
+    code: group.code || deterministicCode(group.name),
+    purpose: group.purpose || 'A purpose-driven group created by an appointed church leader.',
+    intendedMembers: group.intendedMembers || 'Church members invited by the group leader',
+    connectedMinistryId: ministryIds.has(group.connectedMinistryId) ? group.connectedMinistryId : '',
+    memberCount: Number.isFinite(group.memberCount) ? group.memberCount : 0,
+    memberLimit: Number.isFinite(group.memberLimit) ? group.memberLimit : 20,
+    leaderId: group.leaderId || 'current-member',
+    visibility: group.visibility || 'Invitation only',
+    approvalRequired: group.approvalRequired !== false,
+    duration: group.duration || 'Ongoing',
+  }));
+}
+
+function normalizePolicies(policies = {}) {
+  return {
+    wholeChurchRhythm: false,
+    ministryRhythm: true,
+    groupRhythm: policies.groupRhythm ?? policies.circleRhythm ?? true,
+    privateMode: true,
+    profileDirectory: true,
+    ...clone(policies),
+    groupRhythm: policies.groupRhythm ?? policies.circleRhythm ?? true,
+  };
+}
+
+function normalizeVisibility(visibility = {}) {
+  const rhythmScope = visibility.rhythmScope === 'circles' ? 'groups' : visibility.rhythmScope || 'groups';
+  return {
+    profileScope: visibility.profileScope || 'church',
+    rhythmScope,
+    selectedGroupIds: clone(visibility.selectedGroupIds || visibility.selectedCircleIds || []),
+  };
+}
+
+function normalizeCurrentMember(member, defaults, organization, visibility) {
+  const source = { ...clone(defaults), ...clone(member || {}) };
+  const roles = (source.roles || []).map((role) => normalizeRole(role, organization)).filter(Boolean);
+  const ministryRoleIds = roles
+    .filter((role) => role.role === 'Ministry Leader' && role.scopeType === 'ministry')
+    .map((role) => role.scopeId);
+  return {
+    ...source,
+    roles,
+    ministryIds: [...new Set([...(source.ministryIds || []), ...ministryRoleIds])],
+    groupIds: [...new Set(source.groupIds || visibility.selectedGroupIds || [])],
+  };
+}
+
 function createInitialWorkspace(organization) {
+  const sourceMinistries = clone(organization.ministries) || [];
+  const ministries = normalizeMinistries(sourceMinistries);
+  const legacyGroups = migrateLegacyGroups(sourceMinistries);
+  const groups = normalizeGroups(
+    Array.isArray(organization.groups) ? organization.groups : legacyGroups,
+    ministries,
+  );
+  const memberVisibility = normalizeVisibility(organization.memberVisibility);
+  const defaultCurrentMember = {
+    id: 'current-member',
+    organizationRole: 'Church Member',
+    roles: [],
+    ministryIds: [],
+    groupIds: [],
+  };
+
   return {
     version: PROTOTYPE_VERSION,
     organizationId: organization.id,
@@ -28,25 +150,17 @@ function createInitialWorkspace(organization) {
       rebuildingRhythm: 0,
       careSignals: 0,
     },
-    policies: clone(organization.policies) || {
-      wholeChurchRhythm: false,
-      ministryRhythm: true,
-      circleRhythm: true,
-      privateMode: true,
-      profileDirectory: true,
-    },
-    memberVisibility: clone(organization.memberVisibility) || {
-      profileScope: 'church',
-      rhythmScope: 'circles',
-      selectedCircleIds: [],
-    },
-    currentMember: clone(organization.currentMember) || {
-      id: 'current-member',
-      organizationRole: 'Church Member',
-      roles: [],
-    },
-    ministries: clone(organization.ministries) || [],
-    members: clone(organization.members) || [],
+    policies: normalizePolicies(organization.policies),
+    memberVisibility,
+    currentMember: normalizeCurrentMember(
+      organization.currentMember,
+      defaultCurrentMember,
+      organization,
+      memberVisibility,
+    ),
+    ministries,
+    groups,
+    members: normalizeMembers(organization.members, organization),
   };
 }
 
@@ -54,16 +168,36 @@ function normalizeWorkspace(organization, stored) {
   const defaults = createInitialWorkspace(organization);
   if (!stored || stored.organizationId !== organization.id) return defaults;
 
+  const storedMinistries = Array.isArray(stored.ministries) ? stored.ministries : defaults.ministries;
+  const ministries = normalizeMinistries(storedMinistries);
+  const migratedGroups = Array.isArray(stored.groups)
+    ? stored.groups
+    : migrateLegacyGroups(storedMinistries);
+  const groups = normalizeGroups(migratedGroups.length ? migratedGroups : defaults.groups, ministries);
+  const memberVisibility = normalizeVisibility({
+    ...defaults.memberVisibility,
+    ...(stored.memberVisibility || {}),
+  });
+
   return {
     ...defaults,
-    ...stored,
+    ...clone(stored),
     version: PROTOTYPE_VERSION,
     pulse: { ...defaults.pulse, ...(stored.pulse || {}) },
-    policies: { ...defaults.policies, ...(stored.policies || {}) },
-    memberVisibility: { ...defaults.memberVisibility, ...(stored.memberVisibility || {}) },
-    currentMember: { ...defaults.currentMember, ...(stored.currentMember || {}) },
-    ministries: Array.isArray(stored.ministries) ? stored.ministries : defaults.ministries,
-    members: Array.isArray(stored.members) ? stored.members : defaults.members,
+    policies: normalizePolicies({ ...defaults.policies, ...(stored.policies || {}) }),
+    memberVisibility,
+    currentMember: normalizeCurrentMember(
+      stored.currentMember,
+      defaults.currentMember,
+      organization,
+      memberVisibility,
+    ),
+    ministries,
+    groups,
+    members: normalizeMembers(
+      Array.isArray(stored.members) ? stored.members : defaults.members,
+      organization,
+    ),
   };
 }
 
@@ -172,7 +306,7 @@ export function exitOrganizationWorkspace() {
   return clearActiveWorkspace();
 }
 
-export function generatePrototypeCode(label = 'CIRCLE') {
+export function generatePrototypeCode(label = 'GROUP') {
   const prefix = String(label)
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, '')

@@ -36,8 +36,8 @@ function OrganizationDetailsDialog({ ecosystem, onClose }) {
           <div><dt>Joined status</dt><dd>Connected on this device</dd></div>
         </dl>
         <div className="church-workspace-dialog-note">
-          <strong>One church. Many ministries. Scoped accountability.</strong>
-          <p>Ministry and circle leaders receive authority only within the areas assigned to them. Private devotional content remains protected.</p>
+          <strong>One church. Official ministries. Purpose-driven groups.</strong>
+          <p>Ministry managers receive scoped authority for an official ministry. Appointed Group Leaders may create mission-specific groups without receiving access to private devotional content.</p>
         </div>
       </section>
     </div>
@@ -57,7 +57,7 @@ function LeaveOrganizationDialog({ ecosystem, leaving, error, onStay, onConfirm 
         <p className="dashboard-eyebrow">Connection settings</p>
         <h2 id="church-workspace-leave-title">Leave {ecosystem.name}?</h2>
         <p className="church-workspace-dialog-copy">
-          You will no longer have access to this church organization or its ministries and accountability circles on this device. Your personal devotions, WGAP reflections, Journey history, Bible position, and notebook photos will remain unchanged.
+          You will no longer have access to this church organization, its official ministries, or its leader-created groups on this device. Your personal devotions, WGAP reflections, Journey history, Bible position, and notebook photos will remain unchanged.
         </p>
         {error ? <p className="church-workspace-error" role="alert">{error}</p> : null}
         <div className="church-workspace-dialog-actions">
@@ -193,7 +193,7 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
 
           {demoExpanded ? (
             <div className="church-workspace-demo-details" id={demoDetailsId}>
-              The church organization, ministries, roles, codes, privacy settings, and Church Pulse shown here are local prototype information. No live church-member accounts are connected.
+              The church organization, official ministries, appointed leader roles, groups, access codes, privacy settings, and Church Pulse shown here are local prototype information. No live church-member accounts are connected.
             </div>
           ) : null}
           <p className="church-workspace-announcement" aria-live="polite">Entered {organization.name} workspace.</p>
