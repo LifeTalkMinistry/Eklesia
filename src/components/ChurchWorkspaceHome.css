@@ -62,13 +62,13 @@
   margin-top: 0;
 }
 
-.church-workspace-identity h1 {
+.church-workspace-shell .church-workspace-identity h1 {
   max-width: 720px;
   font-size: clamp(2rem, 6vw, 3.9rem);
   line-height: 1.02;
 }
 
-.church-workspace-role {
+.church-workspace-shell .church-workspace-role {
   color: #e8d9aa;
 }
 
