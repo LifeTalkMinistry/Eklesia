@@ -50,8 +50,8 @@ function OrganizationDetailsDialog({ ecosystem, onClose }) {
           <div><dt>Joined status</dt><dd>Connected on this device</dd></div>
         </dl>
         <div className="together-dialog-note">
-          <strong>One church. Many ministries. Scoped accountability.</strong>
-          <p>Ministry and circle leaders receive authority only within the areas assigned to them. Private devotional content remains protected.</p>
+          <strong>One church. Official ministries. Purpose-driven groups.</strong>
+          <p>Ministry managers receive authority within their assigned ministry. Appointed Group Leaders may create mission-specific groups without receiving access to private devotional content.</p>
         </div>
       </section>
     </div>
@@ -71,7 +71,7 @@ function LeaveOrganizationDialog({ ecosystem, leaving, error, onStay, onConfirm 
         <p className="dashboard-eyebrow">Connection settings</p>
         <h3 id="leave-organization-title">Leave {ecosystem.name}?</h3>
         <p className="together-dialog-copy">
-          You will no longer have access to this church organization or its ministries and accountability circles on this device. Your personal devotions, WGAP reflections, Journey history, Bible position, and notebook photos will remain unchanged.
+          You will no longer have access to this church organization, its official ministries, or its leader-created groups on this device. Your personal devotions, WGAP reflections, Journey history, Bible position, and notebook photos will remain unchanged.
         </p>
         {error ? <p className="together-inline-error" role="alert">{error}</p> : null}
         <div className="together-dialog-actions">
@@ -115,7 +115,7 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
   );
   const currentRole = joinedWorkspace?.currentMember?.organizationRole || 'Church Member';
   const ministryCount = joinedWorkspace?.ministries?.length || 0;
-  const circleCount = joinedWorkspace?.ministries?.reduce((total, ministry) => total + (ministry.circles?.length || 0), 0) || 0;
+  const groupCount = joinedWorkspace?.groups?.length || 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -285,11 +285,11 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
             </div>
             <span className="together-workspace-mark" aria-hidden="true">⌂</span>
           </div>
-          <p>You are connected to this church organization. Enter the church space to view its Pulse, ministries, accountability circles, people, and privacy settings.</p>
+          <p>You are connected to this church organization. Enter the church space to view its Pulse, official ministries, leader-created groups, people, and privacy settings.</p>
           <dl className="together-workspace-summary">
             <div><dt>Members</dt><dd>{joinedEcosystem.memberCount}</dd></div>
-            <div><dt>Ministries</dt><dd>{ministryCount}</dd></div>
-            <div><dt>Accountability circles</dt><dd>{circleCount}</dd></div>
+            <div><dt>Official ministries</dt><dd>{ministryCount}</dd></div>
+            <div><dt>Leader-created groups</dt><dd>{groupCount}</dd></div>
             <div><dt>Your role</dt><dd>{currentRole}</dd></div>
           </dl>
           <p className="together-workspace-privacy"><strong>Privacy note:</strong> Your personal WGAP, prayers, notes, and notebook photos remain private.</p>
@@ -342,7 +342,7 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
             <section><h4>General signals may be shared</h4><ul><li>Completed today</li><li>General rhythm status</li><li>Care signal when permitted</li></ul></section>
             <section><h4>Private content stays protected</h4><ul><li>WGAP responses</li><li>Prayers and journals</li><li>Notebook photos</li></ul></section>
           </div>
-          <p className="together-control-note">After joining, you can choose whether your rhythm is visible only to you, selected circles, ministries, or the whole church.</p>
+          <p className="together-control-note">After joining, you can choose whether your rhythm is visible only to you, selected groups, ministries, or the whole church.</p>
         </section>
         <div className="together-preview-actions" aria-live="polite">
           <button className="primary-button together-primary-button" type="button" onClick={confirmJoin} disabled={viewState === VIEW_STATES.JOINING}>
@@ -391,7 +391,7 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
     <section className="panel-page together-page">
       <p className="dashboard-eyebrow">Church connection</p>
       <h2>Join your church organization.</h2>
-      <p className="panel-intro">The organization is the main home for church members, ministries, accountability circles, and the Church Pulse.</p>
+      <p className="panel-intro">The organization is the main home for church members, official ministries, leader-created groups, and the Church Pulse.</p>
       <form className="together-card together-join-card" onSubmit={handleSubmit} noValidate>
         <div><h3>Enter your church code</h3><p>The code connects this device profile to the church organization. It is not a password.</p></div>
         <label htmlFor="organization-code">Church organization code</label>
