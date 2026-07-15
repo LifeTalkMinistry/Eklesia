@@ -17,8 +17,49 @@
 }
 
 .group-rhythm-card .daily-checkin-member strong {
+  min-width: 0;
   font-size: 0.92rem;
   line-height: 1.35;
+}
+
+.group-rhythm-name-line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px 8px;
+}
+
+.group-rhythm-status {
+  display: inline-flex;
+  min-height: 23px;
+  align-items: center;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.025em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.group-rhythm-status.is-consistent {
+  border-color: rgba(184, 215, 190, 0.24);
+  color: #cfe6d4;
+  background: rgba(184, 215, 190, 0.09);
+}
+
+.group-rhythm-status.is-needs-consistency {
+  border-color: rgba(232, 217, 170, 0.22);
+  color: #eadbac;
+  background: rgba(232, 217, 170, 0.075);
+}
+
+.group-rhythm-status.is-neutral {
+  border-color: rgba(255, 255, 255, 0.09);
+  color: rgba(244, 245, 239, 0.48);
+  background: rgba(255, 255, 255, 0.035);
 }
 
 .group-rhythm-card .daily-checkin-member small,
@@ -42,6 +83,12 @@
   .group-rhythm-card .daily-rhythm-member-line {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 11px;
+  }
+
+  .group-rhythm-status {
+    min-height: 22px;
+    padding: 3px 7px;
+    font-size: 0.55rem;
   }
 
   .group-rhythm-card .daily-rhythm-week {
