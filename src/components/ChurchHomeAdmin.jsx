@@ -63,7 +63,7 @@ function EditorDialog({ editor, form, setForm, ministries, groups, onClose, onSa
     }
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  }, []);
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
