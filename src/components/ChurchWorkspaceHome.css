@@ -1,0 +1,99 @@
+.church-workspace-primary-nav {
+  position: sticky;
+  top: max(8px, env(safe-area-inset-top));
+  z-index: 40;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  margin: 0 0 20px;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 18px;
+  background: rgba(7, 17, 11, 0.94);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(14px);
+  scrollbar-width: none;
+}
+
+.church-workspace-primary-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.church-workspace-primary-nav button {
+  min-height: 40px;
+  flex: 1 0 auto;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  color: rgba(244, 245, 239, 0.48);
+  background: transparent;
+  font: inherit;
+  font-size: 0.71rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.church-workspace-primary-nav button.is-active {
+  border-color: rgba(184, 215, 190, 0.22);
+  color: #102018;
+  background: #cfe4d5;
+}
+
+.church-workspace-primary-nav button:focus-visible {
+  outline: 3px solid rgba(232, 217, 170, 0.62);
+  outline-offset: 3px;
+}
+
+.church-workspace-hub-host[hidden] {
+  display: none !important;
+}
+
+.church-workspace-content .church-workspace-hub-host .organization-hero,
+.church-workspace-content .church-workspace-hub-host .organization-access-card,
+.church-workspace-content .church-workspace-hub-host .organization-section-nav {
+  display: none !important;
+}
+
+.church-workspace-content .church-workspace-hub-host .organization-status {
+  margin-top: 0;
+}
+
+.church-workspace-content .church-workspace-hub-host .organization-section-stack {
+  margin-top: 0;
+}
+
+.church-workspace-shell .church-workspace-identity h1 {
+  max-width: 720px;
+  font-size: clamp(2rem, 6vw, 3.9rem);
+  line-height: 1.02;
+}
+
+.church-workspace-shell .church-workspace-role {
+  color: #e8d9aa;
+}
+
+@media (max-width: 520px) {
+  .church-workspace-primary-nav {
+    margin-right: -4px;
+    margin-left: -4px;
+    border-radius: 16px;
+  }
+
+  .church-workspace-primary-nav button {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .church-workspace-primary-nav {
+    gap: 5px;
+    padding: 6px;
+  }
+
+  .church-workspace-primary-nav button {
+    min-height: 38px;
+    padding: 7px 10px;
+    font-size: 0.66rem;
+  }
+}
