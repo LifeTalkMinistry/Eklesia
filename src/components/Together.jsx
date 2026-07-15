@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import OrganizationHub from './OrganizationHub.jsx';
 import './Together.css';
 import {
   findEcosystemByCode,
@@ -18,7 +19,7 @@ const VIEW_STATES = {
   GENERAL_ERROR: 'GENERAL_ERROR',
 };
 
-function CircleDetailsDialog({ ecosystem, onClose }) {
+function OrganizationDetailsDialog({ ecosystem, onClose }) {
   const closeButtonRef = useRef(null);
 
   useEffect(() => {
@@ -32,39 +33,40 @@ function CircleDetailsDialog({ ecosystem, onClose }) {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <section className="together-dialog" role="dialog" aria-modal="true" aria-labelledby="circle-details-title">
+      <section className="together-dialog" role="dialog" aria-modal="true" aria-labelledby="organization-details-title">
         <div className="together-dialog-heading">
           <div>
-            <p className="dashboard-eyebrow">Circle details</p>
-            <h3 id="circle-details-title">{ecosystem.name}</h3>
+            <p className="dashboard-eyebrow">Organization details</p>
+            <h3 id="organization-details-title">{ecosystem.name}</h3>
           </div>
           <button
             ref={closeButtonRef}
             className="together-icon-button"
             type="button"
             onClick={onClose}
-            aria-label="Close circle details"
+            aria-label="Close organization details"
           >
             ×
           </button>
         </div>
         <dl className="together-detail-list">
-          <div><dt>Ecosystem</dt><dd>{ecosystem.name}</dd></div>
-          <div><dt>Owner</dt><dd>{ecosystem.ownerName}</dd></div>
+          <div><dt>Church organization</dt><dd>{ecosystem.name}</dd></div>
+          <div><dt>Organization owner</dt><dd>{ecosystem.ownerName}</dd></div>
           <div><dt>Plan</dt><dd>{ecosystem.planName}</dd></div>
           <div><dt>Member capacity</dt><dd>{ecosystem.memberCount} of {ecosystem.memberLimit} spaces used</dd></div>
+          <div><dt>Join policy</dt><dd>{ecosystem.approvalMode}</dd></div>
           <div><dt>Joined status</dt><dd>Connected on this device</dd></div>
         </dl>
         <div className="together-dialog-note">
-          <strong>Grow together with consistency.</strong>
-          <p>This circle helps members notice progress and offer timely encouragement.</p>
+          <strong>One church. Many ministries. Scoped accountability.</strong>
+          <p>Ministry and circle leaders receive authority only within the areas assigned to them. Private devotional content remains protected.</p>
         </div>
       </section>
     </div>
   );
 }
 
-function LeaveCircleDialog({ ecosystem, leaving, error, onStay, onConfirm }) {
+function LeaveOrganizationDialog({ ecosystem, leaving, error, onStay, onConfirm }) {
   const stayButtonRef = useRef(null);
 
   useEffect(() => {
@@ -73,11 +75,11 @@ function LeaveCircleDialog({ ecosystem, leaving, error, onStay, onConfirm }) {
 
   return (
     <div className="together-dialog-backdrop">
-      <section className="together-dialog together-dialog-small" role="dialog" aria-modal="true" aria-labelledby="leave-circle-title">
+      <section className="together-dialog together-dialog-small" role="dialog" aria-modal="true" aria-labelledby="leave-organization-title">
         <p className="dashboard-eyebrow">Connection settings</p>
-        <h3 id="leave-circle-title">Leave {ecosystem.name}?</h3>
+        <h3 id="leave-organization-title">Leave {ecosystem.name}?</h3>
         <p className="together-dialog-copy">
-          You will stop seeing this accountability circle on this device. You can reconnect later using an ecosystem code.
+          You will stop seeing this church organization on this device. Your personal devotions and private Journey data will remain unchanged.
         </p>
         {error ? <p className="together-inline-error" role="alert">{error}</p> : null}
         <div className="together-dialog-actions">
@@ -85,7 +87,7 @@ function LeaveCircleDialog({ ecosystem, leaving, error, onStay, onConfirm }) {
             Stay connected
           </button>
           <button className="together-danger-button" type="button" onClick={onConfirm} disabled={leaving}>
-            {leaving ? 'Leaving circle…' : 'Leave circle'}
+            {leaving ? 'Leaving organization…' : 'Leave organization'}
           </button>
         </div>
       </section>
@@ -97,12 +99,12 @@ function LoadingState() {
   return (
     <section className="together-card together-restoring-card" aria-live="polite">
       <span className="together-spinner" aria-hidden="true" />
-      <p>Checking your circle connection…</p>
+      <p>Checking your church connection…</p>
     </section>
   );
 }
 
-export default function Together() {
+export default function Together({ profile }) {
   const [viewState, setViewState] = useState(VIEW_STATES.NOT_CONNECTED);
   const [restoring, setRestoring] = useState(true);
   const [code, setCode] = useState('');
@@ -272,38 +274,19 @@ export default function Together() {
 
   if (viewState === VIEW_STATES.JOINED && joinedEcosystem) {
     return (
-      <section className="panel-page together-page together-joined-page">
-        <div className="together-heading-row">
-          <div>
-            <p className="dashboard-eyebrow">Your accountability circle</p>
-            <h2>{joinedEcosystem.name}</h2>
-            <p className="panel-intro">
-              {joinedEcosystem.memberCount} members · Managed by {joinedEcosystem.ownerName}
-            </p>
-          </div>
-        </div>
-
-        <div className="together-joined-actions">
-          <button className="secondary-button" type="button" onClick={() => setShowDetails(true)}>
-            Circle details
-          </button>
-          <button
-            className="together-leave-link"
-            type="button"
-            onClick={() => {
-              setLeaveError('');
-              setShowLeaveDialog(true);
-            }}
-          >
-            Leave circle
-          </button>
-        </div>
-
-        {showDetails ? (
-          <CircleDetailsDialog ecosystem={joinedEcosystem} onClose={() => setShowDetails(false)} />
-        ) : null}
+      <>
+        <OrganizationHub
+          organization={joinedEcosystem}
+          profile={profile}
+          onShowDetails={() => setShowDetails(true)}
+          onRequestLeave={() => {
+            setLeaveError('');
+            setShowLeaveDialog(true);
+          }}
+        />
+        {showDetails ? <OrganizationDetailsDialog ecosystem={joinedEcosystem} onClose={() => setShowDetails(false)} /> : null}
         {showLeaveDialog ? (
-          <LeaveCircleDialog
+          <LeaveOrganizationDialog
             ecosystem={joinedEcosystem}
             leaving={leaving}
             error={leaveError}
@@ -311,47 +294,45 @@ export default function Together() {
             onConfirm={confirmLeave}
           />
         ) : null}
-      </section>
+      </>
     );
   }
 
   if (viewState === VIEW_STATES.ECOSYSTEM_PREVIEW || viewState === VIEW_STATES.JOINING) {
     return (
       <section className="panel-page together-page">
-        <p className="dashboard-eyebrow">Circle found</p>
+        <p className="dashboard-eyebrow">Church found</p>
         <h2>Review before joining.</h2>
-        <p className="panel-intro">Make sure this is the accountability community you intended to join.</p>
+        <p className="panel-intro">Make sure this is the church organization you intended to join.</p>
 
         <section className="together-card together-preview-card">
           <span className="soft-badge">{previewEcosystem.planName} plan</span>
           <h3>{previewEcosystem.name}</h3>
           <p>{previewEcosystem.description}</p>
           <dl className="together-preview-details">
-            <div><dt>Managed by</dt><dd>{previewEcosystem.ownerName}</dd></div>
-            <div><dt>Plan</dt><dd>{previewEcosystem.planName}</dd></div>
+            <div><dt>Organization owner</dt><dd>{previewEcosystem.ownerName}</dd></div>
+            <div><dt>Join policy</dt><dd>{previewEcosystem.approvalMode}</dd></div>
             <div><dt>Member spaces</dt><dd>{previewEcosystem.memberCount} of {previewEcosystem.memberLimit} currently used</dd></div>
           </dl>
         </section>
 
+        <section className="together-card together-sharing-card">
+          <div className="together-sharing-heading">
+            <p className="dashboard-eyebrow">Before you join</p>
+            <h3>Membership does not automatically expose your devotions.</h3>
+          </div>
+          <div className="together-privacy-grid">
+            <section><h4>General signals may be shared</h4><ul><li>Completed today</li><li>General rhythm status</li><li>Care signal when permitted</li></ul></section>
+            <section><h4>Private content stays protected</h4><ul><li>WGAP responses</li><li>Prayers and journals</li><li>Notebook photos</li></ul></section>
+          </div>
+          <p className="together-control-note">After joining, you can choose whether your rhythm is visible only to you, selected circles, ministries, or the whole church.</p>
+        </section>
+
         <div className="together-preview-actions" aria-live="polite">
-          <button
-            className="primary-button together-primary-button"
-            type="button"
-            onClick={confirmJoin}
-            disabled={viewState === VIEW_STATES.JOINING}
-          >
-            {viewState === VIEW_STATES.JOINING ? (
-              <><span className="together-spinner together-spinner-dark" aria-hidden="true" /> Joining circle…</>
-            ) : 'Join this circle'}
+          <button className="primary-button together-primary-button" type="button" onClick={confirmJoin} disabled={viewState === VIEW_STATES.JOINING}>
+            {viewState === VIEW_STATES.JOINING ? <><span className="together-spinner together-spinner-dark" aria-hidden="true" /> Joining church…</> : 'Join this church'}
           </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={useDifferentCode}
-            disabled={viewState === VIEW_STATES.JOINING}
-          >
-            Use a different code
-          </button>
+          <button className="secondary-button" type="button" onClick={useDifferentCode} disabled={viewState === VIEW_STATES.JOINING}>Use a different code</button>
         </div>
       </section>
     );
@@ -360,12 +341,12 @@ export default function Together() {
   if (viewState === VIEW_STATES.MEMBER_LIMIT_REACHED) {
     return (
       <section className="panel-page together-page">
-        <p className="dashboard-eyebrow">Circle unavailable</p>
-        <h2>This accountability circle has reached its member limit.</h2>
-        <p className="panel-intro">Ask the ecosystem owner to free a space or upgrade the circle’s subscription.</p>
+        <p className="dashboard-eyebrow">Organization unavailable</p>
+        <h2>This church organization has reached its member limit.</h2>
+        <p className="panel-intro">Ask the organization owner to free a space or upgrade the church subscription.</p>
         <section className="together-card together-message-card" role="status">
           <span className="together-message-icon" aria-hidden="true">◎</span>
-          <p>The ecosystem owner is responsible for the subscription. No payment is required from the joining member here.</p>
+          <p>The organization owner is responsible for the subscription. No payment is required from the joining member here.</p>
           <button className="secondary-button" type="button" onClick={useDifferentCode}>Use a different code</button>
         </section>
       </section>
@@ -376,8 +357,8 @@ export default function Together() {
     return (
       <section className="panel-page together-page">
         <p className="dashboard-eyebrow">Connection interrupted</p>
-        <h2>Something went wrong while checking this ecosystem.</h2>
-        <p className="panel-intro">Please try again. Your account has not been connected.</p>
+        <h2>Something went wrong while checking this church organization.</h2>
+        <p className="panel-intro">Please try again. Your device profile has not been connected.</p>
         <section className="together-card together-message-card" role="alert">
           <span className="together-message-icon" aria-hidden="true">!</span>
           <p>No joined state was saved from the failed request.</p>
@@ -392,22 +373,20 @@ export default function Together() {
 
   return (
     <section className="panel-page together-page">
-      <p className="dashboard-eyebrow">Healthy accountability</p>
-      <h2>Grow with people who care.</h2>
-      <p className="panel-intro">
-        Join the church, ministry, or accountability community you belong to and see healthy progress signals.
-      </p>
+      <p className="dashboard-eyebrow">Church connection</p>
+      <h2>Join your church organization.</h2>
+      <p className="panel-intro">The organization is the main home for church members, ministries, accountability circles, and the Church Pulse.</p>
 
       <form className="together-card together-join-card" onSubmit={handleSubmit} noValidate>
         <div>
-          <h3>Join an accountability circle</h3>
-          <p>Enter the ecosystem code shared by your church or group owner.</p>
+          <h3>Enter your church code</h3>
+          <p>The code connects this device profile to the church organization. It is not a password.</p>
         </div>
-        <label htmlFor="ecosystem-code">Ecosystem code</label>
+        <label htmlFor="organization-code">Church organization code</label>
         <input
           ref={inputRef}
-          id="ecosystem-code"
-          name="ecosystem-code"
+          id="organization-code"
+          name="organization-code"
           type="text"
           inputMode="text"
           autoComplete="off"
@@ -418,27 +397,20 @@ export default function Together() {
           onChange={handleCodeChange}
           disabled={validating}
           aria-invalid={invalidCode}
-          aria-describedby={invalidCode ? 'ecosystem-code-error' : undefined}
+          aria-describedby={invalidCode ? 'organization-code-error' : 'organization-code-note'}
         />
         <div className="together-validation-slot" aria-live="polite" aria-atomic="true">
-          {validating ? (
-            <p className="together-checking-message">
-              <span className="together-spinner" aria-hidden="true" /> Checking the code shared with you…
-            </p>
-          ) : null}
+          {validating ? <p className="together-checking-message"><span className="together-spinner" aria-hidden="true" /> Checking the church code…</p> : null}
           {invalidCode ? (
-            <div id="ecosystem-code-error" className="together-inline-error" role="alert">
-              <strong>We could not find an accountability circle using that code.</strong>
-              <p>Check the code and try again, or ask the ecosystem owner whether the code has changed.</p>
+            <div id="organization-code-error" className="together-inline-error" role="alert">
+              <strong>We could not find a church organization using that code.</strong>
+              <p>Check the code and try again, or ask an organization administrator whether the code has changed.</p>
             </div>
           ) : null}
         </div>
-        <button className="primary-button together-primary-button" type="submit" disabled={!code.trim() || validating}>
-          {validating ? 'Checking code…' : 'Find my circle'}
-        </button>
-        <p className="together-secondary-note">
-          Don’t have a code? Ask your church, ministry, or accountability-circle owner.
-        </p>
+        <button className="primary-button together-primary-button" type="submit" disabled={!code.trim() || validating}>{validating ? 'Checking code…' : 'Find my church'}</button>
+        <p id="organization-code-note" className="together-form-privacy"><strong>Privacy first:</strong> joining the church does not automatically reveal WGAP responses, prayers, journals, or notebook photos.</p>
+        <p className="together-secondary-note">Don’t have a code? Ask your church organization owner or administrator.</p>
       </form>
     </section>
   );
