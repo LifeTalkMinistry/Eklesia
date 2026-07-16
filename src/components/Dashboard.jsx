@@ -14,6 +14,8 @@ import Together from './Together.jsx';
 import WhyEklesia from './WhyEklesia.jsx';
 import { formatManilaDate, getManilaGreeting } from '../lib/manilaTime.js';
 import { getDevotionMetrics } from '../services/devotionService.js';
+import { getJoinedEcosystem } from '../services/ecosystemService.js';
+import { getOrganizationPrototypeState } from '../services/organizationPrototypeService.js';
 import './UnifiedDashboard.css';
 
 function HomeDashboard({
@@ -59,7 +61,7 @@ function HomeDashboard({
         <span>
           <small>Your church is one tap away</small>
           <strong>Open Church</strong>
-          <em>Ministries, Groups, announcements, and church updates</em>
+          <em>Pulse, ministries, Groups, and church updates</em>
         </span>
         <b aria-hidden="true">›</b>
       </button>
@@ -110,22 +112,6 @@ function TogetherDemoNotice() {
         </div>
       ) : null}
     </aside>
-  );
-}
-
-function UnifiedPulse({ profile }) {
-  const organization = { name: profile?.churchName || 'Your Church' };
-  const workspace = {
-    home: { announcements: [] },
-    ministries: [],
-    groups: [],
-    currentMember: { ministryIds: [], groupIds: [] },
-  };
-
-  return (
-    <section className="unified-pulse-page" aria-label="Pulse feed">
-      <ChurchPulseFeed organization={organization} workspace={workspace} profile={profile} />
-    </section>
   );
 }
 
@@ -189,23 +175,45 @@ function Profile({ profile, storageAvailable, onProfileUpdated, onRestartIntrodu
 
 export default function Dashboard({ profile, storageAvailable, activeTab, setActiveTab, completed, officialDevotion, onStartDaily, onReviewDaily, onSpendMore, onExit, onProfileUpdated, onRestartIntroduction, onDeleteLocalData, dailyVerse, dailyLoading, dailyError, dailyRefreshing, dailyRefreshError, onRefreshDaily, bibleTarget, bibleSelectionMode, onSelectBibleVerse, onCancelBibleSelection, onReturnFromBible, devotionHistory, selectedHistoryId, onSelectHistoryEntry, onCloseHistoryEntry, onHistoryEntryUpdated, onEnterOrganization, organizationLauncherFocusKey }) {
   const [showWhyEklesia, setShowWhyEklesia] = useState(false);
+  const [openingChurch, setOpeningChurch] = useState(false);
   const whyEklesiaButtonRef = useRef(null);
   const closeWhyEklesia = useCallback(() => setShowWhyEklesia(false), []);
   const mainTab = activeTab === 'journey' || activeTab === 'bible' ? 'tools' : activeTab;
 
+  async function openChurchDirectly() {
+    if (openingChurch) return;
+    setOpeningChurch(true);
+    try {
+      const result = await getJoinedEcosystem();
+      if (result.ok && result.data) {
+        onEnterOrganization(result.data);
+        return;
+      }
+      setActiveTab('community');
+    } catch (error) {
+      console.warn('Ekklesia Pulse could not restore the church connection.', error);
+      setActiveTab('community');
+    } finally {
+      setOpeningChurch(false);
+    }
+  }
+
+  const pulseOrganization = { id: 'unified-pulse', name: profile?.churchName || 'Ekklesia Pulse Church' };
+  const pulseWorkspace = getOrganizationPrototypeState(pulseOrganization);
+
   const content = {
-    home: <HomeDashboard profile={profile} dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} dailyRefreshing={dailyRefreshing} dailyRefreshError={dailyRefreshError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onRefreshDaily={onRefreshDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} onOpenCommunity={() => setActiveTab('community')} />,
+    home: <HomeDashboard profile={profile} dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} dailyRefreshing={dailyRefreshing} dailyRefreshError={dailyRefreshError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onRefreshDaily={onRefreshDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} onOpenCommunity={openChurchDirectly} />,
     journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} onEntryUpdated={onHistoryEntryUpdated} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
-    community: <><TogetherDemoNotice /><Together profile={profile} onEnterOrganization={onEnterOrganization} focusKey={organizationLauncherFocusKey} /></>,
-    pulse: <UnifiedPulse profile={profile} />,
+    pulse: <ChurchPulseFeed organization={pulseOrganization} workspace={pulseWorkspace} profile={profile} />,
     tools: <ToolsHome onOpenJourney={() => setActiveTab('journey')} onOpenBible={() => setActiveTab('bible')} />,
+    community: <><TogetherDemoNotice /><Together profile={profile} onEnterOrganization={onEnterOrganization} focusKey={organizationLauncherFocusKey} /></>,
     profile: <Profile profile={profile} storageAvailable={storageAvailable} onProfileUpdated={onProfileUpdated} onRestartIntroduction={onRestartIntroduction} onDeleteLocalData={onDeleteLocalData} />,
   }[activeTab] || null;
 
   return (
-    <main className="dashboard-shell">
-      <div className={`dashboard-frame ${activeTab === 'pulse' ? 'is-unified-pulse' : ''}`}>
+    <main className={`dashboard-shell ${activeTab === 'pulse' ? 'dashboard-pulse-active' : ''}`}>
+      <div className="dashboard-frame">
         <header className="dashboard-header">
           <div className="alpha-brand-cluster"><button className="brand-button" type="button" onClick={onExit} aria-label="Return to welcome screen"><span className="brand-mark">E</span><span>{APP_NAME}</span></button><AlphaBadge compact /></div>
           <button className="notification-button why-eklesia-trigger" type="button" aria-label="Why Ekklesia Pulse?" onClick={() => setShowWhyEklesia(true)} ref={whyEklesiaButtonRef}><span className="information-glyph" aria-hidden="true">i</span></button>
@@ -213,12 +221,8 @@ export default function Dashboard({ profile, storageAvailable, activeTab, setAct
         <div className="dashboard-content">{!storageAvailable ? <p className="alpha-storage-warning alpha-dashboard-storage-warning" role="status">This browser is currently preventing Ekklesia Pulse from saving information.</p> : null}{content}</div>
         <nav className="bottom-nav unified-bottom-nav" aria-label="Main navigation">
           {[
-            ['home', '⌂', 'Home'],
-            ['community', '♧', 'Church'],
-            ['pulse', '♡', 'Pulse'],
-            ['tools', '✦', 'Tools'],
-            ['profile', '○', 'Me'],
-          ].map(([id, icon, label]) => <button className={mainTab === id ? 'active' : ''} type="button" key={id} onClick={() => setActiveTab(id)}><span aria-hidden="true">{icon}</span><small>{label}</small></button>)}
+            ['home', '⌂', 'Home'], ['community', '♧', openingChurch ? 'Opening…' : 'Church'], ['pulse', '♡', 'Pulse'], ['tools', '✦', 'Tools'], ['profile', '○', 'Me'],
+          ].map(([id, icon, label]) => <button className={mainTab === id ? 'active' : ''} type="button" key={id} disabled={id === 'community' && openingChurch} onClick={() => id === 'community' ? openChurchDirectly() : setActiveTab(id)}><span aria-hidden="true">{icon}</span><small>{label}</small></button>)}
         </nav>
         <WhyEklesia open={showWhyEklesia} onClose={closeWhyEklesia} triggerRef={whyEklesiaButtonRef} />
       </div>
