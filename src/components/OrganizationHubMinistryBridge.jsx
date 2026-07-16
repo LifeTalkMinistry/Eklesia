@@ -5,12 +5,22 @@ import OrganizationHub from './OrganizationHub.jsx';
 import './BetaChurchViewMode.css';
 
 const MEMBER_SECTIONS = new Set(['home', 'ministries', 'groups', 'people']);
-const MEMBER_HUB_SECTIONS = new Set(['ministries', 'groups', 'people']);
+const MEMBER_NAV_ITEMS = [
+  ['home', 'Home', 'Church Board'],
+  ['ministries', 'Ministries', 'Ministries'],
+  ['groups', 'Groups', 'Groups'],
+  ['people', 'People', 'People'],
+];
 
 function sectionButtonLabel(button) {
-  return String(button?.dataset?.betaOriginalSectionLabel || button?.textContent || '')
-    .trim()
-    .toLowerCase();
+  const label = String(
+    button?.dataset?.memberSection
+      || button?.dataset?.betaOriginalSectionLabel
+      || button?.textContent
+      || '',
+  ).trim().toLowerCase();
+
+  return label === 'church board' ? 'home' : label;
 }
 
 function getStorageKey(organizationId) {
@@ -66,9 +76,21 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
   const [showChooser, setShowChooser] = useState(() => !restoreMode(organization?.id));
   const [memberSection, setMemberSection] = useState('home');
   const [contentTarget, setContentTarget] = useState(null);
+  const [primaryNavTarget, setPrimaryNavTarget] = useState(null);
 
   useEffect(() => {
-    setContentTarget(document.querySelector('.church-workspace-content'));
+    function syncPortalTargets() {
+      setContentTarget(document.querySelector('.church-workspace-content'));
+      setPrimaryNavTarget(document.querySelector('.church-workspace-primary-nav'));
+    }
+
+    syncPortalTargets();
+    const shell = document.querySelector('.church-workspace-shell');
+    if (!shell) return undefined;
+
+    const observer = new MutationObserver(syncPortalTargets);
+    observer.observe(shell, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -101,27 +123,25 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       const memberView = presentationMode === 'member';
       const groupWorkspace = shell.querySelector('.group-workspace');
       const role = shell.querySelector('.church-workspace-role');
+
       if (role) {
         if (!role.dataset.betaOriginalRole) role.dataset.betaOriginalRole = role.textContent;
         const nextRole = memberView ? 'Church Member · Beta member view' : role.dataset.betaOriginalRole;
         if (role.textContent !== nextRole) role.textContent = nextRole;
       }
 
-      shell.querySelectorAll('.church-workspace-primary-nav button').forEach((button) => {
-        const label = preserveSectionLabel(button);
-        setMemberHidden(button, memberView && !MEMBER_SECTIONS.has(label));
-        const nextLabel = memberView && label === 'home'
-          ? 'Church Board'
-          : button.dataset.betaOriginalSectionLabel;
-        if (button.textContent.trim() !== nextLabel) button.textContent = nextLabel;
+      shell.querySelectorAll('.church-workspace-primary-nav > button:not([data-member-section-button="true"])').forEach((button) => {
+        preserveSectionLabel(button);
+        setMemberHidden(button, memberView);
       });
 
       shell.querySelectorAll('.organization-section-nav button').forEach((button) => {
-        const label = preserveSectionLabel(button);
-        setMemberHidden(button, memberView && !MEMBER_HUB_SECTIONS.has(label));
+        preserveSectionLabel(button);
+        setMemberHidden(button, memberView);
       });
 
       shell.querySelectorAll('button').forEach((button) => {
+        if (button.dataset.memberSectionButton === 'true') return;
         if (groupWorkspace?.contains(button)) {
           if (button.dataset.betaAdminOnly === 'true') delete button.dataset.betaAdminOnly;
           return;
@@ -133,22 +153,11 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       });
     }
 
-    function handleSectionNavigation(event) {
-      if (presentationMode !== 'member') return;
-      const button = event.target.closest('.church-workspace-primary-nav button, .organization-section-nav button');
-      if (!button || !shell.contains(button)) return;
-      const label = sectionButtonLabel(button);
-      if (MEMBER_SECTIONS.has(label)) setMemberSection(label);
-    }
-
     applyPresentation();
     const observer = new MutationObserver(applyPresentation);
     observer.observe(shell, { childList: true, subtree: true, characterData: true });
-    shell.addEventListener('click', handleSectionNavigation);
-    return () => {
-      observer.disconnect();
-      shell.removeEventListener('click', handleSectionNavigation);
-    };
+
+    return () => observer.disconnect();
   }, [mode, memberSection]);
 
   useEffect(() => {
@@ -213,7 +222,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       const group = (workspace?.groups || []).find((entry) => entry.id === groupId);
       if (!group) return;
 
-      const homeButton = [...document.querySelectorAll('.church-workspace-primary-nav button')]
+      const homeButton = [...document.querySelectorAll('.church-workspace-primary-nav > button:not([data-member-section-button="true"])')]
         .find((button) => sectionButtonLabel(button) === 'home');
       homeButton?.click();
 
@@ -253,8 +262,10 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
   }, [workspace, onOpenMinistry, mode]);
 
   function navigateMember(section) {
+    if (!MEMBER_SECTIONS.has(section)) return;
     setMemberSection(section);
-    const targetButton = [...document.querySelectorAll('.church-workspace-primary-nav button')]
+
+    const targetButton = [...document.querySelectorAll('.church-workspace-primary-nav > button:not([data-member-section-button="true"])')]
       .find((button) => sectionButtonLabel(button) === section);
     targetButton?.click();
   }
@@ -270,9 +281,11 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
     } catch (error) {
       console.warn('Ekklesia Pulse could not save the beta church view.', error);
     }
+
     setMode(nextMode);
     setMemberSection('home');
     setShowChooser(false);
+
     if (nextMode === 'member') {
       window.requestAnimationFrame(() => navigateMember('home'));
     }
@@ -286,6 +299,24 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       <div ref={hostRef} className="organization-hub-ministry-bridge">
         <OrganizationHub organization={organization} {...props} />
       </div>
+
+      {memberMode && primaryNavTarget ? createPortal(
+        MEMBER_NAV_ITEMS.map(([id, originalLabel, displayLabel]) => (
+          <button
+            key={`member-${id}`}
+            type="button"
+            data-member-section-button="true"
+            data-member-section={id}
+            data-beta-original-section-label={originalLabel}
+            className={memberSection === id ? 'is-active' : ''}
+            aria-current={memberSection === id ? 'page' : undefined}
+            onClick={() => navigateMember(id)}
+          >
+            {displayLabel}
+          </button>
+        )),
+        primaryNavTarget,
+      ) : null}
 
       {memberMode && contentTarget && memberSection === 'people' ? createPortal(
         <div className="member-connections-portal">
