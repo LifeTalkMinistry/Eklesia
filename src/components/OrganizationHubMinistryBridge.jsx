@@ -137,14 +137,15 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
         const actionLabel = memberView && joinedGroup ? 'Open Group' : 'Enter Ministry Room';
         const actionTarget = memberView && joinedGroup ? joinedGroup.id : ministry.id;
         const actionType = memberView && joinedGroup ? 'group' : 'ministry';
+        const ariaLabel = actionType === 'group'
+          ? `Open ${joinedGroup.name}`
+          : `Enter ${ministry.name} ministry room`;
 
         if (existingButton) {
-          existingButton.textContent = actionLabel;
-          existingButton.dataset.enterMinistryRoom = actionTarget;
-          existingButton.dataset.openTargetType = actionType;
-          existingButton.setAttribute('aria-label', actionType === 'group'
-            ? `Open ${joinedGroup.name}`
-            : `Enter ${ministry.name} ministry room`);
+          if (existingButton.textContent !== actionLabel) existingButton.textContent = actionLabel;
+          if (existingButton.dataset.enterMinistryRoom !== actionTarget) existingButton.dataset.enterMinistryRoom = actionTarget;
+          if (existingButton.dataset.openTargetType !== actionType) existingButton.dataset.openTargetType = actionType;
+          if (existingButton.getAttribute('aria-label') !== ariaLabel) existingButton.setAttribute('aria-label', ariaLabel);
           return;
         }
 
@@ -154,9 +155,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
         button.dataset.enterMinistryRoom = actionTarget;
         button.dataset.openTargetType = actionType;
         button.textContent = actionLabel;
-        button.setAttribute('aria-label', actionType === 'group'
-          ? `Open ${joinedGroup.name}`
-          : `Enter ${ministry.name} ministry room`);
+        button.setAttribute('aria-label', ariaLabel);
         actions.appendChild(button);
       });
     }
@@ -194,7 +193,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
     }
 
     const observer = new MutationObserver(enhanceMinistryCards);
-    observer.observe(host, { childList: true, subtree: true, characterData: true });
+    observer.observe(host, { childList: true, subtree: true });
     host.addEventListener('click', handleClick);
     enhanceMinistryCards();
 
