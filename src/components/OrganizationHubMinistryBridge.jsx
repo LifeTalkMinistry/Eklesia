@@ -142,7 +142,7 @@ export default function OrganizationHubMinistryBridge({
       </div>
 
       {portalTarget ? createPortal(
-        <nav className="church-unified-bottom-nav" aria-label="Main navigation">
+        <nav className="bottom-nav unified-bottom-nav" aria-label="Main navigation">
           {[
             ['home', '⌂', 'Home'],
             ['church', '♧', 'Church'],
@@ -153,7 +153,7 @@ export default function OrganizationHubMinistryBridge({
             <button
               key={id}
               type="button"
-              className={id === 'church' ? 'is-active' : ''}
+              className={id === 'church' ? 'active' : ''}
               aria-current={id === 'church' ? 'page' : undefined}
               onClick={() => navigateUnifiedApp(id)}
             >
