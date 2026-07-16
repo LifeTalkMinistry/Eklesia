@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import ChurchPulseFeed from './ChurchPulseFeed.jsx';
 import MemberConnections from './MemberConnections.jsx';
 import OrganizationHub from './OrganizationHub.jsx';
 import './BetaChurchViewMode.css';
 
-const MEMBER_SECTIONS = new Set(['ministries', 'groups', 'people']);
+const MEMBER_SECTIONS = new Set(['home', 'ministries', 'groups', 'people']);
+const MEMBER_HUB_SECTIONS = new Set(['ministries', 'groups', 'people']);
+
+function sectionButtonLabel(button) {
+  return String(button?.dataset?.betaOriginalSectionLabel || button?.textContent || '')
+    .trim()
+    .toLowerCase();
+}
 
 function getStorageKey(organizationId) {
   return `ekklesia-pulse-beta-view:${organizationId || 'church'}`;
@@ -45,7 +51,7 @@ function BetaViewChooser({ currentMode, organizationName, canClose, onChoose, on
           <button className={`beta-view-mode-option ${currentMode === 'member' ? 'is-selected' : ''}`} type="button" onClick={() => onChoose('member')}>
             <span aria-hidden="true">M</span>
             <strong>Explore as Church Member</strong>
-            <small>See a quieter member experience focused on Ministries, Groups, and the friends or close companions saved under People.</small>
+            <small>See the Church Board, Ministries, Groups, and the friends or close companions saved under People.</small>
           </button>
         </div>
         <p className="beta-view-mode-note">You can switch views again at any time using the beta view button inside the church workspace.</p>
@@ -58,9 +64,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
   const hostRef = useRef(null);
   const [mode, setMode] = useState(() => restoreMode(organization?.id));
   const [showChooser, setShowChooser] = useState(() => !restoreMode(organization?.id));
-  const [memberSection, setMemberSection] = useState(() => (
-    restoreMode(organization?.id) === 'member' ? 'ministries' : 'home'
-  ));
+  const [memberSection, setMemberSection] = useState('home');
   const [contentTarget, setContentTarget] = useState(null);
 
   useEffect(() => {
@@ -86,6 +90,13 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       }
     }
 
+    function preserveSectionLabel(button) {
+      if (!button.dataset.betaOriginalSectionLabel) {
+        button.dataset.betaOriginalSectionLabel = button.textContent.trim();
+      }
+      return sectionButtonLabel(button);
+    }
+
     function applyPresentation() {
       const memberView = presentationMode === 'member';
       const groupWorkspace = shell.querySelector('.group-workspace');
@@ -96,9 +107,18 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
         if (role.textContent !== nextRole) role.textContent = nextRole;
       }
 
-      shell.querySelectorAll('.church-workspace-primary-nav button, .organization-section-nav button').forEach((button) => {
-        const label = button.textContent.trim().toLowerCase();
+      shell.querySelectorAll('.church-workspace-primary-nav button').forEach((button) => {
+        const label = preserveSectionLabel(button);
         setMemberHidden(button, memberView && !MEMBER_SECTIONS.has(label));
+        const nextLabel = memberView && label === 'home'
+          ? 'Church Board'
+          : button.dataset.betaOriginalSectionLabel;
+        if (button.textContent.trim() !== nextLabel) button.textContent = nextLabel;
+      });
+
+      shell.querySelectorAll('.organization-section-nav button').forEach((button) => {
+        const label = preserveSectionLabel(button);
+        setMemberHidden(button, memberView && !MEMBER_HUB_SECTIONS.has(label));
       });
 
       shell.querySelectorAll('button').forEach((button) => {
@@ -117,7 +137,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       if (presentationMode !== 'member') return;
       const button = event.target.closest('.church-workspace-primary-nav button, .organization-section-nav button');
       if (!button || !shell.contains(button)) return;
-      const label = button.textContent.trim().toLowerCase();
+      const label = sectionButtonLabel(button);
       if (MEMBER_SECTIONS.has(label)) setMemberSection(label);
     }
 
@@ -133,7 +153,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
 
   useEffect(() => {
     if (mode !== 'member') return undefined;
-    const frame = window.requestAnimationFrame(() => navigateMember('ministries'));
+    const frame = window.requestAnimationFrame(() => navigateMember('home'));
     return () => window.cancelAnimationFrame(frame);
   }, [mode, organization?.id]);
 
@@ -194,7 +214,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       if (!group) return;
 
       const homeButton = [...document.querySelectorAll('.church-workspace-primary-nav button')]
-        .find((button) => button.textContent.trim().toLowerCase() === 'home');
+        .find((button) => sectionButtonLabel(button) === 'home');
       homeButton?.click();
 
       window.requestAnimationFrame(() => {
@@ -234,15 +254,8 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
 
   function navigateMember(section) {
     setMemberSection(section);
-    if (section === 'pulse') {
-      const homeButton = [...document.querySelectorAll('.church-workspace-primary-nav button')]
-        .find((button) => button.textContent.trim().toLowerCase() === 'home');
-      homeButton?.click();
-      return;
-    }
-
     const targetButton = [...document.querySelectorAll('.church-workspace-primary-nav button')]
-      .find((button) => button.textContent.trim().toLowerCase() === section);
+      .find((button) => sectionButtonLabel(button) === section);
     targetButton?.click();
   }
 
@@ -258,10 +271,10 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       console.warn('Ekklesia Pulse could not save the beta church view.', error);
     }
     setMode(nextMode);
-    setMemberSection(nextMode === 'member' ? 'ministries' : 'home');
+    setMemberSection('home');
     setShowChooser(false);
     if (nextMode === 'member') {
-      window.requestAnimationFrame(() => navigateMember('ministries'));
+      window.requestAnimationFrame(() => navigateMember('home'));
     }
   }
 
@@ -273,13 +286,6 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       <div ref={hostRef} className="organization-hub-ministry-bridge">
         <OrganizationHub organization={organization} {...props} />
       </div>
-
-      {memberMode && contentTarget && memberSection === 'pulse' ? createPortal(
-        <div className="church-pulse-feed-portal">
-          <ChurchPulseFeed organization={organization} workspace={workspace} profile={props.profile} />
-        </div>,
-        contentTarget,
-      ) : null}
 
       {memberMode && contentTarget && memberSection === 'people' ? createPortal(
         <div className="member-connections-portal">
