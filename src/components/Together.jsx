@@ -16,19 +16,6 @@ const VIEW_STATES = {
   GENERAL_ERROR: 'GENERAL_ERROR',
 };
 
-const SKIP_AUTO_OPEN_KEY = 'ekklesia-skip-church-auto-open-once';
-
-function consumeSkipAutoOpen() {
-  if (typeof window === 'undefined') return false;
-  try {
-    const shouldSkip = window.sessionStorage.getItem(SKIP_AUTO_OPEN_KEY) === 'true';
-    if (shouldSkip) window.sessionStorage.removeItem(SKIP_AUTO_OPEN_KEY);
-    return shouldSkip;
-  } catch {
-    return false;
-  }
-}
-
 function LoadingState() {
   return (
     <section className="together-card together-restoring-card" aria-live="polite">
@@ -71,11 +58,6 @@ export default function Together({ onEnterOrganization }) {
 
       if (!result.data) {
         setViewState(VIEW_STATES.NOT_CONNECTED);
-        setRestoring(false);
-        return;
-      }
-
-      if (consumeSkipAutoOpen()) {
         setRestoring(false);
         return;
       }
