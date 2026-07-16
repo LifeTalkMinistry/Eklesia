@@ -44,7 +44,7 @@ function BetaViewChooser({ currentMode, organizationName, canClose, onChoose, on
             <small>See a quieter everyday experience focused on church updates, joined ministries, joined Groups, events, and participation.</small>
           </button>
         </div>
-        <p className="beta-view-mode-note">You can switch views again at any time using the beta view button inside the church workspace.</p>
+        <p className="beta-view-mode-note">Members retain full access to the shared spaces they have joined, including Group rhythm, member, and about sections. You can switch views again at any time.</p>
       </section>
     </div>
   );
@@ -88,6 +88,14 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       });
 
       shell.querySelectorAll('button').forEach((button) => {
+        // A joined Group is a normal member space. Never apply the admin presentation
+        // filter inside GroupWorkspace; members need Our Rhythm, Members, About,
+        // progress summaries, and normal Group navigation.
+        if (button.closest('.group-workspace')) {
+          if (button.dataset.betaAdminOnly === 'true') delete button.dataset.betaAdminOnly;
+          return;
+        }
+
         const label = button.textContent.trim();
         const adminOnly = /^(assign|rotate|create group|admin tools|manage|edit|delete)/i.test(label);
         if (adminOnly && button.dataset.betaAdminOnly !== 'true') button.dataset.betaAdminOnly = 'true';
