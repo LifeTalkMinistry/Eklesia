@@ -179,6 +179,7 @@ export default function Dashboard({ profile, storageAvailable, activeTab, setAct
   const whyEklesiaButtonRef = useRef(null);
   const closeWhyEklesia = useCallback(() => setShowWhyEklesia(false), []);
   const mainTab = activeTab === 'journey' || activeTab === 'bible' ? 'tools' : activeTab;
+  const showHomeHeader = activeTab === 'home';
 
   async function openChurchDirectly() {
     if (openingChurch) return;
@@ -212,12 +213,14 @@ export default function Dashboard({ profile, storageAvailable, activeTab, setAct
   }[activeTab] || null;
 
   return (
-    <main className={`dashboard-shell ${activeTab === 'pulse' ? 'dashboard-pulse-active' : ''}`}>
+    <main className={`dashboard-shell ${activeTab === 'pulse' ? 'dashboard-pulse-active' : ''} ${showHomeHeader ? '' : 'dashboard-header-hidden'}`}>
       <div className="dashboard-frame">
-        <header className="dashboard-header">
-          <div className="alpha-brand-cluster"><button className="brand-button" type="button" onClick={onExit} aria-label="Return to welcome screen"><span className="brand-mark">E</span><span>{APP_NAME}</span></button><AlphaBadge compact /></div>
-          <button className="notification-button why-eklesia-trigger" type="button" aria-label="Why Ekklesia Pulse?" onClick={() => setShowWhyEklesia(true)} ref={whyEklesiaButtonRef}><span className="information-glyph" aria-hidden="true">i</span></button>
-        </header>
+        {showHomeHeader ? (
+          <header className="dashboard-header">
+            <div className="alpha-brand-cluster"><button className="brand-button" type="button" onClick={onExit} aria-label="Return to welcome screen"><span className="brand-mark">E</span><span>{APP_NAME}</span></button><AlphaBadge compact /></div>
+            <button className="notification-button why-eklesia-trigger" type="button" aria-label="Why Ekklesia Pulse?" onClick={() => setShowWhyEklesia(true)} ref={whyEklesiaButtonRef}><span className="information-glyph" aria-hidden="true">i</span></button>
+          </header>
+        ) : null}
         <div className="dashboard-content">{!storageAvailable ? <p className="alpha-storage-warning alpha-dashboard-storage-warning" role="status">This browser is currently preventing Ekklesia Pulse from saving information.</p> : null}{content}</div>
         <nav className="bottom-nav unified-bottom-nav" aria-label="Main navigation">
           {[
