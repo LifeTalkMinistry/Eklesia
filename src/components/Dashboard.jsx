@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { APP_NAME } from '../config/appConfig.js';
 import AlphaBadge from './AlphaBadge.jsx';
 import AlphaInformation from './AlphaInformation.jsx';
@@ -18,6 +18,21 @@ import { getJoinedEcosystem } from '../services/ecosystemService.js';
 import { getOrganizationPrototypeState } from '../services/organizationPrototypeService.js';
 import './UnifiedDashboard.css';
 
+const PENDING_APP_TAB_KEY = 'ekklesia-pending-app-tab';
+const APP_TABS = new Set(['home', 'community', 'pulse', 'tools', 'profile']);
+
+function consumePendingAppTab() {
+  if (typeof window === 'undefined') return '';
+  try {
+    const destination = window.sessionStorage.getItem(PENDING_APP_TAB_KEY) || '';
+    window.sessionStorage.removeItem(PENDING_APP_TAB_KEY);
+    return APP_TABS.has(destination) ? destination : '';
+  } catch (error) {
+    console.warn('Ekklesia Pulse could not restore the selected app tab.', error);
+    return '';
+  }
+}
+
 function HomeDashboard({
   profile,
   dailyVerse,
@@ -32,7 +47,6 @@ function HomeDashboard({
   onReviewDaily,
   onSpendMore,
   devotionHistory,
-  onOpenCommunity,
 }) {
   const rhythm = getDevotionMetrics(devotionHistory);
   const displayName = profile?.displayName || 'Friend';
@@ -56,15 +70,6 @@ function HomeDashboard({
         onReview={onReviewDaily}
         onSpendMore={onSpendMore}
       />
-      <button className="unified-church-entry" type="button" onClick={onOpenCommunity}>
-        <span className="unified-church-entry-icon" aria-hidden="true">E</span>
-        <span>
-          <small>Your church is one tap away</small>
-          <strong>Open Church</strong>
-          <em>Pulse, ministries, Groups, and church updates</em>
-        </span>
-        <b aria-hidden="true">›</b>
-      </button>
       <section className="section-block">
         <div className="section-heading">
           <div><p className="dashboard-eyebrow">Your rhythm</p><h3>This week</h3></div>
@@ -177,9 +182,24 @@ export default function Dashboard({ profile, storageAvailable, activeTab, setAct
   const [showWhyEklesia, setShowWhyEklesia] = useState(false);
   const [openingChurch, setOpeningChurch] = useState(false);
   const whyEklesiaButtonRef = useRef(null);
+  const pendingTabRef = useRef(null);
+
+  if (pendingTabRef.current === null) {
+    const pendingTab = consumePendingAppTab();
+    pendingTabRef.current = pendingTab || (activeTab === 'community' ? 'home' : '');
+  }
+
+  const effectiveTab = pendingTabRef.current || activeTab;
   const closeWhyEklesia = useCallback(() => setShowWhyEklesia(false), []);
-  const mainTab = activeTab === 'journey' || activeTab === 'bible' ? 'tools' : activeTab;
-  const showHomeHeader = activeTab === 'home';
+  const mainTab = effectiveTab === 'journey' || effectiveTab === 'bible' ? 'tools' : effectiveTab;
+  const showHomeHeader = effectiveTab === 'home';
+
+  useEffect(() => {
+    const destination = pendingTabRef.current;
+    if (!destination) return;
+    pendingTabRef.current = '';
+    if (activeTab !== destination) setActiveTab(destination);
+  }, [activeTab, setActiveTab]);
 
   async function openChurchDirectly() {
     if (openingChurch) return;
@@ -203,17 +223,17 @@ export default function Dashboard({ profile, storageAvailable, activeTab, setAct
   const pulseWorkspace = getOrganizationPrototypeState(pulseOrganization);
 
   const content = {
-    home: <HomeDashboard profile={profile} dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} dailyRefreshing={dailyRefreshing} dailyRefreshError={dailyRefreshError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onRefreshDaily={onRefreshDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} onOpenCommunity={openChurchDirectly} />,
+    home: <HomeDashboard profile={profile} dailyVerse={dailyVerse} dailyLoading={dailyLoading} dailyError={dailyError} dailyRefreshing={dailyRefreshing} dailyRefreshError={dailyRefreshError} completed={completed} officialDevotion={officialDevotion} onStartDaily={onStartDaily} onRefreshDaily={onRefreshDaily} onReviewDaily={onReviewDaily} onSpendMore={onSpendMore} devotionHistory={devotionHistory} />,
     journey: <Journey history={devotionHistory} selectedEntryId={selectedHistoryId} onSelectEntry={onSelectHistoryEntry} onCloseEntry={onCloseHistoryEntry} onEntryUpdated={onHistoryEntryUpdated} />,
     bible: <BibleReader target={bibleTarget} selectionMode={bibleSelectionMode} onSelectVerse={onSelectBibleVerse} onCancelSelection={onCancelBibleSelection} onReturn={onReturnFromBible} />,
     pulse: <ChurchPulseFeed organization={pulseOrganization} workspace={pulseWorkspace} profile={profile} />,
     tools: <ToolsHome onOpenJourney={() => setActiveTab('journey')} onOpenBible={() => setActiveTab('bible')} />,
     community: <><TogetherDemoNotice /><Together profile={profile} onEnterOrganization={onEnterOrganization} focusKey={organizationLauncherFocusKey} /></>,
     profile: <Profile profile={profile} storageAvailable={storageAvailable} onProfileUpdated={onProfileUpdated} onRestartIntroduction={onRestartIntroduction} onDeleteLocalData={onDeleteLocalData} />,
-  }[activeTab] || null;
+  }[effectiveTab] || null;
 
   return (
-    <main className={`dashboard-shell ${activeTab === 'pulse' ? 'dashboard-pulse-active' : ''} ${showHomeHeader ? '' : 'dashboard-header-hidden'}`}>
+    <main className={`dashboard-shell ${effectiveTab === 'pulse' ? 'dashboard-pulse-active' : ''} ${showHomeHeader ? '' : 'dashboard-header-hidden'}`}>
       <div className="dashboard-frame">
         {showHomeHeader ? (
           <header className="dashboard-header">
