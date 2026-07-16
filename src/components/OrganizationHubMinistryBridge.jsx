@@ -44,7 +44,7 @@ function BetaViewChooser({ currentMode, organizationName, canClose, onChoose, on
             <small>See a quieter everyday experience focused on church updates, joined ministries, joined Groups, events, and participation.</small>
           </button>
         </div>
-        <p className="beta-view-mode-note">Members retain full access to the shared spaces they have joined, including Group rhythm, member, and about sections. You can switch views again at any time.</p>
+        <p className="beta-view-mode-note">You can switch views again at any time using the beta view button inside the church workspace.</p>
       </section>
     </div>
   );
@@ -75,6 +75,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
 
     function applyPresentation() {
       const memberView = presentationMode === 'member';
+      const groupWorkspace = shell.querySelector('.group-workspace');
       const role = shell.querySelector('.church-workspace-role');
       if (role) {
         if (!role.dataset.betaOriginalRole) role.dataset.betaOriginalRole = role.textContent;
@@ -88,14 +89,10 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       });
 
       shell.querySelectorAll('button').forEach((button) => {
-        // A joined Group is a normal member space. Never apply the admin presentation
-        // filter inside GroupWorkspace; members need Our Rhythm, Members, About,
-        // progress summaries, and normal Group navigation.
-        if (button.closest('.group-workspace')) {
+        if (groupWorkspace?.contains(button)) {
           if (button.dataset.betaAdminOnly === 'true') delete button.dataset.betaAdminOnly;
           return;
         }
-
         const label = button.textContent.trim();
         const adminOnly = /^(assign|rotate|create group|admin tools|manage|edit|delete)/i.test(label);
         if (adminOnly && button.dataset.betaAdminOnly !== 'true') button.dataset.betaAdminOnly = 'true';
@@ -113,9 +110,17 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
     const host = hostRef.current;
     if (!host) return undefined;
 
+    function joinedGroupForMinistry(ministryId) {
+      const joinedGroupIds = new Set(workspace?.currentMember?.groupIds || []);
+      return (workspace?.groups || []).find((group) => (
+        group.connectedMinistryId === ministryId && joinedGroupIds.has(group.id)
+      ));
+    }
+
     function enhanceMinistryCards() {
       const joinedIds = new Set(workspace?.currentMember?.ministryIds || []);
       const ministryCards = host.querySelectorAll('.organization-ministry-card');
+      const memberView = (mode || 'admin') === 'member';
 
       ministryCards.forEach((card, index) => {
         const ministry = workspace?.ministries?.[index];
@@ -128,23 +133,64 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
           return;
         }
 
-        if (existingButton) return;
+        const joinedGroup = joinedGroupForMinistry(ministry.id);
+        const actionLabel = memberView && joinedGroup ? 'Open Group' : 'Enter Ministry Room';
+        const actionTarget = memberView && joinedGroup ? joinedGroup.id : ministry.id;
+        const actionType = memberView && joinedGroup ? 'group' : 'ministry';
+
+        if (existingButton) {
+          existingButton.textContent = actionLabel;
+          existingButton.dataset.enterMinistryRoom = actionTarget;
+          existingButton.dataset.openTargetType = actionType;
+          existingButton.setAttribute('aria-label', actionType === 'group'
+            ? `Open ${joinedGroup.name}`
+            : `Enter ${ministry.name} ministry room`);
+          return;
+        }
+
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'organization-enter-ministry-room';
-        button.dataset.enterMinistryRoom = ministry.id;
-        button.textContent = 'Enter Ministry Room';
-        button.setAttribute('aria-label', `Enter ${ministry.name} ministry room`);
+        button.dataset.enterMinistryRoom = actionTarget;
+        button.dataset.openTargetType = actionType;
+        button.textContent = actionLabel;
+        button.setAttribute('aria-label', actionType === 'group'
+          ? `Open ${joinedGroup.name}`
+          : `Enter ${ministry.name} ministry room`);
         actions.appendChild(button);
+      });
+    }
+
+    function openGroupThroughChurchHome(groupId) {
+      const group = (workspace?.groups || []).find((entry) => entry.id === groupId);
+      if (!group) return;
+
+      const homeButton = [...document.querySelectorAll('.church-workspace-primary-nav button')]
+        .find((button) => button.textContent.trim().toLowerCase() === 'home');
+      homeButton?.click();
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          const groupButton = [...document.querySelectorAll('.church-home-spaces-grid button')]
+            .find((button) => button.querySelector('strong')?.textContent.trim() === group.name);
+          groupButton?.click();
+        });
       });
     }
 
     function handleClick(event) {
       const button = event.target.closest('[data-enter-ministry-room]');
       if (!button || !host.contains(button)) return;
-      const ministryId = button.dataset.enterMinistryRoom;
-      const isJoined = (workspace?.currentMember?.ministryIds || []).includes(ministryId);
-      if (isJoined) onOpenMinistry(ministryId);
+
+      const targetId = button.dataset.enterMinistryRoom;
+      if (button.dataset.openTargetType === 'group') {
+        const isJoined = (workspace?.currentMember?.groupIds || []).includes(targetId);
+        if (isJoined) openGroupThroughChurchHome(targetId);
+        return;
+      }
+
+      const isJoined = (workspace?.currentMember?.ministryIds || []).includes(targetId);
+      if (isJoined) onOpenMinistry(targetId);
     }
 
     const observer = new MutationObserver(enhanceMinistryCards);
@@ -156,7 +202,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       observer.disconnect();
       host.removeEventListener('click', handleClick);
     };
-  }, [workspace, onOpenMinistry]);
+  }, [workspace, onOpenMinistry, mode]);
 
   function chooseMode(nextMode) {
     try {
