@@ -1,12 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './Together.css';
 import {
   findEcosystemByCode,
   getJoinedEcosystem,
   joinEcosystem,
-  leaveEcosystem,
 } from '../services/ecosystemService.js';
-import { getOrganizationPrototypeState } from '../services/organizationPrototypeService.js';
 
 const VIEW_STATES = {
   NOT_CONNECTED: 'NOT_CONNECTED',
@@ -14,108 +12,35 @@ const VIEW_STATES = {
   INVALID_CODE: 'INVALID_CODE',
   ECOSYSTEM_PREVIEW: 'ECOSYSTEM_PREVIEW',
   JOINING: 'JOINING',
-  JOINED: 'JOINED',
   MEMBER_LIMIT_REACHED: 'MEMBER_LIMIT_REACHED',
   GENERAL_ERROR: 'GENERAL_ERROR',
 };
-
-function OrganizationDetailsDialog({ ecosystem, onClose }) {
-  const closeButtonRef = useRef(null);
-
-  useEffect(() => {
-    closeButtonRef.current?.focus();
-  }, []);
-
-  return (
-    <div
-      className="together-dialog-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <section className="together-dialog" role="dialog" aria-modal="true" aria-labelledby="organization-details-title">
-        <div className="together-dialog-heading">
-          <div>
-            <p className="dashboard-eyebrow">Organization details</p>
-            <h3 id="organization-details-title">{ecosystem.name}</h3>
-          </div>
-          <button ref={closeButtonRef} className="together-icon-button" type="button" onClick={onClose} aria-label="Close organization details">×</button>
-        </div>
-        <dl className="together-detail-list">
-          <div><dt>Church organization</dt><dd>{ecosystem.name}</dd></div>
-          <div><dt>Organization owner</dt><dd>{ecosystem.ownerName}</dd></div>
-          <div><dt>Plan</dt><dd>{ecosystem.planName}</dd></div>
-          <div><dt>Member capacity</dt><dd>{ecosystem.memberCount} of {ecosystem.memberLimit} spaces used</dd></div>
-          <div><dt>Join policy</dt><dd>{ecosystem.approvalMode}</dd></div>
-          <div><dt>Joined status</dt><dd>Connected on this device</dd></div>
-        </dl>
-        <div className="together-dialog-note">
-          <strong>One church. Official ministries. Purpose-driven groups.</strong>
-          <p>Ministry managers receive authority within their assigned ministry. Appointed Group Leaders may create mission-specific groups without receiving access to private devotional content.</p>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function LeaveOrganizationDialog({ ecosystem, leaving, error, onStay, onConfirm }) {
-  const stayButtonRef = useRef(null);
-
-  useEffect(() => {
-    stayButtonRef.current?.focus();
-  }, []);
-
-  return (
-    <div className="together-dialog-backdrop">
-      <section className="together-dialog together-dialog-small" role="dialog" aria-modal="true" aria-labelledby="leave-organization-title">
-        <p className="dashboard-eyebrow">Connection settings</p>
-        <h3 id="leave-organization-title">Leave {ecosystem.name}?</h3>
-        <p className="together-dialog-copy">
-          You will no longer have access to this church organization, its official ministries, or its leader-created groups on this device. Your personal devotions, WGAP reflections, Journey history, Bible position, and notebook photos will remain unchanged.
-        </p>
-        {error ? <p className="together-inline-error" role="alert">{error}</p> : null}
-        <div className="together-dialog-actions">
-          <button ref={stayButtonRef} className="secondary-button" type="button" onClick={onStay} disabled={leaving}>Stay connected</button>
-          <button className="together-danger-button" type="button" onClick={onConfirm} disabled={leaving}>
-            {leaving ? 'Leaving organization…' : 'Leave organization'}
-          </button>
-        </div>
-      </section>
-    </div>
-  );
-}
 
 function LoadingState() {
   return (
     <section className="together-card together-restoring-card" aria-live="polite">
       <span className="together-spinner" aria-hidden="true" />
-      <p>Checking your church connection…</p>
+      <p>Opening your church…</p>
     </section>
   );
 }
 
-export default function Together({ profile, onEnterOrganization, focusKey = 0 }) {
+export default function Together({ onEnterOrganization }) {
   const [viewState, setViewState] = useState(VIEW_STATES.NOT_CONNECTED);
   const [restoring, setRestoring] = useState(true);
   const [code, setCode] = useState('');
   const [previewEcosystem, setPreviewEcosystem] = useState(null);
-  const [joinedEcosystem, setJoinedEcosystem] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
-  const [leaving, setLeaving] = useState(false);
-  const [leaveError, setLeaveError] = useState('');
   const [retryType, setRetryType] = useState('check');
   const inputRef = useRef(null);
-  const enterButtonRef = useRef(null);
+  const openedOrganizationRef = useRef('');
 
   const isBusy = viewState === VIEW_STATES.VALIDATING_CODE || viewState === VIEW_STATES.JOINING;
-  const joinedWorkspace = useMemo(
-    () => (joinedEcosystem ? getOrganizationPrototypeState(joinedEcosystem) : null),
-    [joinedEcosystem],
-  );
-  const currentRole = joinedWorkspace?.currentMember?.organizationRole || 'Church Member';
-  const ministryCount = joinedWorkspace?.ministries?.length || 0;
-  const groupCount = joinedWorkspace?.groups?.length || 0;
+
+  function openOrganization(organization) {
+    if (!organization?.id || openedOrganizationRef.current === organization.id) return;
+    openedOrganizationRef.current = organization.id;
+    onEnterOrganization?.(organization);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -137,30 +62,12 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
         return;
       }
 
-      setJoinedEcosystem(result.data);
-      setViewState(VIEW_STATES.JOINED);
-      setRestoring(false);
+      openOrganization(result.data);
     }
 
     restoreConnection();
     return () => { cancelled = true; };
   }, []);
-
-  useEffect(() => {
-    if (!focusKey || viewState !== VIEW_STATES.JOINED) return;
-    window.requestAnimationFrame(() => enterButtonRef.current?.focus());
-  }, [focusKey, viewState]);
-
-  useEffect(() => {
-    function handleEscape(event) {
-      if (event.key !== 'Escape') return;
-      if (showLeaveDialog && !leaving) setShowLeaveDialog(false);
-      else if (showDetails) setShowDetails(false);
-    }
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [showLeaveDialog, showDetails, leaving]);
 
   async function validateCode() {
     if (!code.trim() || isBusy) return;
@@ -196,6 +103,7 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
   }
 
   function useDifferentCode() {
+    openedOrganizationRef.current = '';
     setCode('');
     setPreviewEcosystem(null);
     setViewState(VIEW_STATES.NOT_CONNECTED);
@@ -209,10 +117,8 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
     const result = await joinEcosystem(previewEcosystem.id);
 
     if (result.ok) {
-      setJoinedEcosystem(result.data);
       setPreviewEcosystem(null);
-      setViewState(VIEW_STATES.JOINED);
-      onEnterOrganization?.(result.data);
+      openOrganization(result.data);
       return;
     }
     if (result.error.code === 'MEMBER_LIMIT_REACHED') {
@@ -220,25 +126,6 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
       return;
     }
     setViewState(VIEW_STATES.GENERAL_ERROR);
-  }
-
-  async function confirmLeave() {
-    if (leaving) return;
-    setLeaving(true);
-    setLeaveError('');
-    const result = await leaveEcosystem();
-
-    if (!result.ok) {
-      setLeaveError(result.error.message);
-      setLeaving(false);
-      return;
-    }
-
-    setJoinedEcosystem(null);
-    setShowLeaveDialog(false);
-    setLeaving(false);
-    setCode('');
-    setViewState(VIEW_STATES.NOT_CONNECTED);
   }
 
   async function retryLastAction() {
@@ -250,13 +137,11 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
       setRestoring(true);
       const result = await getJoinedEcosystem();
       if (result.ok && result.data) {
-        setJoinedEcosystem(result.data);
-        setViewState(VIEW_STATES.JOINED);
-      } else if (result.ok) {
-        setViewState(VIEW_STATES.NOT_CONNECTED);
-      } else {
-        setViewState(VIEW_STATES.GENERAL_ERROR);
+        openOrganization(result.data);
+        return;
       }
+      if (result.ok) setViewState(VIEW_STATES.NOT_CONNECTED);
+      else setViewState(VIEW_STATES.GENERAL_ERROR);
       setRestoring(false);
       return;
     }
@@ -264,58 +149,6 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
   }
 
   if (restoring) return <LoadingState />;
-
-  if (viewState === VIEW_STATES.JOINED && joinedEcosystem) {
-    return (
-      <section className="panel-page together-page">
-        <div className="together-heading-row">
-          <div>
-            <p className="dashboard-eyebrow">Your church organization</p>
-            <h2>{joinedEcosystem.name}</h2>
-            <p className="panel-intro">You are connected as an {currentRole}.</p>
-          </div>
-          <span className="together-connected-badge">✓ Connected</span>
-        </div>
-
-        <section className="together-card together-workspace-launcher" aria-labelledby="connected-organization-heading">
-          <div className="together-workspace-launcher-heading">
-            <div>
-              <span className="soft-badge">UI PROTOTYPE</span>
-              <h3 id="connected-organization-heading">Enter your church space</h3>
-            </div>
-            <span className="together-workspace-mark" aria-hidden="true">⌂</span>
-          </div>
-          <p>You are connected to this church organization. Enter the church space to view its Pulse, official ministries, leader-created groups, people, and privacy settings.</p>
-          <dl className="together-workspace-summary">
-            <div><dt>Members</dt><dd>{joinedEcosystem.memberCount}</dd></div>
-            <div><dt>Official ministries</dt><dd>{ministryCount}</dd></div>
-            <div><dt>Leader-created groups</dt><dd>{groupCount}</dd></div>
-            <div><dt>Your role</dt><dd>{currentRole}</dd></div>
-          </dl>
-          <p className="together-workspace-privacy"><strong>Privacy note:</strong> Your personal WGAP, prayers, notes, and notebook photos remain private.</p>
-          <div className="together-workspace-actions">
-            <button ref={enterButtonRef} className="primary-button" type="button" onClick={() => onEnterOrganization?.(joinedEcosystem)}>Enter church space</button>
-            <button className="secondary-button" type="button" onClick={() => setShowDetails(true)}>Organization details</button>
-          </div>
-          <button className="together-leave-link" type="button" onClick={() => {
-            setLeaveError('');
-            setShowLeaveDialog(true);
-          }}>Leave organization</button>
-        </section>
-
-        {showDetails ? <OrganizationDetailsDialog ecosystem={joinedEcosystem} onClose={() => setShowDetails(false)} /> : null}
-        {showLeaveDialog ? (
-          <LeaveOrganizationDialog
-            ecosystem={joinedEcosystem}
-            leaving={leaving}
-            error={leaveError}
-            onStay={() => setShowLeaveDialog(false)}
-            onConfirm={confirmLeave}
-          />
-        ) : null}
-      </section>
-    );
-  }
 
   if (viewState === VIEW_STATES.ECOSYSTEM_PREVIEW || viewState === VIEW_STATES.JOINING) {
     return (
@@ -374,10 +207,10 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
       <section className="panel-page together-page">
         <p className="dashboard-eyebrow">Connection interrupted</p>
         <h2>Something went wrong while checking this church organization.</h2>
-        <p className="panel-intro">Please try again. Your device profile has not been connected.</p>
+        <p className="panel-intro">Please try again. Your device profile has not been changed.</p>
         <section className="together-card together-message-card" role="alert">
           <span className="together-message-icon" aria-hidden="true">!</span>
-          <p>No joined state was saved from the failed request.</p>
+          <p>Your existing local information remains unchanged.</p>
           <button className="primary-button together-primary-button" type="button" onClick={retryLastAction}>Try again</button>
         </section>
       </section>
@@ -391,7 +224,7 @@ export default function Together({ profile, onEnterOrganization, focusKey = 0 })
     <section className="panel-page together-page">
       <p className="dashboard-eyebrow">Church connection</p>
       <h2>Join your church organization.</h2>
-      <p className="panel-intro">The organization is the main home for church members, official ministries, leader-created groups, and the Church Pulse.</p>
+      <p className="panel-intro">Enter the church code once. After joining, the Church tab opens your church directly.</p>
       <form className="together-card together-join-card" onSubmit={handleSubmit} noValidate>
         <div><h3>Enter your church code</h3><p>The code connects this device profile to the church organization. It is not a password.</p></div>
         <label htmlFor="organization-code">Church organization code</label>
