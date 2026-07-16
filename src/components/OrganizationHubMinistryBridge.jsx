@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import ChurchPulseFeed from './ChurchPulseFeed.jsx';
 import OrganizationHub from './OrganizationHub.jsx';
 import './BetaChurchViewMode.css';
 
@@ -41,7 +42,7 @@ function BetaViewChooser({ currentMode, organizationName, canClose, onChoose, on
           <button className={`beta-view-mode-option ${currentMode === 'member' ? 'is-selected' : ''}`} type="button" onClick={() => onChoose('member')}>
             <span aria-hidden="true">M</span>
             <strong>Explore as Church Member</strong>
-            <small>See a quieter everyday experience focused on church updates, joined ministries, joined Groups, events, and participation.</small>
+            <small>See a quieter everyday experience focused on church updates, Pulse, joined ministries, joined Groups, and participation.</small>
           </button>
         </div>
         <p className="beta-view-mode-note">You can switch views again at any time using the beta view button inside the church workspace.</p>
@@ -54,10 +55,17 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
   const hostRef = useRef(null);
   const [mode, setMode] = useState(() => restoreMode(organization?.id));
   const [showChooser, setShowChooser] = useState(() => !restoreMode(organization?.id));
+  const [memberSection, setMemberSection] = useState('home');
+  const [contentTarget, setContentTarget] = useState(null);
+
+  useEffect(() => {
+    setContentTarget(document.querySelector('.church-workspace-content'));
+  }, []);
 
   useEffect(() => {
     const presentationMode = mode || 'admin';
     document.documentElement.dataset.ekklesiaDemoView = presentationMode;
+    document.documentElement.dataset.ekklesiaMemberSection = memberSection;
 
     const shell = document.querySelector('.church-workspace-shell');
     if (!shell) return undefined;
@@ -104,7 +112,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
     const observer = new MutationObserver(applyPresentation);
     observer.observe(shell, { childList: true, subtree: true, characterData: true });
     return () => observer.disconnect();
-  }, [mode]);
+  }, [mode, memberSection]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -137,9 +145,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
         const actionLabel = memberView && joinedGroup ? 'Open Group' : 'Enter Ministry Room';
         const actionTarget = memberView && joinedGroup ? joinedGroup.id : ministry.id;
         const actionType = memberView && joinedGroup ? 'group' : 'ministry';
-        const ariaLabel = actionType === 'group'
-          ? `Open ${joinedGroup.name}`
-          : `Enter ${ministry.name} ministry room`;
+        const ariaLabel = actionType === 'group' ? `Open ${joinedGroup.name}` : `Enter ${ministry.name} ministry room`;
 
         if (existingButton) {
           if (existingButton.textContent !== actionLabel) existingButton.textContent = actionLabel;
@@ -203,6 +209,20 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
     };
   }, [workspace, onOpenMinistry, mode]);
 
+  function navigateMember(section) {
+    setMemberSection(section);
+    if (section === 'pulse') {
+      const homeButton = [...document.querySelectorAll('.church-workspace-primary-nav button')]
+        .find((button) => button.textContent.trim().toLowerCase() === 'home');
+      homeButton?.click();
+      return;
+    }
+
+    const targetButton = [...document.querySelectorAll('.church-workspace-primary-nav button')]
+      .find((button) => button.textContent.trim().toLowerCase() === section);
+    targetButton?.click();
+  }
+
   function chooseMode(nextMode) {
     try {
       window.localStorage.setItem(getStorageKey(organization?.id), nextMode);
@@ -210,25 +230,45 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       console.warn('Ekklesia Pulse could not save the beta church view.', error);
     }
     setMode(nextMode);
+    setMemberSection('home');
     setShowChooser(false);
     if (nextMode === 'member') {
-      window.requestAnimationFrame(() => {
-        const homeButton = [...document.querySelectorAll('.church-workspace-primary-nav button')]
-          .find((button) => button.textContent.trim().toLowerCase() === 'home');
-        homeButton?.click();
-      });
+      window.requestAnimationFrame(() => navigateMember('home'));
     }
   }
 
   const portalTarget = typeof document !== 'undefined' ? document.body : null;
+  const memberMode = mode === 'member';
 
   return (
     <>
       <div ref={hostRef} className="organization-hub-ministry-bridge">
         <OrganizationHub organization={organization} {...props} />
       </div>
+
+      {memberMode && contentTarget && memberSection === 'pulse' ? createPortal(
+        <div className="church-pulse-feed-portal">
+          <ChurchPulseFeed organization={organization} workspace={workspace} profile={props.profile} />
+        </div>,
+        contentTarget,
+      ) : null}
+
       {portalTarget ? createPortal(
         <>
+          {memberMode ? (
+            <nav className="church-member-bottom-nav" aria-label="Church member navigation">
+              {[
+                ['home', '⌂', 'Home'],
+                ['pulse', '♡', 'Pulse'],
+                ['ministries', 'M', 'Ministries'],
+                ['groups', 'G', 'Groups'],
+              ].map(([id, icon, label]) => (
+                <button key={id} type="button" className={memberSection === id ? 'is-active' : ''} aria-current={memberSection === id ? 'page' : undefined} onClick={() => navigateMember(id)}>
+                  <span aria-hidden="true">{icon}</span>{label}
+                </button>
+              ))}
+            </nav>
+          ) : null}
           <button className="beta-view-mode-switch" type="button" onClick={() => setShowChooser(true)}>
             {mode === 'member' ? 'Member view' : 'Admin view'} · Switch
           </button>
