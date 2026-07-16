@@ -85,16 +85,16 @@ function LeaveOrganizationDialog({ ecosystem, leaving, error, onStay, onConfirm 
   return (
     <div className="church-workspace-dialog-backdrop">
       <section className="church-workspace-dialog church-workspace-dialog-small" role="dialog" aria-modal="true" aria-labelledby="church-workspace-leave-title">
-        <p className="dashboard-eyebrow">Connection settings</p>
-        <h2 id="church-workspace-leave-title">Leave {ecosystem.name}?</h2>
+        <p className="dashboard-eyebrow">Church connection</p>
+        <h2 id="church-workspace-leave-title">Exit {ecosystem.name}?</h2>
         <p className="church-workspace-dialog-copy">
-          You will no longer have access to this church organization, its ministries, or its leader-created Groups on this device. Your personal devotions, WGAP reflections, Journey history, Bible position, and notebook photos will remain unchanged.
+          This will disconnect this device from the church. To enter the church again, you will need to provide its church organization code. Your personal devotions, WGAP reflections, Journey history, Bible position, and notebook photos will remain unchanged.
         </p>
         {error ? <p className="church-workspace-error" role="alert">{error}</p> : null}
         <div className="church-workspace-dialog-actions">
           <button ref={stayButtonRef} className="secondary-button" type="button" onClick={onStay} disabled={leaving}>Stay connected</button>
           <button className="church-workspace-danger" type="button" onClick={onConfirm} disabled={leaving}>
-            {leaving ? 'Leaving organization…' : 'Leave organization'}
+            {leaving ? 'Exiting church…' : 'Exit church'}
           </button>
         </div>
       </section>
@@ -266,6 +266,11 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
     onExit();
   }
 
+  function requestChurchExit() {
+    setLeaveError('');
+    setShowLeaveDialog(true);
+  }
+
   async function confirmLeave() {
     if (leaving) return;
     setLeaving(true);
@@ -307,10 +312,10 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
             <button
               className="church-workspace-exit"
               type="button"
-              onClick={() => exitToAppTab('home')}
-              aria-label={`Exit ${organization.name} view and return to Home`}
+              onClick={requestChurchExit}
+              aria-label={`Exit ${organization.name} and require the church code to enter again`}
             >
-              <span aria-hidden="true">←</span> Exit church view
+              <span aria-hidden="true">←</span> Exit church
             </button>
             <div className="church-workspace-badges">
               <button
@@ -395,10 +400,7 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
                   onOpenMinistry={openMinistry}
                   onNavigateApp={exitToAppTab}
                   onShowDetails={() => setShowDetails(true)}
-                  onRequestLeave={() => {
-                    setLeaveError('');
-                    setShowLeaveDialog(true);
-                  }}
+                  onRequestLeave={requestChurchExit}
                 />
               </div>
             </>
