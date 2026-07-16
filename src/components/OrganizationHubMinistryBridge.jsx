@@ -15,6 +15,7 @@ const MEMBER_NAV_ITEMS = [
 function sectionButtonLabel(button) {
   const label = String(
     button?.dataset?.memberSection
+      || button?.dataset?.betaNativeSectionLabel
       || button?.dataset?.betaOriginalSectionLabel
       || button?.textContent
       || '',
@@ -113,8 +114,8 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
     }
 
     function preserveSectionLabel(button) {
-      if (!button.dataset.betaOriginalSectionLabel) {
-        button.dataset.betaOriginalSectionLabel = button.textContent.trim();
+      if (!button.dataset.betaNativeSectionLabel) {
+        button.dataset.betaNativeSectionLabel = button.textContent.trim();
       }
       return sectionButtonLabel(button);
     }
