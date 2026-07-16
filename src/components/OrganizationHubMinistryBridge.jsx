@@ -4,8 +4,6 @@ import ChurchPulseFeed from './ChurchPulseFeed.jsx';
 import OrganizationHub from './OrganizationHub.jsx';
 import './BetaChurchViewMode.css';
 
-const SKIP_AUTO_OPEN_KEY = 'ekklesia-skip-church-auto-open-once';
-
 function getStorageKey(organizationId) {
   return `ekklesia-pulse-beta-view:${organizationId || 'church'}`;
 }
@@ -53,7 +51,7 @@ function BetaViewChooser({ currentMode, organizationName, canClose, onChoose, on
   );
 }
 
-export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistry, organization, ...props }) {
+export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistry, onNavigateApp, organization, ...props }) {
   const hostRef = useRef(null);
   const [mode, setMode] = useState(() => restoreMode(organization?.id));
   const [showChooser, setShowChooser] = useState(() => !restoreMode(organization?.id));
@@ -227,30 +225,7 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
 
   function navigateUnifiedApp(section) {
     if (section === 'church') return;
-
-    const labelBySection = { home: 'home', pulse: 'pulse', tools: 'tools', profile: 'me' };
-    try {
-      window.sessionStorage.setItem(SKIP_AUTO_OPEN_KEY, 'true');
-    } catch (error) {
-      console.warn('Ekklesia Pulse could not prepare unified navigation.', error);
-    }
-
-    const exitButton = document.querySelector('.church-workspace-exit');
-    exitButton?.click();
-
-    const targetLabel = labelBySection[section];
-    let attempts = 0;
-    const openTarget = () => {
-      const targetButton = [...document.querySelectorAll('.unified-bottom-nav button')]
-        .find((button) => button.textContent.trim().toLowerCase() === targetLabel);
-      if (targetButton) {
-        targetButton.click();
-        return;
-      }
-      attempts += 1;
-      if (attempts < 20) window.setTimeout(openTarget, 25);
-    };
-    window.setTimeout(openTarget, 0);
+    onNavigateApp?.(section);
   }
 
   function chooseMode(nextMode) {
