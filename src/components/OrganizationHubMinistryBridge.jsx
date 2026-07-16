@@ -6,6 +6,10 @@ function getLegacyViewStorageKey(organizationId) {
   return `ekklesia-pulse-beta-view:${organizationId || 'church'}`;
 }
 
+function normalizeSectionLabel(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
 export default function OrganizationHubMinistryBridge({
   workspace,
   onOpenMinistry,
@@ -74,6 +78,8 @@ export default function OrganizationHubMinistryBridge({
     const host = hostRef.current;
     if (!host) return undefined;
 
+    const shell = host.closest('.church-workspace-shell');
+    let syncFrame = 0;
     let enhancementFrame = 0;
 
     function enhanceMinistryCards() {
@@ -95,18 +101,11 @@ export default function OrganizationHubMinistryBridge({
         const ariaLabel = `Enter ${ministry.name} ministry room`;
 
         if (existingButton) {
-          // Keep this enhancement idempotent. Replacing textContent on every
-          // MutationObserver callback creates another child-list mutation and
-          // can lock the church tabs in a self-triggering render loop.
-          if (existingButton.textContent !== buttonLabel) {
-            existingButton.textContent = buttonLabel;
-          }
+          if (existingButton.textContent !== buttonLabel) existingButton.textContent = buttonLabel;
           if (existingButton.dataset.enterMinistryRoom !== ministry.id) {
             existingButton.dataset.enterMinistryRoom = ministry.id;
           }
-          if (existingButton.dataset.openTargetType) {
-            delete existingButton.dataset.openTargetType;
-          }
+          if (existingButton.dataset.openTargetType) delete existingButton.dataset.openTargetType;
           if (existingButton.getAttribute('aria-label') !== ariaLabel) {
             existingButton.setAttribute('aria-label', ariaLabel);
           }
@@ -123,12 +122,36 @@ export default function OrganizationHubMinistryBridge({
       });
     }
 
-    function scheduleEnhancement() {
+    function scheduleMinistryEnhancement() {
       window.cancelAnimationFrame(enhancementFrame);
-      enhancementFrame = window.requestAnimationFrame(enhanceMinistryCards);
+      enhancementFrame = window.requestAnimationFrame(() => {
+        enhancementFrame = window.requestAnimationFrame(enhanceMinistryCards);
+      });
     }
 
-    function handleClick(event) {
+    function syncOrganizationSection(section) {
+      if (!section || section === 'home') return;
+
+      window.cancelAnimationFrame(syncFrame);
+      syncFrame = window.requestAnimationFrame(() => {
+        const targetButton = [...host.querySelectorAll('.organization-section-nav button')]
+          .find((button) => normalizeSectionLabel(button.textContent) === section);
+
+        if (targetButton && !targetButton.classList.contains('is-active')) {
+          targetButton.click();
+        }
+
+        if (section === 'ministries') scheduleMinistryEnhancement();
+      });
+    }
+
+    function handlePrimaryNavigation(event) {
+      const button = event.target.closest('.church-workspace-primary-nav > button');
+      if (!button || !shell?.contains(button)) return;
+      syncOrganizationSection(normalizeSectionLabel(button.textContent));
+    }
+
+    function handleMinistryRoomClick(event) {
       const button = event.target.closest('[data-enter-ministry-room]');
       if (!button || !host.contains(button)) return;
 
@@ -137,15 +160,17 @@ export default function OrganizationHubMinistryBridge({
       if (isJoined) onOpenMinistry(ministryId);
     }
 
-    const observer = new MutationObserver(scheduleEnhancement);
-    observer.observe(host, { childList: true, subtree: true });
-    host.addEventListener('click', handleClick);
-    enhanceMinistryCards();
+    shell?.addEventListener('click', handlePrimaryNavigation);
+    host.addEventListener('click', handleMinistryRoomClick);
+
+    const activeButton = shell?.querySelector('.church-workspace-primary-nav > button.is-active');
+    syncOrganizationSection(normalizeSectionLabel(activeButton?.textContent));
 
     return () => {
+      window.cancelAnimationFrame(syncFrame);
       window.cancelAnimationFrame(enhancementFrame);
-      observer.disconnect();
-      host.removeEventListener('click', handleClick);
+      shell?.removeEventListener('click', handlePrimaryNavigation);
+      host.removeEventListener('click', handleMinistryRoomClick);
     };
   }, [workspace, onOpenMinistry]);
 
