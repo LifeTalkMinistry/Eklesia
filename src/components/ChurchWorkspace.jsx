@@ -20,8 +20,20 @@ const CHURCH_SECTIONS = [
   ['privacy', 'Privacy'],
 ];
 
+const PENDING_APP_TAB_KEY = 'ekklesia-pending-app-tab';
+const APP_TABS = new Set(['home', 'community', 'pulse', 'tools', 'profile']);
+
 function clone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
+function rememberPendingAppTab(destination) {
+  if (typeof window === 'undefined' || !APP_TABS.has(destination)) return;
+  try {
+    window.sessionStorage.setItem(PENDING_APP_TAB_KEY, destination);
+  } catch (error) {
+    console.warn('Ekklesia Pulse could not preserve the selected app tab.', error);
+  }
 }
 
 function OrganizationDetailsDialog({ ecosystem, onClose }) {
@@ -245,7 +257,8 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
     setChurchSection('ministries');
   }
 
-  function exitToPersonalSpace() {
+  function exitToAppTab(destination = 'home') {
+    rememberPendingAppTab(destination);
     if (typeof window !== 'undefined' && window.history.state?.ekklesiaWorkspaceId) {
       window.history.back();
       return;
@@ -257,6 +270,7 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
     if (leaving) return;
     setLeaving(true);
     setLeaveError('');
+    rememberPendingAppTab('community');
 
     if (typeof window !== 'undefined' && window.history.state?.ekklesiaWorkspaceId) {
       const currentState = window.history.state || {};
@@ -276,8 +290,8 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
         <div className="church-workspace-frame church-workspace-unavailable">
           <p className="dashboard-eyebrow">Church workspace</p>
           <h1>Church space unavailable</h1>
-          <p>This church organization could not be restored on this device. Return to your personal space and try entering it again.</p>
-          <button className="primary-button" type="button" onClick={exitToPersonalSpace}>Return to my personal space</button>
+          <p>This church organization could not be restored on this device. Return to Home and try opening Church again.</p>
+          <button className="primary-button" type="button" onClick={() => exitToAppTab('home')}>Return to Home</button>
         </div>
       </main>
     );
@@ -293,10 +307,10 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
             <button
               className="church-workspace-exit"
               type="button"
-              onClick={exitToPersonalSpace}
-              aria-label={`Exit ${organization.name} and return to my personal space`}
+              onClick={() => exitToAppTab('home')}
+              aria-label={`Exit ${organization.name} view and return to Home`}
             >
-              <span aria-hidden="true">←</span> My personal space
+              <span aria-hidden="true">←</span> Exit church view
             </button>
             <div className="church-workspace-badges">
               <button
@@ -379,6 +393,7 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
                   profile={profile}
                   workspace={workspaceSnapshot}
                   onOpenMinistry={openMinistry}
+                  onNavigateApp={exitToAppTab}
                   onShowDetails={() => setShowDetails(true)}
                   onRequestLeave={() => {
                     setLeaveError('');
