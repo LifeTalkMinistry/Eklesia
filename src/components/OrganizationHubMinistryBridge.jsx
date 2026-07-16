@@ -74,6 +74,8 @@ export default function OrganizationHubMinistryBridge({
     const host = hostRef.current;
     if (!host) return undefined;
 
+    let enhancementFrame = 0;
+
     function enhanceMinistryCards() {
       const joinedIds = new Set(workspace?.currentMember?.ministryIds || []);
       const ministryCards = host.querySelectorAll('.organization-ministry-card');
@@ -89,12 +91,25 @@ export default function OrganizationHubMinistryBridge({
           return;
         }
 
+        const buttonLabel = 'Enter Ministry Room';
         const ariaLabel = `Enter ${ministry.name} ministry room`;
+
         if (existingButton) {
-          existingButton.textContent = 'Enter Ministry Room';
-          existingButton.dataset.enterMinistryRoom = ministry.id;
-          delete existingButton.dataset.openTargetType;
-          existingButton.setAttribute('aria-label', ariaLabel);
+          // Keep this enhancement idempotent. Replacing textContent on every
+          // MutationObserver callback creates another child-list mutation and
+          // can lock the church tabs in a self-triggering render loop.
+          if (existingButton.textContent !== buttonLabel) {
+            existingButton.textContent = buttonLabel;
+          }
+          if (existingButton.dataset.enterMinistryRoom !== ministry.id) {
+            existingButton.dataset.enterMinistryRoom = ministry.id;
+          }
+          if (existingButton.dataset.openTargetType) {
+            delete existingButton.dataset.openTargetType;
+          }
+          if (existingButton.getAttribute('aria-label') !== ariaLabel) {
+            existingButton.setAttribute('aria-label', ariaLabel);
+          }
           return;
         }
 
@@ -102,10 +117,15 @@ export default function OrganizationHubMinistryBridge({
         button.type = 'button';
         button.className = 'organization-enter-ministry-room';
         button.dataset.enterMinistryRoom = ministry.id;
-        button.textContent = 'Enter Ministry Room';
+        button.textContent = buttonLabel;
         button.setAttribute('aria-label', ariaLabel);
         actions.appendChild(button);
       });
+    }
+
+    function scheduleEnhancement() {
+      window.cancelAnimationFrame(enhancementFrame);
+      enhancementFrame = window.requestAnimationFrame(enhanceMinistryCards);
     }
 
     function handleClick(event) {
@@ -117,12 +137,13 @@ export default function OrganizationHubMinistryBridge({
       if (isJoined) onOpenMinistry(ministryId);
     }
 
-    const observer = new MutationObserver(enhanceMinistryCards);
+    const observer = new MutationObserver(scheduleEnhancement);
     observer.observe(host, { childList: true, subtree: true });
     host.addEventListener('click', handleClick);
     enhanceMinistryCards();
 
     return () => {
+      window.cancelAnimationFrame(enhancementFrame);
       observer.disconnect();
       host.removeEventListener('click', handleClick);
     };
