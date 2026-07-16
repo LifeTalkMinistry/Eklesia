@@ -5,24 +5,6 @@ import OrganizationHub from './OrganizationHub.jsx';
 import './BetaChurchViewMode.css';
 
 const MEMBER_SECTIONS = new Set(['home', 'ministries', 'groups', 'people']);
-const MEMBER_NAV_ITEMS = [
-  ['home', 'Home', 'Church Board'],
-  ['ministries', 'Ministries', 'Ministries'],
-  ['groups', 'Groups', 'Groups'],
-  ['people', 'People', 'People'],
-];
-
-function sectionButtonLabel(button) {
-  const label = String(
-    button?.dataset?.memberSection
-      || button?.dataset?.betaNativeSectionLabel
-      || button?.dataset?.betaOriginalSectionLabel
-      || button?.textContent
-      || '',
-  ).trim().toLowerCase();
-
-  return label === 'church board' ? 'home' : label;
-}
 
 function getStorageKey(organizationId) {
   return `ekklesia-pulse-beta-view:${organizationId || 'church'}`;
@@ -37,6 +19,14 @@ function restoreMode(organizationId) {
     console.warn('Ekklesia Pulse could not restore the beta church view.', error);
     return '';
   }
+}
+
+function originalSectionLabel(button) {
+  if (!button) return '';
+  if (!button.dataset.betaNativeSectionLabel) {
+    button.dataset.betaNativeSectionLabel = button.textContent.trim();
+  }
+  return button.dataset.betaNativeSectionLabel.trim().toLowerCase();
 }
 
 function BetaViewChooser({ currentMode, organizationName, canClose, onChoose, onClose }) {
@@ -77,21 +67,9 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
   const [showChooser, setShowChooser] = useState(() => !restoreMode(organization?.id));
   const [memberSection, setMemberSection] = useState('home');
   const [contentTarget, setContentTarget] = useState(null);
-  const [primaryNavTarget, setPrimaryNavTarget] = useState(null);
 
   useEffect(() => {
-    function syncPortalTargets() {
-      setContentTarget(document.querySelector('.church-workspace-content'));
-      setPrimaryNavTarget(document.querySelector('.church-workspace-primary-nav'));
-    }
-
-    syncPortalTargets();
-    const shell = document.querySelector('.church-workspace-shell');
-    if (!shell) return undefined;
-
-    const observer = new MutationObserver(syncPortalTargets);
-    observer.observe(shell, { childList: true, subtree: true });
-    return () => observer.disconnect();
+    setContentTarget(document.querySelector('.church-workspace-content'));
   }, []);
 
   useEffect(() => {
@@ -113,13 +91,6 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       }
     }
 
-    function preserveSectionLabel(button) {
-      if (!button.dataset.betaNativeSectionLabel) {
-        button.dataset.betaNativeSectionLabel = button.textContent.trim();
-      }
-      return sectionButtonLabel(button);
-    }
-
     function applyPresentation() {
       const memberView = presentationMode === 'member';
       const groupWorkspace = shell.querySelector('.group-workspace');
@@ -131,18 +102,22 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
         if (role.textContent !== nextRole) role.textContent = nextRole;
       }
 
-      shell.querySelectorAll('.church-workspace-primary-nav > button:not([data-member-section-button="true"])').forEach((button) => {
-        preserveSectionLabel(button);
-        setMemberHidden(button, memberView);
+      shell.querySelectorAll('.church-workspace-primary-nav > button').forEach((button) => {
+        const section = originalSectionLabel(button);
+        const isMemberSection = MEMBER_SECTIONS.has(section);
+        setMemberHidden(button, memberView && !isMemberSection);
+
+        const nextLabel = memberView && section === 'home'
+          ? 'Church Board'
+          : button.dataset.betaNativeSectionLabel;
+        if (button.textContent.trim() !== nextLabel) button.textContent = nextLabel;
       });
 
       shell.querySelectorAll('.organization-section-nav button').forEach((button) => {
-        preserveSectionLabel(button);
         setMemberHidden(button, memberView);
       });
 
       shell.querySelectorAll('button').forEach((button) => {
-        if (button.dataset.memberSectionButton === 'true') return;
         if (groupWorkspace?.contains(button)) {
           if (button.dataset.betaAdminOnly === 'true') delete button.dataset.betaAdminOnly;
           return;
@@ -154,17 +129,27 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       });
     }
 
+    function handleSectionNavigation(event) {
+      if (presentationMode !== 'member') return;
+      const button = event.target.closest('.church-workspace-primary-nav > button');
+      if (!button || !shell.contains(button)) return;
+      const section = originalSectionLabel(button);
+      if (MEMBER_SECTIONS.has(section)) setMemberSection(section);
+    }
+
     applyPresentation();
     const observer = new MutationObserver(applyPresentation);
     observer.observe(shell, { childList: true, subtree: true, characterData: true });
+    shell.addEventListener('click', handleSectionNavigation);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      shell.removeEventListener('click', handleSectionNavigation);
+    };
   }, [mode, memberSection]);
 
   useEffect(() => {
-    if (mode !== 'member') return undefined;
-    const frame = window.requestAnimationFrame(() => navigateMember('home'));
-    return () => window.cancelAnimationFrame(frame);
+    if (mode === 'member') setMemberSection('home');
   }, [mode, organization?.id]);
 
   useEffect(() => {
@@ -223,8 +208,8 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       const group = (workspace?.groups || []).find((entry) => entry.id === groupId);
       if (!group) return;
 
-      const homeButton = [...document.querySelectorAll('.church-workspace-primary-nav > button:not([data-member-section-button="true"])')]
-        .find((button) => sectionButtonLabel(button) === 'home');
+      const homeButton = [...document.querySelectorAll('.church-workspace-primary-nav > button')]
+        .find((button) => originalSectionLabel(button) === 'home');
       homeButton?.click();
 
       window.requestAnimationFrame(() => {
@@ -262,15 +247,6 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
     };
   }, [workspace, onOpenMinistry, mode]);
 
-  function navigateMember(section) {
-    if (!MEMBER_SECTIONS.has(section)) return;
-    setMemberSection(section);
-
-    const targetButton = [...document.querySelectorAll('.church-workspace-primary-nav > button:not([data-member-section-button="true"])')]
-      .find((button) => sectionButtonLabel(button) === section);
-    targetButton?.click();
-  }
-
   function navigateUnifiedApp(section) {
     if (section === 'church') return;
     onNavigateApp?.(section);
@@ -286,10 +262,6 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
     setMode(nextMode);
     setMemberSection('home');
     setShowChooser(false);
-
-    if (nextMode === 'member') {
-      window.requestAnimationFrame(() => navigateMember('home'));
-    }
   }
 
   const portalTarget = typeof document !== 'undefined' ? document.body : null;
@@ -300,24 +272,6 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       <div ref={hostRef} className="organization-hub-ministry-bridge">
         <OrganizationHub organization={organization} {...props} />
       </div>
-
-      {memberMode && primaryNavTarget ? createPortal(
-        MEMBER_NAV_ITEMS.map(([id, originalLabel, displayLabel]) => (
-          <button
-            key={`member-${id}`}
-            type="button"
-            data-member-section-button="true"
-            data-member-section={id}
-            data-beta-original-section-label={originalLabel}
-            className={memberSection === id ? 'is-active' : ''}
-            aria-current={memberSection === id ? 'page' : undefined}
-            onClick={() => navigateMember(id)}
-          >
-            {displayLabel}
-          </button>
-        )),
-        primaryNavTarget,
-      ) : null}
 
       {memberMode && contentTarget && memberSection === 'people' ? createPortal(
         <div className="member-connections-portal">
