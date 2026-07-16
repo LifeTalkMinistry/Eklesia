@@ -72,24 +72,28 @@ export default function ChurchPulseFeed({ organization, workspace, profile }) {
   const posts = useMemo(() => createPrototypePosts(organization, workspace, profile), [organization, workspace, profile]);
   const [encouragedIds, setEncouragedIds] = useState([]);
   const [savedIds, setSavedIds] = useState([]);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   function toggle(list, setter, id) {
     setter(list.includes(id) ? list.filter((item) => item !== id) : [...list, id]);
   }
 
   return (
-    <section className="church-pulse-feed" aria-labelledby="church-pulse-feed-title">
-      <header className="church-pulse-feed-heading">
-        <div>
-          <p className="dashboard-eyebrow">The living heartbeat of your church</p>
-          <h2 id="church-pulse-feed-title">Pulse</h2>
+    <section className="church-pulse-feed" aria-label="Church Pulse feed">
+      <div className="church-pulse-feed-topbar">
+        <div className="church-pulse-feed-tabs" aria-label="Pulse feed filter">
+          <button type="button">Following</button>
+          <span aria-hidden="true">|</span>
+          <button type="button" className="is-active" aria-current="page">For You</button>
         </div>
-        <span>{posts.length} prototype posts</span>
-      </header>
+        <button className="church-pulse-feed-info" type="button" onClick={() => setShowPrivacy((current) => !current)} aria-expanded={showPrivacy} aria-label="Pulse privacy information">i</button>
+      </div>
 
-      <p className="church-pulse-feed-privacy">
-        Only content deliberately shared with a Group, ministry, or the whole church can appear here. Private WGAP responses, prayers, journals, notebook photos, and notes stay private.
-      </p>
+      {showPrivacy ? (
+        <p className="church-pulse-feed-privacy">
+          Only content deliberately shared with a Group, ministry, or the whole church can appear here. Private WGAP responses, prayers, journals, notebook photos, and notes stay private.
+        </p>
+      ) : null}
 
       <div className="church-pulse-feed-stream" aria-label="Church Pulse posts">
         {posts.map((post) => {
@@ -101,19 +105,27 @@ export default function ChurchPulseFeed({ organization, workspace, profile }) {
                 <span>{post.symbol}</span>
                 {post.type === 'video' ? <b>Tap to play prototype</b> : null}
               </div>
+
               <div className="church-pulse-post-copy">
                 <p className="dashboard-eyebrow">{post.eyebrow}</p>
                 <small>{post.author}</small>
-                <h3>{post.title}</h3>
+                <h2>{post.title}</h2>
                 <p>{post.body}</p>
                 <em>{post.meta}</em>
               </div>
-              <div className="church-pulse-post-actions">
-                <button type="button" className={encouraged ? 'is-active' : ''} onClick={() => toggle(encouragedIds, setEncouragedIds, post.id)} aria-pressed={encouraged}>
-                  <span aria-hidden="true">🙏</span>{encouraged ? 'Encouraged' : 'Encourage'}
+
+              <div className="church-pulse-post-actions" aria-label={`${post.title} actions`}>
+                <button type="button" className={encouraged ? 'is-active' : ''} onClick={() => toggle(encouragedIds, setEncouragedIds, post.id)} aria-pressed={encouraged} aria-label={encouraged ? 'Remove encouragement' : 'Encourage this post'}>
+                  <span aria-hidden="true">{encouraged ? '♥' : '♡'}</span><small>{encouraged ? 'Encouraged' : 'Encourage'}</small>
                 </button>
-                <button type="button" className={saved ? 'is-active' : ''} onClick={() => toggle(savedIds, setSavedIds, post.id)} aria-pressed={saved}>
-                  <span aria-hidden="true">▣</span>{saved ? 'Saved' : 'Save'}
+                <button type="button" aria-label="Open reflection comments">
+                  <span aria-hidden="true">◌</span><small>Reflect</small>
+                </button>
+                <button type="button" className={saved ? 'is-active' : ''} onClick={() => toggle(savedIds, setSavedIds, post.id)} aria-pressed={saved} aria-label={saved ? 'Remove from saved posts' : 'Save this post'}>
+                  <span aria-hidden="true">{saved ? '▮' : '▯'}</span><small>{saved ? 'Saved' : 'Save'}</small>
+                </button>
+                <button type="button" aria-label="Share this post">
+                  <span aria-hidden="true">↗</span><small>Share</small>
                 </button>
               </div>
             </article>
