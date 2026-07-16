@@ -223,6 +223,21 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
     targetButton?.click();
   }
 
+  function navigateUnifiedApp(section) {
+    if (section === 'church') return;
+    const labelBySection = { home: 'home', pulse: 'pulse', tools: 'tools', profile: 'me' };
+    const exitButton = document.querySelector('.church-workspace-exit');
+    exitButton?.click();
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const targetLabel = labelBySection[section];
+        const targetButton = [...document.querySelectorAll('.unified-bottom-nav button')]
+          .find((button) => button.textContent.trim().toLowerCase() === targetLabel);
+        targetButton?.click();
+      });
+    });
+  }
+
   function chooseMode(nextMode) {
     try {
       window.localStorage.setItem(getStorageKey(organization?.id), nextMode);
@@ -255,20 +270,19 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
 
       {portalTarget ? createPortal(
         <>
-          {memberMode ? (
-            <nav className="church-member-bottom-nav" aria-label="Church member navigation">
-              {[
-                ['home', '⌂', 'Home'],
-                ['pulse', '♡', 'Pulse'],
-                ['ministries', 'M', 'Ministries'],
-                ['groups', 'G', 'Groups'],
-              ].map(([id, icon, label]) => (
-                <button key={id} type="button" className={memberSection === id ? 'is-active' : ''} aria-current={memberSection === id ? 'page' : undefined} onClick={() => navigateMember(id)}>
-                  <span aria-hidden="true">{icon}</span>{label}
-                </button>
-              ))}
-            </nav>
-          ) : null}
+          <nav className="church-unified-bottom-nav" aria-label="Main navigation">
+            {[
+              ['home', '⌂', 'Home'],
+              ['church', '♧', 'Church'],
+              ['pulse', '♡', 'Pulse'],
+              ['tools', '✦', 'Tools'],
+              ['profile', '○', 'Me'],
+            ].map(([id, icon, label]) => (
+              <button key={id} type="button" className={id === 'church' ? 'is-active' : ''} aria-current={id === 'church' ? 'page' : undefined} onClick={() => navigateUnifiedApp(id)}>
+                <span aria-hidden="true">{icon}</span><small>{label}</small>
+              </button>
+            ))}
+          </nav>
           <button className="beta-view-mode-switch" type="button" onClick={() => setShowChooser(true)}>
             {mode === 'member' ? 'Member view' : 'Admin view'} · Switch
           </button>
