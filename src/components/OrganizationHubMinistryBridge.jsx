@@ -64,10 +64,10 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
 
     function setMemberHidden(element, hidden) {
       if (!element) return;
-      if (hidden) {
+      if (hidden && !element.hidden) {
         element.dataset.betaMemberHidden = 'true';
         element.hidden = true;
-      } else if (element.dataset.betaMemberHidden === 'true') {
+      } else if (!hidden && element.dataset.betaMemberHidden === 'true') {
         delete element.dataset.betaMemberHidden;
         element.hidden = false;
       }
@@ -78,7 +78,8 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       const role = shell.querySelector('.church-workspace-role');
       if (role) {
         if (!role.dataset.betaOriginalRole) role.dataset.betaOriginalRole = role.textContent;
-        role.textContent = memberView ? 'Church Member · Beta member view' : role.dataset.betaOriginalRole;
+        const nextRole = memberView ? 'Church Member · Beta member view' : role.dataset.betaOriginalRole;
+        if (role.textContent !== nextRole) role.textContent = nextRole;
       }
 
       shell.querySelectorAll('.church-workspace-primary-nav button, .organization-section-nav button').forEach((button) => {
@@ -89,8 +90,8 @@ export default function OrganizationHubMinistryBridge({ workspace, onOpenMinistr
       shell.querySelectorAll('button').forEach((button) => {
         const label = button.textContent.trim();
         const adminOnly = /^(assign|rotate|create group|admin tools|manage|edit|delete)/i.test(label);
-        if (adminOnly) button.dataset.betaAdminOnly = 'true';
-        else if (button.dataset.betaAdminOnly === 'true') delete button.dataset.betaAdminOnly;
+        if (adminOnly && button.dataset.betaAdminOnly !== 'true') button.dataset.betaAdminOnly = 'true';
+        else if (!adminOnly && button.dataset.betaAdminOnly === 'true') delete button.dataset.betaAdminOnly;
       });
     }
 
