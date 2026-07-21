@@ -25,9 +25,11 @@ function generatePulseAccessCode() {
 
 function restorePulseAccessCode(organizationId) {
   if (typeof window === 'undefined') return 'PULSE1';
+
   try {
     const stored = normalizeAccessCode(window.localStorage.getItem(getPulseCodeStorageKey(organizationId)));
     if (stored) return stored;
+
     const initialCode = 'PULSE1';
     window.localStorage.setItem(getPulseCodeStorageKey(organizationId), initialCode);
     return initialCode;
@@ -37,18 +39,19 @@ function restorePulseAccessCode(organizationId) {
   }
 }
 
-function PulseAccessDialog({
-  organizationName,
-  code,
+function CodeAccessDialog({
+  eyebrow,
+  title,
+  description,
+  label,
+  placeholder,
   entry,
   error,
-  adminMessage,
-  isOrganizationManager,
+  submitLabel,
   onEntryChange,
   onSubmit,
-  onCopy,
-  onRotate,
   onClose,
+  children,
 }) {
   const inputRef = useRef(null);
 
@@ -58,27 +61,25 @@ function PulseAccessDialog({
 
   return (
     <div className="pulse-access-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="pulse-access-dialog" role="dialog" aria-modal="true" aria-labelledby="pulse-access-title">
+      <section className="pulse-access-dialog" role="dialog" aria-modal="true" aria-labelledby="code-access-title">
         <div className="pulse-access-heading">
           <div>
-            <p className="dashboard-eyebrow">Restricted church insight</p>
-            <h2 id="pulse-access-title">Enter the Church Pulse code</h2>
+            <p className="dashboard-eyebrow">{eyebrow}</p>
+            <h2 id="code-access-title">{title}</h2>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close Church Pulse access">×</button>
+          <button type="button" onClick={onClose} aria-label="Close access code dialog">×</button>
         </div>
 
-        <p className="pulse-access-copy">
-          Pulse contains organization-wide rhythm and care signals for {organizationName || 'this church'}. The tab is visible to everyone, but its content opens only with the separate code provided by a church administrator.
-        </p>
+        <p className="pulse-access-copy">{description}</p>
 
         <form className="pulse-access-form" onSubmit={onSubmit}>
-          <label htmlFor="church-pulse-access-code">Church Pulse code</label>
+          <label htmlFor="workspace-access-code">{label}</label>
           <input
             ref={inputRef}
-            id="church-pulse-access-code"
+            id="workspace-access-code"
             value={entry}
             onChange={(event) => onEntryChange(normalizeAccessCode(event.target.value))}
-            placeholder="Enter Pulse code"
+            placeholder={placeholder}
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck="false"
@@ -87,29 +88,11 @@ function PulseAccessDialog({
           {error ? <p className="pulse-access-error" role="alert">{error}</p> : null}
           <div className="pulse-access-actions">
             <button className="secondary-button" type="button" onClick={onClose}>Cancel</button>
-            <button className="primary-button" type="submit" disabled={!entry}>Open Pulse</button>
+            <button className="primary-button" type="submit" disabled={!entry}>{submitLabel}</button>
           </div>
         </form>
 
-        {isOrganizationManager ? (
-          <aside className="pulse-access-admin" aria-label="Church Pulse administrator controls">
-            <div>
-              <p className="dashboard-eyebrow">Administrator only</p>
-              <strong>Church Pulse access code</strong>
-              <small>Share this only with people approved to view church-wide rhythm signals.</small>
-            </div>
-            <code>{code}</code>
-            <div className="pulse-access-admin-actions">
-              <button type="button" onClick={onCopy}>Copy</button>
-              <button type="button" onClick={onRotate}>Rotate</button>
-            </div>
-            {adminMessage ? <p className="pulse-access-admin-message" role="status">{adminMessage}</p> : null}
-          </aside>
-        ) : null}
-
-        <p className="pulse-access-prototype-note">
-          Local prototype note: this code is stored on this device and is not production-grade security.
-        </p>
+        {children}
       </section>
     </div>
   );
@@ -126,6 +109,7 @@ export default function OrganizationHubMinistryBridge({
   const hostRef = useRef(null);
   const pulseUnlockedRef = useRef(false);
   const pendingPulseButtonRef = useRef(null);
+
   const [pulseCode, setPulseCode] = useState(() => restorePulseAccessCode(organization?.id));
   const [pulseUnlocked, setPulseUnlocked] = useState(false);
   const [showPulseGate, setShowPulseGate] = useState(false);
@@ -133,8 +117,17 @@ export default function OrganizationHubMinistryBridge({
   const [pulseError, setPulseError] = useState('');
   const [pulseAdminMessage, setPulseAdminMessage] = useState('');
 
+  const [ministryEntry, setMinistryEntry] = useState({ ministryId: '', code: '', error: '' });
+
   const currentRole = workspace?.currentMember?.organizationRole || 'Church Member';
   const isOrganizationManager = ['Organization Owner', 'Organization Admin'].includes(currentRole);
+  const activeMinistry = (workspace?.ministries || []).find((ministry) => ministry.id === ministryEntry.ministryId) || null;
+  const joinedGroupIds = new Set(workspace?.currentMember?.groupIds || []);
+  const connectedJoinedGroup = activeMinistry
+    ? (workspace?.groups || []).find((group) => (
+      group.connectedMinistryId === activeMinistry.id && joinedGroupIds.has(group.id)
+    )) || null
+    : null;
 
   useEffect(() => {
     const nextCode = restorePulseAccessCode(organization?.id);
@@ -145,11 +138,28 @@ export default function OrganizationHubMinistryBridge({
     setPulseEntry('');
     setPulseError('');
     setPulseAdminMessage('');
+    setMinistryEntry({ ministryId: '', code: '', error: '' });
   }, [organization?.id]);
 
   useEffect(() => {
     pulseUnlockedRef.current = pulseUnlocked;
   }, [pulseUnlocked]);
+
+  useEffect(() => {
+    if (!showPulseGate && !ministryEntry.ministryId) return undefined;
+
+    function handleEscape(event) {
+      if (event.key !== 'Escape') return;
+      setShowPulseGate(false);
+      setPulseEntry('');
+      setPulseError('');
+      setPulseAdminMessage('');
+      setMinistryEntry({ ministryId: '', code: '', error: '' });
+    }
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showPulseGate, ministryEntry.ministryId]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -172,11 +182,8 @@ export default function OrganizationHubMinistryBridge({
       });
 
       shell.querySelectorAll('.church-workspace-primary-nav > button').forEach((button) => {
-        const originalLabel = button.dataset.betaNativeSectionLabel
-          || button.dataset.betaOriginalSectionLabel;
-        if (originalLabel && button.textContent.trim() !== originalLabel) {
-          button.textContent = originalLabel;
-        }
+        const originalLabel = button.dataset.betaNativeSectionLabel || button.dataset.betaOriginalSectionLabel;
+        if (originalLabel && button.textContent.trim() !== originalLabel) button.textContent = originalLabel;
         button.hidden = false;
         delete button.dataset.betaMemberHidden;
         delete button.dataset.betaNativeSectionLabel;
@@ -193,12 +200,6 @@ export default function OrganizationHubMinistryBridge({
       shell.querySelectorAll('[data-beta-admin-only="true"]').forEach((element) => {
         delete element.dataset.betaAdminOnly;
       });
-
-      const role = shell.querySelector('.church-workspace-role');
-      if (role?.dataset.betaOriginalRole) {
-        role.textContent = role.dataset.betaOriginalRole;
-        delete role.dataset.betaOriginalRole;
-      }
     }
 
     restoreLeaderView();
@@ -245,13 +246,8 @@ export default function OrganizationHubMinistryBridge({
 
         if (existingButton) {
           if (existingButton.textContent !== buttonLabel) existingButton.textContent = buttonLabel;
-          if (existingButton.dataset.enterMinistryRoom !== ministry.id) {
-            existingButton.dataset.enterMinistryRoom = ministry.id;
-          }
-          if (existingButton.dataset.openTargetType) delete existingButton.dataset.openTargetType;
-          if (existingButton.getAttribute('aria-label') !== ariaLabel) {
-            existingButton.setAttribute('aria-label', ariaLabel);
-          }
+          existingButton.dataset.enterMinistryRoom = ministry.id;
+          if (existingButton.getAttribute('aria-label') !== ariaLabel) existingButton.setAttribute('aria-label', ariaLabel);
           readyButtons += 1;
           return;
         }
@@ -294,12 +290,8 @@ export default function OrganizationHubMinistryBridge({
 
         if (existingButton) {
           if (existingButton.textContent !== buttonLabel) existingButton.textContent = buttonLabel;
-          if (existingButton.dataset.openGroupRoom !== group.id) {
-            existingButton.dataset.openGroupRoom = group.id;
-          }
-          if (existingButton.getAttribute('aria-label') !== ariaLabel) {
-            existingButton.setAttribute('aria-label', ariaLabel);
-          }
+          existingButton.dataset.openGroupRoom = group.id;
+          if (existingButton.getAttribute('aria-label') !== ariaLabel) existingButton.setAttribute('aria-label', ariaLabel);
           readyButtons += 1;
           return;
         }
@@ -320,40 +312,36 @@ export default function OrganizationHubMinistryBridge({
       return groupCards.length > 0 && readyButtons === expectedButtons;
     }
 
-    function scheduleMinistryEnhancement() {
-      window.cancelAnimationFrame(ministryFrame);
-      window.clearTimeout(ministryTimer);
-      ministryAttempt = 0;
+    function scheduleEnhancement(kind) {
+      const isMinistry = kind === 'ministries';
 
-      function attemptEnhancement() {
-        ministryFrame = window.requestAnimationFrame(() => {
-          ministryAttempt += 1;
-          const complete = enhanceMinistryCards();
-          if (!complete && ministryAttempt < 12) {
-            ministryTimer = window.setTimeout(attemptEnhancement, 40);
-          }
-        });
+      if (isMinistry) {
+        window.cancelAnimationFrame(ministryFrame);
+        window.clearTimeout(ministryTimer);
+        ministryAttempt = 0;
+      } else {
+        window.cancelAnimationFrame(groupFrame);
+        window.clearTimeout(groupTimer);
+        groupAttempt = 0;
       }
 
-      attemptEnhancement();
-    }
-
-    function scheduleGroupEnhancement() {
-      window.cancelAnimationFrame(groupFrame);
-      window.clearTimeout(groupTimer);
-      groupAttempt = 0;
-
-      function attemptEnhancement() {
-        groupFrame = window.requestAnimationFrame(() => {
-          groupAttempt += 1;
-          const complete = enhanceGroupCards();
-          if (!complete && groupAttempt < 12) {
-            groupTimer = window.setTimeout(attemptEnhancement, 40);
+      function attempt() {
+        const run = () => {
+          const attemptNumber = isMinistry ? ++ministryAttempt : ++groupAttempt;
+          const complete = isMinistry ? enhanceMinistryCards() : enhanceGroupCards();
+          if (!complete && attemptNumber < 12) {
+            const timer = window.setTimeout(attempt, 40);
+            if (isMinistry) ministryTimer = timer;
+            else groupTimer = timer;
           }
-        });
+        };
+
+        const frame = window.requestAnimationFrame(run);
+        if (isMinistry) ministryFrame = frame;
+        else groupFrame = frame;
       }
 
-      attemptEnhancement();
+      attempt();
     }
 
     function syncOrganizationSection(section) {
@@ -364,12 +352,8 @@ export default function OrganizationHubMinistryBridge({
         const targetButton = [...host.querySelectorAll('.organization-section-nav button')]
           .find((button) => normalizeSectionLabel(button.textContent) === section);
 
-        if (targetButton && !targetButton.classList.contains('is-active')) {
-          targetButton.click();
-        }
-
-        if (section === 'ministries') scheduleMinistryEnhancement();
-        if (section === 'groups') scheduleGroupEnhancement();
+        if (targetButton && !targetButton.classList.contains('is-active')) targetButton.click();
+        if (section === 'ministries' || section === 'groups') scheduleEnhancement(section);
       });
     }
 
@@ -405,21 +389,20 @@ export default function OrganizationHubMinistryBridge({
       if (!button || !shell?.contains(button)) return;
 
       const section = normalizeSectionLabel(button.textContent);
-      if (button.closest('.church-workspace-primary-nav')) {
-        syncOrganizationSection(section);
-      } else if (section === 'ministries') {
-        scheduleMinistryEnhancement();
-      } else if (section === 'groups') {
-        scheduleGroupEnhancement();
-      }
+      if (button.closest('.church-workspace-primary-nav')) syncOrganizationSection(section);
+      else if (section === 'ministries' || section === 'groups') scheduleEnhancement(section);
     }
 
     function handleMinistryRoomClick(event) {
       const button = event.target.closest('[data-enter-ministry-room]');
       if (!button || !host.contains(button)) return;
 
+      event.preventDefault();
+      event.stopPropagation();
       const ministryId = button.dataset.enterMinistryRoom;
-      if (ministryId) onOpenMinistry(ministryId);
+      if (!ministryId) return;
+
+      setMinistryEntry({ ministryId, code: '', error: '' });
     }
 
     function handleGroupRoomClick(event) {
@@ -449,7 +432,29 @@ export default function OrganizationHubMinistryBridge({
       host.removeEventListener('click', handleMinistryRoomClick);
       host.removeEventListener('click', handleGroupRoomClick);
     };
-  }, [workspace, onOpenMinistry, onOpenGroup]);
+  }, [workspace, onOpenGroup]);
+
+  function verifyMinistryEntry(event) {
+    event.preventDefault();
+    if (!activeMinistry) return;
+
+    if (normalizeAccessCode(ministryEntry.code) !== normalizeAccessCode(activeMinistry.code)) {
+      setMinistryEntry((current) => ({
+        ...current,
+        error: 'That code does not match this ministry. Ask the ministry leader for the current code.',
+      }));
+      return;
+    }
+
+    setMinistryEntry({ ministryId: '', code: '', error: '' });
+
+    if (connectedJoinedGroup) {
+      onOpenGroup?.(connectedJoinedGroup.id);
+      return;
+    }
+
+    onOpenMinistry?.(activeMinistry.id);
+  }
 
   function verifyPulseAccess(event) {
     event.preventDefault();
@@ -480,12 +485,14 @@ export default function OrganizationHubMinistryBridge({
 
   function rotatePulseCode() {
     if (!isOrganizationManager) return;
+
     const nextCode = generatePulseAccessCode();
     try {
       window.localStorage.setItem(getPulseCodeStorageKey(organization?.id), nextCode);
     } catch (error) {
       console.warn('Ekklesia Pulse could not save the rotated Church Pulse code.', error);
     }
+
     pulseUnlockedRef.current = false;
     setPulseUnlocked(false);
     setPulseCode(nextCode);
@@ -538,23 +545,58 @@ export default function OrganizationHubMinistryBridge({
             ))}
           </nav>
 
+          {ministryEntry.ministryId && activeMinistry ? (
+            <CodeAccessDialog
+              eyebrow="Ministry room access"
+              title={`Enter ${activeMinistry.name}`}
+              description={connectedJoinedGroup
+                ? `Enter the ministry code once. After verification, you will go directly to ${connectedJoinedGroup.name}.`
+                : 'Enter the ministry code to open this ministry room.'}
+              label="Ministry code"
+              placeholder="Enter ministry code"
+              entry={ministryEntry.code}
+              error={ministryEntry.error}
+              submitLabel={connectedJoinedGroup ? 'Open Group' : 'Open Ministry Room'}
+              onEntryChange={(value) => setMinistryEntry((current) => ({ ...current, code: value, error: '' }))}
+              onSubmit={verifyMinistryEntry}
+              onClose={() => setMinistryEntry({ ministryId: '', code: '', error: '' })}
+            />
+          ) : null}
+
           {showPulseGate ? (
-            <PulseAccessDialog
-              organizationName={organization?.name}
-              code={pulseCode}
+            <CodeAccessDialog
+              eyebrow="Restricted church insight"
+              title="Enter the Church Pulse code"
+              description={`Pulse contains organization-wide rhythm and care signals for ${organization?.name || 'this church'}. The tab is visible to everyone, but its content opens only with the separate code provided by a church administrator.`}
+              label="Church Pulse code"
+              placeholder="Enter Pulse code"
               entry={pulseEntry}
               error={pulseError}
-              adminMessage={pulseAdminMessage}
-              isOrganizationManager={isOrganizationManager}
+              submitLabel="Open Pulse"
               onEntryChange={(value) => {
                 setPulseEntry(value);
                 setPulseError('');
               }}
               onSubmit={verifyPulseAccess}
-              onCopy={copyPulseCode}
-              onRotate={rotatePulseCode}
               onClose={closePulseGate}
-            />
+            >
+              {isOrganizationManager ? (
+                <aside className="pulse-access-admin" aria-label="Church Pulse administrator controls">
+                  <div>
+                    <p className="dashboard-eyebrow">Administrator only</p>
+                    <strong>Church Pulse access code</strong>
+                    <small>Share this only with people approved to view church-wide rhythm signals.</small>
+                  </div>
+                  <code>{pulseCode}</code>
+                  <div className="pulse-access-admin-actions">
+                    <button type="button" onClick={copyPulseCode}>Copy</button>
+                    <button type="button" onClick={rotatePulseCode}>Rotate</button>
+                  </div>
+                  {pulseAdminMessage ? <p className="pulse-access-admin-message" role="status">{pulseAdminMessage}</p> : null}
+                </aside>
+              ) : null}
+              <p className="pulse-access-prototype-note">Local prototype note: this code is stored on this device and is not production-grade security.</p>
+            </CodeAccessDialog>
           ) : null}
         </>,
         portalTarget,
