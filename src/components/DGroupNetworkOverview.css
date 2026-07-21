@@ -27,23 +27,7 @@
 }
 
 .dgroup-network-overview-rule {
-  display: grid;
-  gap: 6px;
-  padding: 15px 16px;
-  border: 1px solid rgba(184, 215, 190, 0.15);
-  border-radius: 16px;
-  background: rgba(184, 215, 190, 0.055);
-}
-
-.dgroup-network-overview-rule strong {
-  color: #e7f0e9;
-  font-size: 0.82rem;
-}
-
-.dgroup-network-overview-rule span {
-  color: rgba(244, 245, 239, 0.52);
-  font-size: 0.72rem;
-  line-height: 1.52;
+  display: none;
 }
 
 .dgroup-network-overview .dgroup-network-inline-stats {
