@@ -212,10 +212,14 @@ export default function OrganizationHubMinistryBridge({
     const shell = host.closest('.church-workspace-shell');
     let syncFrame = 0;
     let enhancementFrame = 0;
+    let enhancementTimer = 0;
+    let enhancementAttempt = 0;
 
     function enhanceMinistryCards() {
       const joinedIds = new Set(workspace?.currentMember?.ministryIds || []);
-      const ministryCards = host.querySelectorAll('.organization-ministry-card');
+      const ministryCards = [...host.querySelectorAll('.organization-ministry-card')];
+      let expectedButtons = 0;
+      let readyButtons = 0;
 
       ministryCards.forEach((card, index) => {
         const ministry = workspace?.ministries?.[index];
@@ -223,11 +227,15 @@ export default function OrganizationHubMinistryBridge({
         if (!ministry || !actions) return;
 
         const existingButton = actions.querySelector('[data-enter-ministry-room]');
-        if (!joinedIds.has(ministry.id)) {
+        const cardShowsMembership = Boolean(card.querySelector('.organization-membership-chip'));
+        const joined = joinedIds.has(ministry.id) || cardShowsMembership;
+
+        if (!joined) {
           existingButton?.remove();
           return;
         }
 
+        expectedButtons += 1;
         const buttonLabel = 'Enter Ministry Room';
         const ariaLabel = `Enter ${ministry.name} ministry room`;
 
@@ -240,6 +248,7 @@ export default function OrganizationHubMinistryBridge({
           if (existingButton.getAttribute('aria-label') !== ariaLabel) {
             existingButton.setAttribute('aria-label', ariaLabel);
           }
+          readyButtons += 1;
           return;
         }
 
@@ -250,14 +259,28 @@ export default function OrganizationHubMinistryBridge({
         button.textContent = buttonLabel;
         button.setAttribute('aria-label', ariaLabel);
         actions.appendChild(button);
+        readyButtons += 1;
       });
+
+      return ministryCards.length > 0 && readyButtons === expectedButtons;
     }
 
     function scheduleMinistryEnhancement() {
       window.cancelAnimationFrame(enhancementFrame);
-      enhancementFrame = window.requestAnimationFrame(() => {
-        enhancementFrame = window.requestAnimationFrame(enhanceMinistryCards);
-      });
+      window.clearTimeout(enhancementTimer);
+      enhancementAttempt = 0;
+
+      function attemptEnhancement() {
+        enhancementFrame = window.requestAnimationFrame(() => {
+          enhancementAttempt += 1;
+          const complete = enhanceMinistryCards();
+          if (!complete && enhancementAttempt < 12) {
+            enhancementTimer = window.setTimeout(attemptEnhancement, 40);
+          }
+        });
+      }
+
+      attemptEnhancement();
     }
 
     function syncOrganizationSection(section) {
@@ -303,10 +326,16 @@ export default function OrganizationHubMinistryBridge({
       setShowPulseGate(true);
     }
 
-    function handlePrimaryNavigation(event) {
-      const button = event.target.closest('.church-workspace-primary-nav > button');
+    function handleSectionNavigation(event) {
+      const button = event.target.closest('.church-workspace-primary-nav > button, .organization-section-nav > button');
       if (!button || !shell?.contains(button)) return;
-      syncOrganizationSection(normalizeSectionLabel(button.textContent));
+
+      const section = normalizeSectionLabel(button.textContent);
+      if (button.closest('.church-workspace-primary-nav')) {
+        syncOrganizationSection(section);
+      } else if (section === 'ministries') {
+        scheduleMinistryEnhancement();
+      }
     }
 
     function handleMinistryRoomClick(event) {
@@ -314,12 +343,11 @@ export default function OrganizationHubMinistryBridge({
       if (!button || !host.contains(button)) return;
 
       const ministryId = button.dataset.enterMinistryRoom;
-      const isJoined = (workspace?.currentMember?.ministryIds || []).includes(ministryId);
-      if (isJoined) onOpenMinistry(ministryId);
+      if (ministryId) onOpenMinistry(ministryId);
     }
 
     shell?.addEventListener('click', handlePulseGateCapture, true);
-    shell?.addEventListener('click', handlePrimaryNavigation);
+    shell?.addEventListener('click', handleSectionNavigation);
     host.addEventListener('click', handleMinistryRoomClick);
 
     const activeButton = shell?.querySelector('.church-workspace-primary-nav > button.is-active');
@@ -328,8 +356,9 @@ export default function OrganizationHubMinistryBridge({
     return () => {
       window.cancelAnimationFrame(syncFrame);
       window.cancelAnimationFrame(enhancementFrame);
+      window.clearTimeout(enhancementTimer);
       shell?.removeEventListener('click', handlePulseGateCapture, true);
-      shell?.removeEventListener('click', handlePrimaryNavigation);
+      shell?.removeEventListener('click', handleSectionNavigation);
       host.removeEventListener('click', handleMinistryRoomClick);
     };
   }, [workspace, onOpenMinistry]);
