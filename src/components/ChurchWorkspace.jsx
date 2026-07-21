@@ -13,11 +13,10 @@ import './TogetherWorkspace.css';
 
 const CHURCH_SECTIONS = [
   ['home', 'Home'],
-  ['pulse', 'Pulse'],
   ['ministries', 'Ministries'],
   ['groups', 'Groups'],
-  ['people', 'People'],
   ['privacy', 'Privacy'],
+  ['admin', 'Admin'],
 ];
 
 const PENDING_APP_TAB_KEY = 'ekklesia-pending-app-tab';
@@ -146,7 +145,7 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
   }, [organization?.id]);
 
   useEffect(() => {
-    if (churchSection === 'home' || activeGroupId || activeMinistryId || !hubHostRef.current) return undefined;
+    if (churchSection === 'home' || churchSection === 'admin' || activeGroupId || activeMinistryId || !hubHostRef.current) return undefined;
     const frame = window.requestAnimationFrame(() => {
       const targetButton = [...hubHostRef.current.querySelectorAll('.organization-section-nav button')]
         .find((button) => button.textContent.trim().toLowerCase() === churchSection);
@@ -397,6 +396,7 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
                   organization={organization}
                   profile={profile}
                   workspace={workspaceSnapshot}
+                  activeSection={churchSection}
                   onOpenMinistry={openMinistry}
                   onOpenGroup={openGroup}
                   onNavigateApp={exitToAppTab}
