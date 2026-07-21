@@ -12,22 +12,13 @@ const GROUP_SECTIONS = [
 
 const WEEKDAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const WEEKDAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const WEEKDAY_INDEX = {
-  Mon: 0,
-  Tue: 1,
-  Wed: 2,
-  Thu: 3,
-  Fri: 4,
-  Sat: 5,
-  Sun: 6,
-};
+const WEEKDAY_INDEX = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
 
 function getTodayIndex() {
   const weekday = new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
     timeZone: MANILA_TIME_ZONE,
   }).format(new Date());
-
   return WEEKDAY_INDEX[weekday] ?? 0;
 }
 
@@ -35,7 +26,6 @@ function getMemberWeek(member, todayIndex) {
   if (Array.isArray(member.weeklyCheckIns)) {
     return Array.from({ length: 7 }, (_, index) => Boolean(member.weeklyCheckIns[index]));
   }
-
   return Array.from(
     { length: 7 },
     (_, index) => index === todayIndex && Boolean(member.devotionCompletedWithin24Hours),
@@ -44,29 +34,24 @@ function getMemberWeek(member, todayIndex) {
 
 function getCurrentStreak(checkIns, todayIndex) {
   let streak = 0;
-
   for (let index = todayIndex; index >= 0; index -= 1) {
     if (!checkIns[index]) break;
     streak += 1;
   }
-
   return streak;
 }
 
 function prepareMembers(members, todayIndex) {
   const elapsedDays = todayIndex + 1;
-
   return members
     .map((member, originalIndex) => {
       const checkIns = getMemberWeek(member, todayIndex);
       const completedCount = checkIns.slice(0, elapsedDays).filter(Boolean).length;
-      const currentStreak = getCurrentStreak(checkIns, todayIndex);
-
       return {
         ...member,
         checkIns,
         completedCount,
-        currentStreak,
+        currentStreak: getCurrentStreak(checkIns, todayIndex),
         originalIndex,
       };
     })
@@ -78,10 +63,10 @@ function prepareMembers(members, todayIndex) {
 }
 
 function getRhythmLabel(member, elapsedDays) {
-  if (member.completedCount === elapsedDays) return 'Perfect rhythm so far';
+  if (member.completedCount === elapsedDays) return 'Consistent rhythm so far';
   if (member.completedCount === 0) return 'No completed day yet';
-  if (member.currentStreak === 1) return '1-day streak';
-  if (member.currentStreak > 1) return `${member.currentStreak}-day streak`;
+  if (member.currentStreak === 1) return '1-day rhythm';
+  if (member.currentStreak > 1) return `${member.currentStreak}-day rhythm`;
   return `${member.completedCount} completed ${member.completedCount === 1 ? 'day' : 'days'}`;
 }
 
@@ -97,7 +82,6 @@ function WeeklyRhythm({ member, todayIndex, accessible = false }) {
         const completed = !future && member.checkIns[dayIndex];
         const today = dayIndex === todayIndex;
         const status = future ? 'upcoming' : completed ? 'completed' : 'not completed';
-
         return (
           <div className="daily-rhythm-day" key={`${member.id}-${dayIndex}`}>
             <span
@@ -115,7 +99,7 @@ function WeeklyRhythm({ member, todayIndex, accessible = false }) {
   );
 }
 
-function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack }) {
+function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack, isDGroup }) {
   const backButtonRef = useRef(null);
   const completedToday = Boolean(member.checkIns[todayIndex]);
 
@@ -126,9 +110,8 @@ function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack }) {
   return (
     <section className="group-member-summary" aria-labelledby="group-member-summary-heading">
       <button ref={backButtonRef} className="group-workspace-back-link" type="button" onClick={onBack}>
-        <span aria-hidden="true">←</span> Back to group rhythm
+        <span aria-hidden="true">←</span> Back to {isDGroup ? 'D-Group' : 'group'} rhythm
       </button>
-
       <div className="group-member-identity">
         <span aria-hidden="true">{member.name.charAt(0)}</span>
         <div>
@@ -137,7 +120,6 @@ function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack }) {
           <p>{getRhythmLabel(member, elapsedDays)}</p>
         </div>
       </div>
-
       <section className="group-member-week" aria-labelledby="group-member-week-heading">
         <div className="group-workspace-section-heading">
           <div><p className="dashboard-eyebrow">Devotional rhythm</p><h4 id="group-member-week-heading">This week</h4></div>
@@ -145,18 +127,15 @@ function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack }) {
         </div>
         <WeeklyRhythm member={member} todayIndex={todayIndex} accessible />
       </section>
-
       <div className="group-member-stats">
-        <article><span>Current streak</span><strong>{member.currentStreak} {member.currentStreak === 1 ? 'day' : 'days'}</strong><small>Based on this week</small></article>
+        <article><span>Current rhythm</span><strong>{member.currentStreak} {member.currentStreak === 1 ? 'day' : 'days'}</strong><small>Based on this week</small></article>
         <article><span>Today</span><strong>{completedToday ? 'Completed' : 'Not yet'}</strong><small>{member.devotionCheckInLabel || member.status}</small></article>
       </div>
-
       <section className="group-member-signal">
         <p className="dashboard-eyebrow">General growth signal</p>
         <h4>{member.growthSignal || getRhythmLabel(member, elapsedDays)}</h4>
         <p>Last activity: {member.lastActiveLabel || 'No recent activity shown'}</p>
       </section>
-
       <aside className="group-workspace-privacy-note">
         <strong>Progress summary only</strong>
         <p>WGAP responses, prayers, reflection text, exact Bible passages, journal entries, and full devotion history remain private.</p>
@@ -165,7 +144,7 @@ function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack }) {
   );
 }
 
-function RhythmView({ members }) {
+function RhythmView({ members, isDGroup }) {
   const [selectedMemberId, setSelectedMemberId] = useState('');
   const todayIndex = getTodayIndex();
   const elapsedDays = todayIndex + 1;
@@ -180,6 +159,7 @@ function RhythmView({ members }) {
           member={selectedMember}
           elapsedDays={elapsedDays}
           todayIndex={todayIndex}
+          isDGroup={isDGroup}
           onBack={() => setSelectedMemberId('')}
         />
       </section>
@@ -189,21 +169,18 @@ function RhythmView({ members }) {
   return (
     <section className="daily-checkin-card group-rhythm-card" aria-labelledby="group-rhythm-heading">
       <div className="daily-checkin-heading">
-        <div><p className="dashboard-eyebrow">Group accountability</p><h3 id="group-rhythm-heading">This week</h3></div>
-        <span className="daily-checkin-count" aria-label={`${checkedInToday} of ${orderedMembers.length} displayed group members completed today`}>
+        <div><p className="dashboard-eyebrow">{isDGroup ? 'D-Group accountability' : 'Group accountability'}</p><h3 id="group-rhythm-heading">This week</h3></div>
+        <span className="daily-checkin-count" aria-label={`${checkedInToday} of ${orderedMembers.length} displayed members completed today`}>
           {checkedInToday} of {orderedMembers.length} today
         </span>
       </div>
-
-      <p className="daily-checkin-intro">Members who may need attention appear first. Tap a member to view the progress summary they share with this group.</p>
-
+      <p className="daily-checkin-intro">Members who may appreciate attention appear first. Tap a member to view only the progress summary they share.</p>
       {orderedMembers.length ? (
-        <div className="daily-checkin-list" role="list" aria-label="Weekly group devotion accountability">
+        <div className="daily-checkin-list" role="list" aria-label={`Weekly ${isDGroup ? 'D-Group' : 'group'} devotion accountability`}>
           {orderedMembers.map((member) => {
-            const perfect = member.completedCount === elapsedDays;
-
+            const consistent = member.completedCount === elapsedDays;
             return (
-              <article className={`daily-rhythm-row ${perfect ? 'is-perfect' : ''}`} key={member.id} role="listitem">
+              <article className={`daily-rhythm-row ${consistent ? 'is-perfect' : ''}`} key={member.id} role="listitem">
                 <button
                   className="group-rhythm-row-button"
                   type="button"
@@ -221,9 +198,8 @@ function RhythmView({ members }) {
             );
           })}
         </div>
-      ) : <p className="group-workspace-empty">No shared member rhythm is available in this prototype group yet.</p>}
-
-      <p className="daily-checkin-principle">Members who may appreciate encouragement appear first. This order is not a spiritual score.</p>
+      ) : <p className="group-workspace-empty">No shared member rhythm is available here yet.</p>}
+      <p className="daily-checkin-principle">This order is for care and encouragement, not ranking or spiritual scoring.</p>
     </section>
   );
 }
@@ -232,29 +208,30 @@ export default function GroupWorkspace({ organization, workspace, group, profile
   const [section, setSection] = useState('rhythm');
   const headingRef = useRef(null);
   const currentMemberName = profile?.displayName || 'Current member';
+  const isDGroup = group.groupType === 'dgroup';
   const ministries = workspace.ministries || [];
   const connectedMinistry = ministries.find((ministry) => ministry.id === group.connectedMinistryId);
+  const parentGroup = (workspace.groups || []).find((item) => item.id === group.parentGroupId);
+  const networkName = workspace.dGroupNetwork?.name || 'D-Group Network';
   const memberIds = Array.isArray(group.memberIds) && group.memberIds.length ? new Set(group.memberIds) : null;
 
   const displayMembers = useMemo(() => {
     const members = (workspace.members || [])
       .filter((member) => !memberIds || memberIds.has(member.id))
       .map((member) => member.id === 'current-member' ? { ...member, name: currentMemberName } : member);
-
     const currentMemberJoined = (workspace.currentMember?.groupIds || []).includes(group.id);
     if (currentMemberJoined && !members.some((member) => member.id === 'current-member')) {
       members.unshift({
         id: 'current-member',
         name: currentMemberName,
         status: 'Your current rhythm',
-        growthSignal: 'Your shared group rhythm',
+        growthSignal: 'Your shared rhythm',
         lastActiveLabel: 'Today',
         devotionCompletedWithin24Hours: false,
         devotionCheckInLabel: 'No shared signal available yet',
         weeklyCheckIns: [false, false, false, false, false, false, false],
       });
     }
-
     return members;
   }, [workspace.members, workspace.currentMember, group.id, memberIds, currentMemberName]);
 
@@ -269,39 +246,35 @@ export default function GroupWorkspace({ organization, workspace, group, profile
   return (
     <section className="group-workspace" aria-labelledby="group-workspace-title">
       <button className="group-workspace-back" type="button" onClick={onBack}>
-        <span aria-hidden="true">←</span> Back to church Groups
+        <span aria-hidden="true">←</span> Back to {isDGroup ? 'D-Groups' : 'Ministries'}
       </button>
-
       <header className="group-workspace-hero">
         <div className="group-workspace-hero-topline">
-          <span>{connectedMinistry?.name || 'Church-wide group'}</span>
+          <span>{isDGroup ? networkName : connectedMinistry?.name || 'Church ministry group'}</span>
           <span className="group-workspace-joined">✓ Joined</span>
         </div>
-        <p className="dashboard-eyebrow">Leader-created group</p>
+        <p className="dashboard-eyebrow">{isDGroup ? 'Assigned D-Group' : 'Ministry-connected group'}</p>
         <h2 id="group-workspace-title" ref={headingRef} tabIndex="-1">{group.name}</h2>
         <p className="group-workspace-purpose">{group.purpose}</p>
         <div className="group-workspace-quick-details">
-          <span><small>Appointed leader</small><strong>{leaderName}</strong></span>
-          <span><small>Group members</small><strong>{group.memberCount} of {group.memberLimit}</strong></span>
-          <span><small>Duration</small><strong>{group.duration}</strong></span>
+          <span><small>{isDGroup ? 'D-Group leader' : 'Appointed leader'}</small><strong>{leaderName}</strong></span>
+          <span><small>{isDGroup ? 'Direct members' : 'Group members'}</small><strong>{group.memberCount} of {group.memberLimit}</strong></span>
+          <span><small>{isDGroup ? 'Relationship' : 'Duration'}</small><strong>{isDGroup ? parentGroup ? `Under ${parentGroup.name}` : 'Primary D-Group' : group.duration}</strong></span>
         </div>
       </header>
-
       <nav className="group-workspace-nav" aria-label={`${group.name} sections`}>
         {GROUP_SECTIONS.map(([id, label]) => (
           <button key={id} type="button" className={section === id ? 'is-active' : ''} aria-current={section === id ? 'page' : undefined} onClick={() => setSection(id)}>{label}</button>
         ))}
       </nav>
-
-      {section === 'rhythm' ? <RhythmView members={displayMembers} /> : null}
-
+      {section === 'rhythm' ? <RhythmView members={displayMembers} isDGroup={isDGroup} /> : null}
       {section === 'members' ? (
         <section className="group-workspace-panel" aria-labelledby="group-members-heading">
           <div className="group-workspace-section-heading">
-            <div><p className="dashboard-eyebrow">Group roster</p><h3 id="group-members-heading">Members sharing their rhythm</h3></div>
+            <div><p className="dashboard-eyebrow">{isDGroup ? 'Direct disciples' : 'Group roster'}</p><h3 id="group-members-heading">Members sharing their rhythm</h3></div>
             <strong>{displayMembers.length} shown</strong>
           </div>
-          <p className="group-workspace-panel-intro">The prototype shows only members with a general rhythm signal available to this group.</p>
+          <p className="group-workspace-panel-intro">Only general rhythm signals voluntarily shared with this {isDGroup ? 'D-Group' : 'group'} appear here.</p>
           <div className="group-workspace-member-list">
             {displayMembers.map((member) => {
               const todayIndex = getTodayIndex();
@@ -318,25 +291,23 @@ export default function GroupWorkspace({ organization, workspace, group, profile
           </div>
         </section>
       ) : null}
-
       {section === 'about' ? (
         <section className="group-workspace-panel" aria-labelledby="group-about-heading">
-          <div className="group-workspace-section-heading"><div><p className="dashboard-eyebrow">Group details</p><h3 id="group-about-heading">Purpose and access</h3></div></div>
+          <div className="group-workspace-section-heading"><div><p className="dashboard-eyebrow">{isDGroup ? 'D-Group relationship' : 'Group details'}</p><h3 id="group-about-heading">Purpose and access</h3></div></div>
           <dl className="group-workspace-about-list">
             <div><dt>Church</dt><dd>{organization.name}</dd></div>
+            {isDGroup ? <div><dt>Network</dt><dd>{networkName}</dd></div> : null}
             <div><dt>Purpose</dt><dd>{group.purpose}</dd></div>
-            <div><dt>Intended members</dt><dd>{group.intendedMembers}</dd></div>
-            <div><dt>Appointed leader</dt><dd>{leaderName}</dd></div>
-            <div><dt>Connected ministry</dt><dd>{connectedMinistry?.name || 'None · Church-wide or cross-ministry'}</dd></div>
+            <div><dt>{isDGroup ? 'D-Group leader' : 'Appointed leader'}</dt><dd>{leaderName}</dd></div>
+            {isDGroup ? <div><dt>Parent D-Group</dt><dd>{parentGroup?.name || 'None · Primary D-Group'}</dd></div> : <div><dt>Connected ministry</dt><dd>{connectedMinistry?.name || 'Church-wide'}</dd></div>}
+            <div><dt>Direct-member limit</dt><dd>{group.memberLimit}</dd></div>
             <div><dt>Visibility</dt><dd>{group.visibility}</dd></div>
-            <div><dt>Joining</dt><dd>{group.approvalRequired ? 'Leader approval required' : 'Automatic after valid code'}</dd></div>
-            <div><dt>Duration</dt><dd>{group.duration}</dd></div>
+            <div><dt>Joining</dt><dd>{group.approvalRequired ? 'Leader assignment or approval required' : 'Automatic after valid code'}</dd></div>
           </dl>
         </section>
       ) : null}
-
       <aside className="group-workspace-privacy-note group-workspace-footer-note">
-        <strong>This group sees rhythm, not private devotion content.</strong>
+        <strong>This {isDGroup ? 'D-Group' : 'group'} sees rhythm, not private devotion content.</strong>
         <p>Joining does not reveal WGAP answers, prayers, journals, notebook photos, personal notes, or exact Scripture selections.</p>
       </aside>
     </section>
