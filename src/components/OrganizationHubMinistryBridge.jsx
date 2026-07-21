@@ -118,6 +118,7 @@ function PulseAccessDialog({
 export default function OrganizationHubMinistryBridge({
   workspace,
   onOpenMinistry,
+  onOpenGroup,
   onNavigateApp,
   organization,
   ...props
@@ -211,9 +212,12 @@ export default function OrganizationHubMinistryBridge({
 
     const shell = host.closest('.church-workspace-shell');
     let syncFrame = 0;
-    let enhancementFrame = 0;
-    let enhancementTimer = 0;
-    let enhancementAttempt = 0;
+    let ministryFrame = 0;
+    let ministryTimer = 0;
+    let ministryAttempt = 0;
+    let groupFrame = 0;
+    let groupTimer = 0;
+    let groupAttempt = 0;
 
     function enhanceMinistryCards() {
       const joinedIds = new Set(workspace?.currentMember?.ministryIds || []);
@@ -265,17 +269,86 @@ export default function OrganizationHubMinistryBridge({
       return ministryCards.length > 0 && readyButtons === expectedButtons;
     }
 
+    function enhanceGroupCards() {
+      const joinedIds = new Set(workspace?.currentMember?.groupIds || []);
+      const groupCards = [...host.querySelectorAll('.organization-group-card')];
+      let expectedButtons = 0;
+      let readyButtons = 0;
+
+      groupCards.forEach((card, index) => {
+        const group = workspace?.groups?.[index];
+        if (!group) return;
+
+        const existingButton = card.querySelector('[data-open-group-room]');
+        const cardShowsMembership = Boolean(card.querySelector('.organization-membership-chip'));
+        const joined = joinedIds.has(group.id) || cardShowsMembership;
+
+        if (!joined) {
+          existingButton?.remove();
+          return;
+        }
+
+        expectedButtons += 1;
+        const buttonLabel = 'Open Group';
+        const ariaLabel = `Open ${group.name} group`;
+
+        if (existingButton) {
+          if (existingButton.textContent !== buttonLabel) existingButton.textContent = buttonLabel;
+          if (existingButton.dataset.openGroupRoom !== group.id) {
+            existingButton.dataset.openGroupRoom = group.id;
+          }
+          if (existingButton.getAttribute('aria-label') !== ariaLabel) {
+            existingButton.setAttribute('aria-label', ariaLabel);
+          }
+          readyButtons += 1;
+          return;
+        }
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'organization-enter-ministry-room organization-open-group-room';
+        button.dataset.openGroupRoom = group.id;
+        button.textContent = buttonLabel;
+        button.setAttribute('aria-label', ariaLabel);
+
+        const codeControls = card.querySelector('.organization-group-code-controls');
+        if (codeControls) card.insertBefore(button, codeControls);
+        else card.appendChild(button);
+        readyButtons += 1;
+      });
+
+      return groupCards.length > 0 && readyButtons === expectedButtons;
+    }
+
     function scheduleMinistryEnhancement() {
-      window.cancelAnimationFrame(enhancementFrame);
-      window.clearTimeout(enhancementTimer);
-      enhancementAttempt = 0;
+      window.cancelAnimationFrame(ministryFrame);
+      window.clearTimeout(ministryTimer);
+      ministryAttempt = 0;
 
       function attemptEnhancement() {
-        enhancementFrame = window.requestAnimationFrame(() => {
-          enhancementAttempt += 1;
+        ministryFrame = window.requestAnimationFrame(() => {
+          ministryAttempt += 1;
           const complete = enhanceMinistryCards();
-          if (!complete && enhancementAttempt < 12) {
-            enhancementTimer = window.setTimeout(attemptEnhancement, 40);
+          if (!complete && ministryAttempt < 12) {
+            ministryTimer = window.setTimeout(attemptEnhancement, 40);
+          }
+        });
+      }
+
+      attemptEnhancement();
+    }
+
+    function scheduleGroupEnhancement() {
+      window.cancelAnimationFrame(groupFrame);
+      window.clearTimeout(groupTimer);
+      groupAttempt = 0;
+
+      function attemptEnhancement() {
+        groupFrame = window.requestAnimationFrame(() => {
+          groupAttempt += 1;
+          const complete = enhanceGroupCards();
+          if (!complete && groupAttempt < 12) {
+            groupTimer = window.setTimeout(attemptEnhancement, 40);
           }
         });
       }
@@ -296,6 +369,7 @@ export default function OrganizationHubMinistryBridge({
         }
 
         if (section === 'ministries') scheduleMinistryEnhancement();
+        if (section === 'groups') scheduleGroupEnhancement();
       });
     }
 
@@ -335,6 +409,8 @@ export default function OrganizationHubMinistryBridge({
         syncOrganizationSection(section);
       } else if (section === 'ministries') {
         scheduleMinistryEnhancement();
+      } else if (section === 'groups') {
+        scheduleGroupEnhancement();
       }
     }
 
@@ -346,22 +422,34 @@ export default function OrganizationHubMinistryBridge({
       if (ministryId) onOpenMinistry(ministryId);
     }
 
+    function handleGroupRoomClick(event) {
+      const button = event.target.closest('[data-open-group-room]');
+      if (!button || !host.contains(button)) return;
+
+      const groupId = button.dataset.openGroupRoom;
+      if (groupId) onOpenGroup?.(groupId);
+    }
+
     shell?.addEventListener('click', handlePulseGateCapture, true);
     shell?.addEventListener('click', handleSectionNavigation);
     host.addEventListener('click', handleMinistryRoomClick);
+    host.addEventListener('click', handleGroupRoomClick);
 
     const activeButton = shell?.querySelector('.church-workspace-primary-nav > button.is-active');
     syncOrganizationSection(normalizeSectionLabel(activeButton?.textContent));
 
     return () => {
       window.cancelAnimationFrame(syncFrame);
-      window.cancelAnimationFrame(enhancementFrame);
-      window.clearTimeout(enhancementTimer);
+      window.cancelAnimationFrame(ministryFrame);
+      window.clearTimeout(ministryTimer);
+      window.cancelAnimationFrame(groupFrame);
+      window.clearTimeout(groupTimer);
       shell?.removeEventListener('click', handlePulseGateCapture, true);
       shell?.removeEventListener('click', handleSectionNavigation);
       host.removeEventListener('click', handleMinistryRoomClick);
+      host.removeEventListener('click', handleGroupRoomClick);
     };
-  }, [workspace, onOpenMinistry]);
+  }, [workspace, onOpenMinistry, onOpenGroup]);
 
   function verifyPulseAccess(event) {
     event.preventDefault();
