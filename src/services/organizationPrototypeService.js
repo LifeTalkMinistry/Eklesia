@@ -1,6 +1,7 @@
 import { getBrowserStorage, STORAGE_KEYS } from './storageRegistry.js';
 
-const PROTOTYPE_VERSION = 2;
+const PROTOTYPE_VERSION = 3;
+const D_GROUP_MEMBER_LIMIT = 12;
 
 function clone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -40,6 +41,8 @@ function normalizeRole(role, organization) {
 function normalizeMembers(members, organization) {
   return (Array.isArray(members) ? members : []).map((member) => ({
     ...clone(member),
+    assignedDGroupId: member.assignedDGroupId || '',
+    ledDGroupId: member.ledDGroupId || '',
     roles: (member.roles || []).map((role) => normalizeRole(role, organization)).filter(Boolean),
   }));
 }
@@ -60,8 +63,9 @@ function migrateLegacyGroups(ministries) {
   return (Array.isArray(ministries) ? ministries : []).flatMap((ministry) => (
     Array.isArray(ministry.circles) ? ministry.circles.map((circle) => ({
       ...clone(circle),
+      groupType: 'ministry',
       connectedMinistryId: ministry.id,
-      purpose: circle.purpose || `A leader-created group helping ${ministry.name} members grow and serve together.`,
+      purpose: circle.purpose || `A ministry accountability space helping ${ministry.name} members grow and serve together.`,
       intendedMembers: circle.intendedMembers || `${ministry.name} members`,
       duration: circle.duration || 'Ongoing',
       memberLimit: circle.memberLimit || Math.max(20, circle.memberCount || 0),
@@ -72,19 +76,180 @@ function migrateLegacyGroups(ministries) {
 
 function normalizeGroups(groups, ministries) {
   const ministryIds = new Set(ministries.map((ministry) => ministry.id));
-  return (Array.isArray(groups) ? groups : []).map((group) => ({
-    ...clone(group),
-    code: group.code || deterministicCode(group.name),
-    purpose: group.purpose || 'A purpose-driven group created by an appointed church leader.',
-    intendedMembers: group.intendedMembers || 'Church members invited by the group leader',
-    connectedMinistryId: ministryIds.has(group.connectedMinistryId) ? group.connectedMinistryId : '',
-    memberCount: Number.isFinite(group.memberCount) ? group.memberCount : 0,
-    memberLimit: Number.isFinite(group.memberLimit) ? group.memberLimit : 20,
-    leaderId: group.leaderId || 'current-member',
-    visibility: group.visibility || 'Invitation only',
-    approvalRequired: group.approvalRequired !== false,
-    duration: group.duration || 'Ongoing',
-  }));
+  return (Array.isArray(groups) ? groups : []).map((group) => {
+    const groupType = group.groupType === 'dgroup' || group.networkId ? 'dgroup' : 'ministry';
+    const memberIds = [...new Set(Array.isArray(group.memberIds) ? group.memberIds : [])];
+
+    return {
+      ...clone(group),
+      groupType,
+      code: group.code || deterministicCode(group.name),
+      purpose: group.purpose || (groupType === 'dgroup'
+        ? 'An assigned discipleship circle for spiritual growth, accountability, encouragement, and care.'
+        : 'A ministry accountability space created by an appointed church leader.'),
+      intendedMembers: group.intendedMembers || (groupType === 'dgroup'
+        ? 'Members assigned under one D-Group leader'
+        : 'Church members invited by the group leader'),
+      connectedMinistryId: groupType === 'ministry' && ministryIds.has(group.connectedMinistryId)
+        ? group.connectedMinistryId
+        : '',
+      networkId: groupType === 'dgroup' ? group.networkId || 'mighty-network' : '',
+      parentGroupId: groupType === 'dgroup' ? group.parentGroupId || '' : '',
+      parentLeaderId: groupType === 'dgroup' ? group.parentLeaderId || '' : '',
+      memberIds,
+      memberCount: groupType === 'dgroup'
+        ? memberIds.length
+        : Number.isFinite(group.memberCount) ? group.memberCount : memberIds.length,
+      memberLimit: groupType === 'dgroup'
+        ? D_GROUP_MEMBER_LIMIT
+        : Number.isFinite(group.memberLimit) ? group.memberLimit : 20,
+      leaderId: group.leaderId || 'current-member',
+      visibility: group.visibility || (groupType === 'dgroup' ? 'Assigned members only' : 'Invitation only'),
+      approvalRequired: group.approvalRequired !== false,
+      duration: groupType === 'dgroup' ? 'Ongoing' : group.duration || 'Ongoing',
+    };
+  });
+}
+
+function createDefaultDGroupState(organization, members) {
+  const networkId = 'mighty-network';
+  const primaryGroupId = 'dgroup-mighty-primary';
+  const candidateIds = members.map((member) => member.id).filter(Boolean);
+  const primaryMemberIds = candidateIds.slice(0, Math.min(3, candidateIds.length));
+  const firstLeaderId = primaryMemberIds[0] || '';
+  const childGroupId = firstLeaderId ? `dgroup-${firstLeaderId.replace(/^member-/, '')}` : '';
+  const childMemberIds = firstLeaderId ? candidateIds.slice(3, Math.min(5, candidateIds.length)) : [];
+
+  const dGroups = [
+    {
+      id: primaryGroupId,
+      groupType: 'dgroup',
+      networkId,
+      parentGroupId: '',
+      parentLeaderId: '',
+      name: 'Mighty Network D-Group',
+      code: 'MIGHTY1',
+      purpose: 'The primary discipleship circle of Mighty Network, forming leaders who continue the same spiritual family beneath them.',
+      intendedMembers: 'Direct disciples assigned to the primary network leader',
+      leaderId: 'current-member',
+      memberIds: primaryMemberIds,
+      memberCount: primaryMemberIds.length,
+      memberLimit: D_GROUP_MEMBER_LIMIT,
+      visibility: 'Assigned members only',
+      approvalRequired: true,
+      duration: 'Ongoing',
+    },
+  ];
+
+  if (firstLeaderId) {
+    dGroups.push({
+      id: childGroupId,
+      groupType: 'dgroup',
+      networkId,
+      parentGroupId: primaryGroupId,
+      parentLeaderId: 'current-member',
+      name: `${members.find((member) => member.id === firstLeaderId)?.name || 'Leader'}'s D-Group`,
+      code: deterministicCode(`${firstLeaderId} DGROUP`),
+      purpose: 'A child D-Group growing underneath Mighty Network while its leader remains accountable to the primary D-Group.',
+      intendedMembers: 'Direct disciples assigned to this approved D-Group leader',
+      leaderId: firstLeaderId,
+      memberIds: childMemberIds,
+      memberCount: childMemberIds.length,
+      memberLimit: D_GROUP_MEMBER_LIMIT,
+      visibility: 'Assigned members only',
+      approvalRequired: true,
+      duration: 'Ongoing',
+    });
+  }
+
+  const requestCandidateId = primaryMemberIds.find((memberId) => memberId !== firstLeaderId) || '';
+  const leadRequests = requestCandidateId ? [{
+    id: `dgroup-request-${requestCandidateId}`,
+    memberId: requestCandidateId,
+    parentGroupId: primaryGroupId,
+    requestedAt: new Date().toISOString(),
+    status: 'pending',
+  }] : [];
+
+  const assignedMembers = members.map((member) => {
+    const assignedDGroupId = primaryMemberIds.includes(member.id)
+      ? primaryGroupId
+      : childMemberIds.includes(member.id) ? childGroupId : member.assignedDGroupId || '';
+    const ledDGroupId = member.id === firstLeaderId ? childGroupId : member.ledDGroupId || '';
+    const roles = [...(member.roles || [])];
+
+    if (ledDGroupId && !roles.some((role) => role.role === 'D-Group Leader' && role.scopeId === ledDGroupId)) {
+      roles.push({
+        role: 'D-Group Leader',
+        scopeType: 'dgroup',
+        scopeId: ledDGroupId,
+        scopeName: dGroups.find((group) => group.id === ledDGroupId)?.name || 'D-Group',
+      });
+    }
+
+    return { ...member, assignedDGroupId, ledDGroupId, roles };
+  });
+
+  return {
+    network: {
+      id: networkId,
+      name: 'Mighty Network',
+      primaryLeaderId: 'current-member',
+      primaryGroupId,
+      maxDirectMembers: D_GROUP_MEMBER_LIMIT,
+      description: 'One connected discipleship family where every member has one assigned D-Group and every leader directly cares for no more than twelve people.',
+    },
+    dGroups,
+    leadRequests,
+    members: assignedMembers,
+  };
+}
+
+function normalizeDGroupState(organization, groups, members, stored = {}) {
+  const existingDGroups = groups.filter((group) => group.groupType === 'dgroup');
+  const defaults = createDefaultDGroupState(organization, members);
+  const dGroups = existingDGroups.length ? existingDGroups : defaults.dGroups;
+  const dGroupIds = new Set(dGroups.map((group) => group.id));
+  const network = {
+    ...defaults.network,
+    ...(stored.dGroupNetwork || {}),
+    maxDirectMembers: D_GROUP_MEMBER_LIMIT,
+  };
+
+  const assignments = new Map();
+  dGroups.forEach((group) => {
+    (group.memberIds || []).forEach((memberId) => {
+      if (!assignments.has(memberId)) assignments.set(memberId, group.id);
+    });
+  });
+
+  const normalizedMembers = members.map((member) => {
+    const assignedDGroupId = dGroupIds.has(member.assignedDGroupId)
+      ? member.assignedDGroupId
+      : assignments.get(member.id) || defaults.members.find((item) => item.id === member.id)?.assignedDGroupId || '';
+    const ledGroup = dGroups.find((group) => group.leaderId === member.id);
+    const ledDGroupId = dGroupIds.has(member.ledDGroupId)
+      ? member.ledDGroupId
+      : ledGroup?.id || defaults.members.find((item) => item.id === member.id)?.ledDGroupId || '';
+    return { ...member, assignedDGroupId, ledDGroupId };
+  });
+
+  return {
+    network,
+    groups: [
+      ...groups.filter((group) => group.groupType !== 'dgroup'),
+      ...dGroups.map((group) => ({
+        ...group,
+        memberIds: [...new Set(group.memberIds || [])].slice(0, D_GROUP_MEMBER_LIMIT),
+        memberCount: Math.min(D_GROUP_MEMBER_LIMIT, new Set(group.memberIds || []).size),
+        memberLimit: D_GROUP_MEMBER_LIMIT,
+      })),
+    ],
+    members: normalizedMembers,
+    leadRequests: Array.isArray(stored.dGroupLeadRequests)
+      ? stored.dGroupLeadRequests.map((request) => ({ ...clone(request), status: request.status || 'pending' }))
+      : defaults.leadRequests,
+  };
 }
 
 function normalizePolicies(policies = {}) {
@@ -108,17 +273,25 @@ function normalizeVisibility(visibility = {}) {
   };
 }
 
-function normalizeCurrentMember(member, defaults, organization, visibility) {
+function normalizeCurrentMember(member, defaults, organization, visibility, dGroupState) {
   const source = { ...clone(defaults), ...clone(member || {}) };
   const roles = (source.roles || []).map((role) => normalizeRole(role, organization)).filter(Boolean);
   const ministryRoleIds = roles
     .filter((role) => role.role === 'Ministry Leader' && role.scopeType === 'ministry')
     .map((role) => role.scopeId);
+  const ledDGroupId = source.ledDGroupId || (dGroupState.network.primaryLeaderId === 'current-member'
+    ? dGroupState.network.primaryGroupId
+    : '');
+  const assignedDGroupId = source.assignedDGroupId || '';
+  const dGroupIds = [assignedDGroupId, ledDGroupId].filter(Boolean);
+
   return {
     ...source,
     roles,
     ministryIds: [...new Set([...(source.ministryIds || []), ...ministryRoleIds])],
-    groupIds: [...new Set(source.groupIds || visibility.selectedGroupIds || [])],
+    groupIds: [...new Set([...(source.groupIds || visibility.selectedGroupIds || []), ...dGroupIds])],
+    assignedDGroupId,
+    ledDGroupId,
   };
 }
 
@@ -126,10 +299,12 @@ function createInitialWorkspace(organization) {
   const sourceMinistries = clone(organization.ministries) || [];
   const ministries = normalizeMinistries(sourceMinistries);
   const legacyGroups = migrateLegacyGroups(sourceMinistries);
-  const groups = normalizeGroups(
+  const baseGroups = normalizeGroups(
     Array.isArray(organization.groups) ? organization.groups : legacyGroups,
     ministries,
   );
+  const baseMembers = normalizeMembers(organization.members, organization);
+  const dGroupState = normalizeDGroupState(organization, baseGroups, baseMembers);
   const memberVisibility = normalizeVisibility(organization.memberVisibility);
   const defaultCurrentMember = {
     id: 'current-member',
@@ -137,6 +312,8 @@ function createInitialWorkspace(organization) {
     roles: [],
     ministryIds: [],
     groupIds: [],
+    assignedDGroupId: '',
+    ledDGroupId: dGroupState.network.primaryGroupId,
   };
 
   return {
@@ -157,10 +334,13 @@ function createInitialWorkspace(organization) {
       defaultCurrentMember,
       organization,
       memberVisibility,
+      dGroupState,
     ),
     ministries,
-    groups,
-    members: normalizeMembers(organization.members, organization),
+    groups: dGroupState.groups,
+    dGroupNetwork: dGroupState.network,
+    dGroupLeadRequests: dGroupState.leadRequests,
+    members: dGroupState.members,
   };
 }
 
@@ -173,7 +353,12 @@ function normalizeWorkspace(organization, stored) {
   const migratedGroups = Array.isArray(stored.groups)
     ? stored.groups
     : migrateLegacyGroups(storedMinistries);
-  const groups = normalizeGroups(migratedGroups.length ? migratedGroups : defaults.groups, ministries);
+  const baseGroups = normalizeGroups(migratedGroups.length ? migratedGroups : defaults.groups, ministries);
+  const baseMembers = normalizeMembers(
+    Array.isArray(stored.members) ? stored.members : defaults.members,
+    organization,
+  );
+  const dGroupState = normalizeDGroupState(organization, baseGroups, baseMembers, stored);
   const memberVisibility = normalizeVisibility({
     ...defaults.memberVisibility,
     ...(stored.memberVisibility || {}),
@@ -191,13 +376,13 @@ function normalizeWorkspace(organization, stored) {
       defaults.currentMember,
       organization,
       memberVisibility,
+      dGroupState,
     ),
     ministries,
-    groups,
-    members: normalizeMembers(
-      Array.isArray(stored.members) ? stored.members : defaults.members,
-      organization,
-    ),
+    groups: dGroupState.groups,
+    dGroupNetwork: dGroupState.network,
+    dGroupLeadRequests: dGroupState.leadRequests,
+    members: dGroupState.members,
   };
 }
 
@@ -314,3 +499,5 @@ export function generatePrototypeCode(label = 'GROUP') {
   const random = Math.floor(1000 + Math.random() * 9000);
   return `${prefix}${random}`;
 }
+
+export { D_GROUP_MEMBER_LIMIT };
