@@ -398,6 +398,7 @@ export default function ChurchWorkspace({ organization, profile, onExit, onLeave
                   profile={profile}
                   workspace={workspaceSnapshot}
                   onOpenMinistry={openMinistry}
+                  onOpenGroup={openGroup}
                   onNavigateApp={exitToAppTab}
                   onShowDetails={() => setShowDetails(true)}
                   onRequestLeave={requestChurchExit}
