@@ -1,6 +1,66 @@
-.church-workspace-primary-nav > button:nth-child(2),
-.organization-section-nav > button:first-child {
-  order: 99;
+.organization-admin-shell {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 20px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(184, 215, 190, 0.08), transparent 38%),
+    rgba(12, 28, 19, 0.78);
+}
+
+.organization-admin-heading {
+  display: grid;
+  gap: 6px;
+}
+
+.organization-admin-heading h3 {
+  margin: 0;
+  color: #fffdf5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 6vw, 2rem);
+  font-weight: 500;
+  line-height: 1.08;
+}
+
+.organization-admin-heading > p:last-child {
+  margin: 0;
+  color: rgba(244, 245, 239, 0.58);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.organization-admin-subnav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  padding: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 17px;
+  background: rgba(2, 10, 6, 0.48);
+}
+
+.organization-admin-subnav button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 13px;
+  color: rgba(244, 245, 239, 0.48);
+  background: transparent;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.organization-admin-subnav button.is-active {
+  color: #07130d;
+  background: #cde4d4;
+}
+
+.organization-admin-subnav button:focus-visible {
+  outline: 3px solid rgba(232, 217, 170, 0.65);
+  outline-offset: 3px;
 }
 
 .pulse-access-backdrop {
@@ -201,6 +261,11 @@
 }
 
 @media (max-width: 520px) {
+  .organization-admin-shell {
+    padding: 15px;
+    border-radius: 19px;
+  }
+
   .pulse-access-backdrop {
     align-items: end;
     padding: 10px;
