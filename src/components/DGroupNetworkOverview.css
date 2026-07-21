@@ -1,0 +1,66 @@
+.dgroup-network-overview {
+  display: grid;
+  gap: 17px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(184, 215, 190, 0.1), transparent 40%),
+    linear-gradient(145deg, rgba(23, 55, 37, 0.68), rgba(7, 21, 13, 0.96));
+}
+
+.dgroup-network-overview h2 {
+  margin: -7px 0 0;
+  color: #fffdf5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 8vw, 3rem);
+  font-weight: 500;
+  line-height: 1.04;
+}
+
+.dgroup-network-overview-copy {
+  margin: 0;
+  color: rgba(244, 245, 239, 0.65);
+  font-size: 0.82rem;
+  line-height: 1.72;
+}
+
+.dgroup-network-overview-rule {
+  display: grid;
+  gap: 6px;
+  padding: 15px 16px;
+  border: 1px solid rgba(184, 215, 190, 0.15);
+  border-radius: 16px;
+  background: rgba(184, 215, 190, 0.055);
+}
+
+.dgroup-network-overview-rule strong {
+  color: #e7f0e9;
+  font-size: 0.82rem;
+}
+
+.dgroup-network-overview-rule span {
+  color: rgba(244, 245, 239, 0.52);
+  font-size: 0.72rem;
+  line-height: 1.52;
+}
+
+.dgroup-network-overview .dgroup-network-inline-stats {
+  margin-top: 1px;
+}
+
+.dgroup-network-overview .dgroup-network-inline-stats span {
+  background: rgba(2, 10, 6, 0.28);
+}
+
+@media (max-width: 420px) {
+  .dgroup-network-overview {
+    gap: 15px;
+    padding: 21px;
+  }
+
+  .dgroup-network-overview h2 {
+    font-size: clamp(1.9rem, 10vw, 2.6rem);
+  }
+}
