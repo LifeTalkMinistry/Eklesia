@@ -4,6 +4,7 @@ import {
   generatePrototypeCode,
   saveOrganizationPrototypeState,
 } from '../services/organizationPrototypeService.js';
+import { ensureCompleteDGroupDemo } from '../services/dGroupDemoTree.js';
 import './DGroupNetworkPanel.css';
 
 function clone(value) {
@@ -31,19 +32,38 @@ function DGroupDialog({ titleId, children, onClose }) {
   );
 }
 
-export default function DGroupNetworkPanel({ organization, workspace, profile, onOpenGroup }) {
-  const [localWorkspace, setLocalWorkspace] = useState(workspace);
-  const [statusMessage, setStatusMessage] = useState('');
-  const [expandedGroupId, setExpandedGroupId] = useState(
-    workspace?.dGroupNetwork?.primaryGroupId || '',
+function SectionToggle({ icon, eyebrow, title, meta, expanded, onClick }) {
+  return (
+    <button className="dgroup-section-toggle" type="button" onClick={onClick} aria-expanded={expanded}>
+      <span className="dgroup-section-icon" aria-hidden="true">{icon}</span>
+      <span className="dgroup-section-title">
+        <small>{eyebrow}</small>
+        <strong>{title}</strong>
+        {meta ? <em>{meta}</em> : null}
+      </span>
+      <b aria-hidden="true">{expanded ? '−' : '+'}</b>
+    </button>
   );
+}
+
+export default function DGroupNetworkPanel({ organization, workspace, profile, onOpenGroup }) {
+  const [localWorkspace, setLocalWorkspace] = useState(() => ensureCompleteDGroupDemo(workspace));
+  const [statusMessage, setStatusMessage] = useState('');
+  const [openSections, setOpenSections] = useState({ network: false, groups: false, privacy: false });
+  const [expandedGroupIds, setExpandedGroupIds] = useState([]);
   const [dialog, setDialog] = useState({ type: '', groupId: '', memberId: '', code: '', error: '' });
   const firstInputRef = useRef(null);
 
   useEffect(() => {
-    setLocalWorkspace(workspace);
-    setExpandedGroupId((current) => current || workspace?.dGroupNetwork?.primaryGroupId || '');
-  }, [workspace]);
+    const completed = ensureCompleteDGroupDemo(workspace);
+    setLocalWorkspace(completed);
+    setExpandedGroupIds([]);
+    setOpenSections({ network: false, groups: false, privacy: false });
+
+    if (completed !== workspace) {
+      saveOrganizationPrototypeState(organization.id, completed);
+    }
+  }, [workspace, organization.id]);
 
   useEffect(() => {
     if (!dialog.type) return undefined;
@@ -128,6 +148,8 @@ export default function DGroupNetworkPanel({ organization, workspace, profile, o
   const unassignedMembers = allMembers.filter((member) => !member.assignedDGroupId && !assignedMemberIds.has(member.id));
   const totalAssignedMembers = assignedMemberIds.size;
   const selectedGroup = dGroups.find((group) => group.id === dialog.groupId) || null;
+  const primaryGroup = dGroups.find((group) => group.id === network.primaryGroupId) || null;
+  const childGroups = dGroups.filter((group) => group.parentGroupId === network.primaryGroupId);
 
   function memberName(memberId) {
     if (memberId === 'current-member') return currentMemberName;
@@ -143,9 +165,20 @@ export default function DGroupNetworkPanel({ organization, workspace, profile, o
     return result.ok;
   }
 
+  function toggleSection(section) {
+    setOpenSections((current) => ({ ...current, [section]: !current[section] }));
+  }
+
+  function toggleGroup(groupId) {
+    setExpandedGroupIds((current) => (
+      current.includes(groupId)
+        ? current.filter((id) => id !== groupId)
+        : [...current, groupId]
+    ));
+  }
+
   function requestToLead() {
     if (!assignedGroup || ledGroup || pendingCurrentRequest) return;
-
     persist((current) => ({
       ...current,
       dGroupLeadRequests: [
@@ -211,7 +244,8 @@ export default function DGroupNetworkPanel({ organization, workspace, profile, o
           : item
       )),
     }), `${leader.name} was approved to lead ${groupName} under ${parentGroup.name}.`);
-    setExpandedGroupId(groupId);
+    setOpenSections((current) => ({ ...current, groups: true }));
+    setExpandedGroupIds((current) => [...new Set([...current, groupId])]);
   }
 
   function declineLeadRequest(request) {
@@ -292,7 +326,8 @@ export default function DGroupNetworkPanel({ organization, workspace, profile, o
         return { ...item, memberIds, memberCount: memberIds.length, memberLimit: D_GROUP_MEMBER_LIMIT };
       }),
     }), `You are now assigned to ${group.name}.`);
-    setExpandedGroupId(group.id);
+    setOpenSections((current) => ({ ...current, groups: true }));
+    setExpandedGroupIds((current) => [...new Set([...current, group.id])]);
     setDialog({ type: '', groupId: '', memberId: '', code: '', error: '' });
   }
 
@@ -333,134 +368,144 @@ export default function DGroupNetworkPanel({ organization, workspace, profile, o
     <section className="dgroup-network-panel" aria-labelledby="dgroup-network-title">
       <div className="dgroup-page-heading">
         <p className="dashboard-eyebrow">D-Group network</p>
-        <h2>Know where you belong and who you lead.</h2>
-        <p>Every member belongs to one assigned D-Group. Every leader directly cares for up to {D_GROUP_MEMBER_LIMIT} people.</p>
+        <h2>One leader. Twelve leaders. Twelve people each.</h2>
+        <p>The complete Mighty Network prototype shows the full two-level discipleship structure without crowding the screen.</p>
       </div>
 
-      <section className="dgroup-network-hero">
-        <div className="dgroup-network-identity">
-          <span className="dgroup-network-icon" aria-hidden="true">◎</span>
-          <div>
-            <p className="dashboard-eyebrow">Assigned discipleship network</p>
-            <h3 id="dgroup-network-title">{network.name}</h3>
+      <section className={`dgroup-collapsible-section ${openSections.network ? 'is-open' : ''}`}>
+        <SectionToggle
+          icon="◎"
+          eyebrow="Assigned discipleship network"
+          title={network.name}
+          meta={`${primaryGroup?.memberCount || 0} primary leaders · ${childGroups.length} child D-Groups`}
+          expanded={openSections.network}
+          onClick={() => toggleSection('network')}
+        />
+        {openSections.network ? (
+          <div className="dgroup-section-body">
+            <p className="dgroup-network-copy">{network.description}</p>
+            <div className="dgroup-network-inline-stats" aria-label="D-Group network summary">
+              <span><strong>{dGroups.length}</strong><small>D-Groups</small></span>
+              <span><strong>{totalAssignedMembers}</strong><small>Assigned</small></span>
+              <span><strong>{D_GROUP_MEMBER_LIMIT}</strong><small>Per leader</small></span>
+            </div>
+            <div className="dgroup-network-position">
+              <span>Your place</span>
+              <strong>{placeTitle}</strong>
+              <small>{placeDescription}</small>
+            </div>
+            <div className="dgroup-my-place-actions">
+              {!assignedGroup && !ledGroup ? (
+                <button type="button" onClick={() => setDialog({ type: 'join', groupId: '', memberId: '', code: '', error: '' })}>Enter D-Group code</button>
+              ) : null}
+              {assignedGroup && !ledGroup && !pendingCurrentRequest ? (
+                <button type="button" onClick={requestToLead}>Request to lead a D-Group</button>
+              ) : null}
+              {pendingCurrentRequest ? <span>Leadership request pending</span> : null}
+            </div>
           </div>
-        </div>
-
-        <p className="dgroup-network-copy">One connected spiritual family growing through approved D-Group leaders.</p>
-
-        <div className="dgroup-network-inline-stats" aria-label="D-Group network summary">
-          <span><strong>{dGroups.length}</strong><small>D-Groups</small></span>
-          <span><strong>{totalAssignedMembers}</strong><small>Assigned</small></span>
-          <span><strong>{D_GROUP_MEMBER_LIMIT}</strong><small>Max per leader</small></span>
-        </div>
-
-        <div className="dgroup-network-position">
-          <span>Your place</span>
-          <strong>{placeTitle}</strong>
-          <small>{placeDescription}</small>
-        </div>
-
-        <div className="dgroup-my-place-actions">
-          {!assignedGroup && !ledGroup ? (
-            <button type="button" onClick={() => setDialog({ type: 'join', groupId: '', memberId: '', code: '', error: '' })}>Enter D-Group code</button>
-          ) : null}
-          {assignedGroup && !ledGroup && !pendingCurrentRequest ? (
-            <button type="button" onClick={requestToLead}>Request to lead a D-Group</button>
-          ) : null}
-          {pendingCurrentRequest ? <span>Leadership request pending</span> : null}
-        </div>
+        ) : null}
       </section>
 
       {statusMessage ? <p className="dgroup-status" role="status">{statusMessage}</p> : null}
 
-      <div className="dgroup-network-heading">
-        <div>
-          <p className="dashboard-eyebrow">Your D-Groups</p>
-          <h3>Assigned circles in this network.</h3>
-          <p>Tap a D-Group to view its leader, members, access code, and requests.</p>
-        </div>
-      </div>
+      <section className={`dgroup-collapsible-section ${openSections.groups ? 'is-open' : ''}`}>
+        <SectionToggle
+          icon="↳"
+          eyebrow="Network structure"
+          title="D-Groups"
+          meta={`${dGroups.length} total · every group is closable`}
+          expanded={openSections.groups}
+          onClick={() => toggleSection('groups')}
+        />
+        {openSections.groups ? (
+          <div className="dgroup-section-body dgroup-section-body-groups">
+            <p className="dgroup-section-intro">Open only the D-Group you need. Several cards may stay open at the same time, and every card can be closed again.</p>
+            <div className="dgroup-tree">
+              {orderedGroups.map((group) => {
+                const expanded = expandedGroupIds.includes(group.id);
+                const directMembers = group.memberIds || [];
+                const isFull = directMembers.length >= D_GROUP_MEMBER_LIMIT;
+                const canManage = isOrganizationManager || group.leaderId === 'current-member';
+                const canOpen = isOrganizationManager || joinedIds.has(group.id);
+                const parent = dGroups.find((item) => item.id === group.parentGroupId);
+                const childCount = dGroups.filter((item) => item.parentGroupId === group.id).length;
+                const pendingRequests = leadRequests.filter((request) => request.parentGroupId === group.id && request.status === 'pending');
+                const depth = groupDepth.get(group.id) || 0;
 
-      <div className="dgroup-tree">
-        {orderedGroups.map((group) => {
-          const expanded = expandedGroupId === group.id;
-          const directMembers = group.memberIds || [];
-          const isFull = directMembers.length >= D_GROUP_MEMBER_LIMIT;
-          const canManage = isOrganizationManager || group.leaderId === 'current-member';
-          const canOpen = joinedIds.has(group.id);
-          const parent = dGroups.find((item) => item.id === group.parentGroupId);
-          const childCount = dGroups.filter((item) => item.parentGroupId === group.id).length;
-          const pendingRequests = leadRequests.filter((request) => request.parentGroupId === group.id && request.status === 'pending');
-          const depth = groupDepth.get(group.id) || 0;
+                return (
+                  <article className={`dgroup-card ${expanded ? 'is-expanded' : ''}`} key={group.id} style={{ '--dgroup-depth': depth }}>
+                    <button className="dgroup-card-summary" type="button" onClick={() => toggleGroup(group.id)} aria-expanded={expanded}>
+                      <span className="dgroup-card-icon" aria-hidden="true">{depth ? '↳' : '◎'}</span>
+                      <span className="dgroup-card-title">
+                        <strong>{group.name}</strong>
+                        <small>{memberName(group.leaderId)} · {directMembers.length} of {D_GROUP_MEMBER_LIMIT}</small>
+                      </span>
+                      <b aria-hidden="true">{expanded ? '−' : '+'}</b>
+                    </button>
 
-          return (
-            <article className={`dgroup-card ${expanded ? 'is-expanded' : ''}`} key={group.id} style={{ '--dgroup-depth': depth }}>
-              <button
-                className="dgroup-card-summary"
-                type="button"
-                onClick={() => setExpandedGroupId(expanded ? '' : group.id)}
-                aria-expanded={expanded}
-              >
-                <span className="dgroup-card-icon" aria-hidden="true">{depth ? '↳' : '◎'}</span>
-                <span className="dgroup-card-title">
-                  <strong>{group.name}</strong>
-                  <small>{memberName(group.leaderId)} · {directMembers.length} of {D_GROUP_MEMBER_LIMIT}</small>
-                </span>
-                <b aria-hidden="true">{expanded ? '−' : '+'}</b>
-              </button>
-
-              {expanded ? (
-                <div className="dgroup-card-details">
-                  <div className="dgroup-card-lineage">
-                    <span>{parent ? `Under ${parent.name}` : 'Primary D-Group'}</span>
-                    <b>{isFull ? 'Full' : `${D_GROUP_MEMBER_LIMIT - directMembers.length} spaces`}</b>
-                  </div>
-
-                  <p>{group.purpose}</p>
-
-                  <dl>
-                    <div><dt>D-Group leader</dt><dd>{memberName(group.leaderId)}</dd></div>
-                    <div><dt>Direct members</dt><dd>{directMembers.length} of {D_GROUP_MEMBER_LIMIT}</dd></div>
-                    <div><dt>Child D-Groups</dt><dd>{childCount}</dd></div>
-                  </dl>
-
-                  <div className="dgroup-card-actions">
-                    {canOpen ? <button type="button" onClick={() => onOpenGroup?.(group.id)}>Open D-Group</button> : null}
-                    {canManage && !isFull && unassignedMembers.length ? (
-                      <button type="button" onClick={() => setDialog({ type: 'assign', groupId: group.id, memberId: unassignedMembers[0]?.id || '', code: '', error: '' })}>Assign member</button>
+                    {expanded ? (
+                      <div className="dgroup-card-details">
+                        <div className="dgroup-card-lineage">
+                          <span>{parent ? `Under ${parent.name}` : 'Primary D-Group'}</span>
+                          <b>{isFull ? 'Full · 12 of 12' : `${D_GROUP_MEMBER_LIMIT - directMembers.length} spaces`}</b>
+                        </div>
+                        <p>{group.purpose}</p>
+                        <dl>
+                          <div><dt>D-Group leader</dt><dd>{memberName(group.leaderId)}</dd></div>
+                          <div><dt>Direct members</dt><dd>{directMembers.length} of {D_GROUP_MEMBER_LIMIT}</dd></div>
+                          <div><dt>Child D-Groups</dt><dd>{childCount}</dd></div>
+                        </dl>
+                        <div className="dgroup-card-actions">
+                          {canOpen ? <button type="button" onClick={() => onOpenGroup?.(group.id)}>Open D-Group</button> : null}
+                          {canManage && !isFull && unassignedMembers.length ? (
+                            <button type="button" onClick={() => setDialog({ type: 'assign', groupId: group.id, memberId: unassignedMembers[0]?.id || '', code: '', error: '' })}>Assign member</button>
+                          ) : null}
+                        </div>
+                        {canManage ? (
+                          <div className="dgroup-code-controls">
+                            <div><span>Assignment code</span><code>{group.code}</code></div>
+                            <button type="button" onClick={() => copyCode(group.code)}>Copy</button>
+                            <button type="button" onClick={() => rotateCode(group.id)}>Rotate</button>
+                          </div>
+                        ) : null}
+                        {canManage && pendingRequests.length ? (
+                          <section className="dgroup-lead-requests">
+                            <p className="dashboard-eyebrow">Leadership requests</p>
+                            {pendingRequests.map((request) => (
+                              <article key={request.id}>
+                                <div><strong>{memberName(request.memberId)}</strong><small>Wants to lead a child D-Group while remaining in this D-Group.</small></div>
+                                <div><button type="button" onClick={() => declineLeadRequest(request)}>Decline</button><button type="button" onClick={() => approveLeadRequest(request)}>Approve</button></div>
+                              </article>
+                            ))}
+                          </section>
+                        ) : null}
+                      </div>
                     ) : null}
-                  </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+      </section>
 
-                  {canManage ? (
-                    <div className="dgroup-code-controls">
-                      <div><span>Assignment code</span><code>{group.code}</code></div>
-                      <button type="button" onClick={() => copyCode(group.code)}>Copy</button>
-                      <button type="button" onClick={() => rotateCode(group.id)}>Rotate</button>
-                    </div>
-                  ) : null}
-
-                  {canManage && pendingRequests.length ? (
-                    <section className="dgroup-lead-requests">
-                      <p className="dashboard-eyebrow">Leadership requests</p>
-                      {pendingRequests.map((request) => (
-                        <article key={request.id}>
-                          <div><strong>{memberName(request.memberId)}</strong><small>Wants to lead a child D-Group while remaining in this D-Group.</small></div>
-                          <div><button type="button" onClick={() => declineLeadRequest(request)}>Decline</button><button type="button" onClick={() => approveLeadRequest(request)}>Approve</button></div>
-                        </article>
-                      ))}
-                    </section>
-                  ) : null}
-                </div>
-              ) : null}
-            </article>
-          );
-        })}
-      </div>
-
-      <aside className="dgroup-privacy-note">
-        <strong>Shared rhythm only.</strong>
-        <p>WGAP answers, prayers, journals, notebook photos, personal notes, and exact Scripture reflections remain private.</p>
-      </aside>
+      <section className={`dgroup-collapsible-section ${openSections.privacy ? 'is-open' : ''}`}>
+        <SectionToggle
+          icon="◇"
+          eyebrow="Privacy boundary"
+          title="What leaders can see"
+          meta="Shared rhythm only"
+          expanded={openSections.privacy}
+          onClick={() => toggleSection('privacy')}
+        />
+        {openSections.privacy ? (
+          <div className="dgroup-section-body dgroup-privacy-note">
+            <strong>Private devotion content stays private.</strong>
+            <p>WGAP answers, prayers, journals, notebook photos, personal notes, and exact Scripture reflections are never exposed to the network.</p>
+          </div>
+        ) : null}
+      </section>
 
       {dialog.type === 'join' ? (
         <DGroupDialog titleId="dgroup-join-title" onClose={() => setDialog({ type: '', groupId: '', memberId: '', code: '', error: '' })}>
