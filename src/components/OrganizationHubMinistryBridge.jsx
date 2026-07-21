@@ -7,7 +7,11 @@ function getLegacyViewStorageKey(organizationId) {
   return `ekklesia-pulse-beta-view:${organizationId || 'church'}`;
 }
 
-function getPulseCodeStorageKey(organizationId) {
+function getAdminCodeStorageKey(organizationId) {
+  return `ekklesia-church-admin-code:${organizationId || 'church'}`;
+}
+
+function getLegacyPulseCodeStorageKey(organizationId) {
   return `ekklesia-church-pulse-code:${organizationId || 'church'}`;
 }
 
@@ -19,24 +23,27 @@ function normalizeAccessCode(value) {
   return String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
-function generatePulseAccessCode() {
-  return `PULSE${Math.floor(1000 + Math.random() * 9000)}`;
+function generateAdminAccessCode() {
+  return `ADMIN${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
-function restorePulseAccessCode(organizationId) {
-  if (typeof window === 'undefined') return 'PULSE1';
+function restoreAdminAccessCode(organizationId) {
+  if (typeof window === 'undefined') return 'ADMIN1';
 
   try {
-    const storageKey = getPulseCodeStorageKey(organizationId);
+    const storageKey = getAdminCodeStorageKey(organizationId);
     const stored = normalizeAccessCode(window.localStorage.getItem(storageKey));
     if (stored) return stored;
 
-    const initialCode = 'PULSE1';
+    const legacyCode = normalizeAccessCode(
+      window.localStorage.getItem(getLegacyPulseCodeStorageKey(organizationId)),
+    );
+    const initialCode = legacyCode || 'ADMIN1';
     window.localStorage.setItem(storageKey, initialCode);
     return initialCode;
   } catch (error) {
-    console.warn('Ekklesia Pulse could not restore the Church Pulse access code.', error);
-    return 'PULSE1';
+    console.warn('Ekklesia Pulse could not restore the church Admin access code.', error);
+    return 'ADMIN1';
   }
 }
 
@@ -109,6 +116,7 @@ function CodeAccessDialog({
 
 export default function OrganizationHubMinistryBridge({
   workspace,
+  activeSection,
   onOpenMinistry,
   onOpenGroup,
   onNavigateApp,
@@ -116,15 +124,17 @@ export default function OrganizationHubMinistryBridge({
   ...props
 }) {
   const hostRef = useRef(null);
-  const pulseUnlockedRef = useRef(false);
-  const pendingPulseButtonRef = useRef(null);
+  const adminUnlockedRef = useRef(false);
+  const pendingAdminButtonRef = useRef(null);
 
-  const [pulseCode, setPulseCode] = useState(() => restorePulseAccessCode(organization?.id));
-  const [pulseUnlocked, setPulseUnlocked] = useState(false);
-  const [showPulseGate, setShowPulseGate] = useState(false);
-  const [pulseEntry, setPulseEntry] = useState('');
-  const [pulseError, setPulseError] = useState('');
-  const [pulseAdminMessage, setPulseAdminMessage] = useState('');
+  const [adminCode, setAdminCode] = useState(() => restoreAdminAccessCode(organization?.id));
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [adminActive, setAdminActive] = useState(false);
+  const [adminSection, setAdminSection] = useState('people');
+  const [showAdminGate, setShowAdminGate] = useState(false);
+  const [adminEntry, setAdminEntry] = useState('');
+  const [adminError, setAdminError] = useState('');
+  const [adminMessage, setAdminMessage] = useState('');
   const [ministryEntry, setMinistryEntry] = useState({ ministryId: '', code: '', error: '' });
 
   const currentRole = workspace?.currentMember?.organizationRole || 'Church Member';
@@ -139,36 +149,45 @@ export default function OrganizationHubMinistryBridge({
     : null;
 
   useEffect(() => {
-    const nextCode = restorePulseAccessCode(organization?.id);
-    setPulseCode(nextCode);
-    setPulseUnlocked(false);
-    pulseUnlockedRef.current = false;
-    setShowPulseGate(false);
-    setPulseEntry('');
-    setPulseError('');
-    setPulseAdminMessage('');
+    const nextCode = restoreAdminAccessCode(organization?.id);
+    setAdminCode(nextCode);
+    setAdminUnlocked(false);
+    adminUnlockedRef.current = false;
+    setAdminActive(false);
+    setAdminSection('people');
+    setShowAdminGate(false);
+    setAdminEntry('');
+    setAdminError('');
+    setAdminMessage('');
     setMinistryEntry({ ministryId: '', code: '', error: '' });
   }, [organization?.id]);
 
   useEffect(() => {
-    pulseUnlockedRef.current = pulseUnlocked;
-  }, [pulseUnlocked]);
+    adminUnlockedRef.current = adminUnlocked;
+  }, [adminUnlocked]);
 
   useEffect(() => {
-    if (!showPulseGate && !ministryEntry.ministryId) return undefined;
+    if (activeSection === 'admin') return;
+    adminUnlockedRef.current = false;
+    setAdminUnlocked(false);
+    setAdminActive(false);
+  }, [activeSection]);
+
+  useEffect(() => {
+    if (!showAdminGate && !ministryEntry.ministryId) return undefined;
 
     function handleEscape(event) {
       if (event.key !== 'Escape') return;
-      setShowPulseGate(false);
-      setPulseEntry('');
-      setPulseError('');
-      setPulseAdminMessage('');
+      setShowAdminGate(false);
+      setAdminEntry('');
+      setAdminError('');
+      setAdminMessage('');
       setMinistryEntry({ ministryId: '', code: '', error: '' });
     }
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [showPulseGate, ministryEntry.ministryId]);
+  }, [showAdminGate, ministryEntry.ministryId]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -219,6 +238,7 @@ export default function OrganizationHubMinistryBridge({
 
     const shell = host.closest('.church-workspace-shell');
     let syncFrame = 0;
+    let adminFrame = 0;
     let ministryFrame = 0;
     let ministryTimer = 0;
     let groupFrame = 0;
@@ -335,52 +355,53 @@ export default function OrganizationHubMinistryBridge({
       run();
     }
 
+    function clickOrganizationSection(section) {
+      const targetButton = [...host.querySelectorAll('.organization-section-nav button')]
+        .find((button) => normalizeSectionLabel(button.textContent) === section);
+      if (targetButton && !targetButton.classList.contains('is-active')) targetButton.click();
+    }
+
     function syncOrganizationSection(section) {
-      if (!section || section === 'home') return;
+      if (!section || section === 'home' || section === 'admin') return;
 
       window.cancelAnimationFrame(syncFrame);
       syncFrame = window.requestAnimationFrame(() => {
-        const targetButton = [...host.querySelectorAll('.organization-section-nav button')]
-          .find((button) => normalizeSectionLabel(button.textContent) === section);
-
-        if (targetButton && !targetButton.classList.contains('is-active')) targetButton.click();
+        clickOrganizationSection(section);
         if (section === 'ministries' || section === 'groups') scheduleEnhancement(section);
       });
     }
 
-    function handlePulseGateCapture(event) {
-      const button = event.target.closest(
-        '.church-workspace-primary-nav > button, .organization-section-nav > button',
-      );
+    function syncAdminSection(section) {
+      window.cancelAnimationFrame(adminFrame);
+      adminFrame = window.requestAnimationFrame(() => {
+        clickOrganizationSection(section);
+        window.requestAnimationFrame(() => {
+          const heading = host.querySelector('.organization-section-stack h3');
+          if (heading) {
+            heading.setAttribute('tabindex', '-1');
+            heading.focus({ preventScroll: true });
+          }
+        });
+      });
+    }
+
+    function handleAdminGateCapture(event) {
+      const button = event.target.closest('.church-workspace-primary-nav > button');
       if (!button || !shell?.contains(button)) return;
 
       const section = normalizeSectionLabel(button.textContent);
-      if (section !== 'pulse') {
-        if (pulseUnlockedRef.current) {
-          pulseUnlockedRef.current = false;
-          setPulseUnlocked(false);
-        }
-        return;
-      }
-
-      if (pulseUnlockedRef.current) return;
+      if (section !== 'admin') return;
+      if (adminUnlockedRef.current) return;
 
       event.preventDefault();
       event.stopPropagation();
       if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
 
-      pendingPulseButtonRef.current = [...shell.querySelectorAll('.church-workspace-primary-nav > button')]
-        .find((candidate) => normalizeSectionLabel(candidate.textContent) === 'pulse') || button;
-      setPulseEntry('');
-      setPulseError('');
-      setPulseAdminMessage('');
-      setShowPulseGate(true);
-    }
-
-    function handlePrimaryNavigation(event) {
-      const button = event.target.closest('.church-workspace-primary-nav > button');
-      if (!button || !shell?.contains(button)) return;
-      syncOrganizationSection(normalizeSectionLabel(button.textContent));
+      pendingAdminButtonRef.current = button;
+      setAdminEntry('');
+      setAdminError('');
+      setAdminMessage('');
+      setShowAdminGate(true);
     }
 
     function handleHostClick(event) {
@@ -411,30 +432,32 @@ export default function OrganizationHubMinistryBridge({
 
       const ministrySummary = event.target.closest('.organization-ministry-summary');
       if (ministrySummary && host.contains(ministrySummary)) {
-        // React creates the expanded details after this click. A short finite scan
-        // catches the newly mounted action row without leaving a permanent observer.
         scheduleEnhancement('ministries');
       }
     }
 
-    shell?.addEventListener('click', handlePulseGateCapture, true);
-    shell?.addEventListener('click', handlePrimaryNavigation);
+    shell?.addEventListener('click', handleAdminGateCapture, true);
     host.addEventListener('click', handleHostClick);
 
-    const activeButton = shell?.querySelector('.church-workspace-primary-nav > button.is-active');
-    syncOrganizationSection(normalizeSectionLabel(activeButton?.textContent));
+    if (activeSection === 'admin' && adminUnlockedRef.current) {
+      setAdminActive(true);
+      syncAdminSection(adminSection);
+    } else {
+      setAdminActive(false);
+      syncOrganizationSection(activeSection);
+    }
 
     return () => {
       window.cancelAnimationFrame(syncFrame);
+      window.cancelAnimationFrame(adminFrame);
       window.cancelAnimationFrame(ministryFrame);
       window.clearTimeout(ministryTimer);
       window.cancelAnimationFrame(groupFrame);
       window.clearTimeout(groupTimer);
-      shell?.removeEventListener('click', handlePulseGateCapture, true);
-      shell?.removeEventListener('click', handlePrimaryNavigation);
+      shell?.removeEventListener('click', handleAdminGateCapture, true);
       host.removeEventListener('click', handleHostClick);
     };
-  }, [workspace, onOpenGroup]);
+  }, [workspace, onOpenGroup, activeSection, adminSection]);
 
   function verifyMinistryEntry(event) {
     event.preventDefault();
@@ -458,61 +481,57 @@ export default function OrganizationHubMinistryBridge({
     onOpenMinistry?.(activeMinistry.id);
   }
 
-  function verifyPulseAccess(event) {
+  function verifyAdminAccess(event) {
     event.preventDefault();
-    if (normalizeAccessCode(pulseEntry) !== normalizeAccessCode(pulseCode)) {
-      setPulseError(
-        'That code does not match the current Church Pulse code. Ask a church administrator for the latest code.',
-      );
+    if (normalizeAccessCode(adminEntry) !== normalizeAccessCode(adminCode)) {
+      setAdminError('That code does not match the current Admin code. Ask the organization administrator for the latest code.');
       return;
     }
 
-    pulseUnlockedRef.current = true;
-    setPulseUnlocked(true);
-    setPulseError('');
-    setShowPulseGate(false);
+    adminUnlockedRef.current = true;
+    setAdminUnlocked(true);
+    setAdminError('');
+    setShowAdminGate(false);
 
-    const pulseButton = pendingPulseButtonRef.current;
-    pendingPulseButtonRef.current = null;
-    window.requestAnimationFrame(() => pulseButton?.click());
+    const adminButton = pendingAdminButtonRef.current;
+    pendingAdminButtonRef.current = null;
+    window.requestAnimationFrame(() => adminButton?.click());
   }
 
-  async function copyPulseCode() {
+  async function copyAdminCode() {
     try {
-      await navigator.clipboard.writeText(pulseCode);
-      setPulseAdminMessage(`Code ${pulseCode} copied.`);
+      await navigator.clipboard.writeText(adminCode);
+      setAdminMessage(`Code ${adminCode} copied.`);
     } catch (error) {
-      console.warn('Church Pulse code copy failed.', error);
-      setPulseAdminMessage(`Current code: ${pulseCode}`);
+      console.warn('Church Admin code copy failed.', error);
+      setAdminMessage(`Current code: ${adminCode}`);
     }
   }
 
-  function rotatePulseCode() {
+  function rotateAdminCode() {
     if (!isOrganizationManager) return;
 
-    const nextCode = generatePulseAccessCode();
+    const nextCode = generateAdminAccessCode();
     try {
-      window.localStorage.setItem(getPulseCodeStorageKey(organization?.id), nextCode);
+      window.localStorage.setItem(getAdminCodeStorageKey(organization?.id), nextCode);
     } catch (error) {
-      console.warn('Ekklesia Pulse could not save the rotated Church Pulse code.', error);
+      console.warn('Ekklesia Pulse could not save the rotated Admin code.', error);
     }
 
-    pulseUnlockedRef.current = false;
-    setPulseUnlocked(false);
-    setPulseCode(nextCode);
-    setPulseEntry('');
-    setPulseError('');
-    setPulseAdminMessage(
-      'A new Church Pulse code was created. The previous code no longer opens Pulse on this device.',
-    );
+    adminUnlockedRef.current = false;
+    setAdminUnlocked(false);
+    setAdminCode(nextCode);
+    setAdminEntry('');
+    setAdminError('');
+    setAdminMessage('A new Admin code was created. The previous code no longer opens Admin on this device.');
   }
 
-  function closePulseGate() {
-    pendingPulseButtonRef.current = null;
-    setShowPulseGate(false);
-    setPulseEntry('');
-    setPulseError('');
-    setPulseAdminMessage('');
+  function closeAdminGate() {
+    pendingAdminButtonRef.current = null;
+    setShowAdminGate(false);
+    setAdminEntry('');
+    setAdminError('');
+    setAdminMessage('');
   }
 
   function navigateUnifiedApp(section) {
@@ -525,6 +544,32 @@ export default function OrganizationHubMinistryBridge({
   return (
     <>
       <div ref={hostRef} className="organization-hub-ministry-bridge">
+        {adminActive ? (
+          <section className="organization-admin-shell" aria-label="Church administration">
+            <div className="organization-admin-heading">
+              <p className="dashboard-eyebrow">Church administration</p>
+              <h3>Manage people and church-wide rhythm.</h3>
+              <p>People controls and the Church Pulse are kept together inside this protected area.</p>
+            </div>
+            <nav className="organization-admin-subnav" aria-label="Admin sections">
+              {[
+                ['people', 'People'],
+                ['pulse', 'Pulse'],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={adminSection === id ? 'is-active' : ''}
+                  aria-current={adminSection === id ? 'page' : undefined}
+                  onClick={() => setAdminSection(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+          </section>
+        ) : null}
+
         <OrganizationHub organization={organization} {...props} />
       </div>
 
@@ -573,37 +618,37 @@ export default function OrganizationHubMinistryBridge({
             />
           ) : null}
 
-          {showPulseGate ? (
+          {showAdminGate ? (
             <CodeAccessDialog
-              eyebrow="Restricted church insight"
-              title="Enter the Church Pulse code"
-              description={`Pulse contains organization-wide rhythm and care signals for ${organization?.name || 'this church'}. The tab is visible to everyone, but its content opens only with the separate code provided by a church administrator.`}
-              label="Church Pulse code"
-              placeholder="Enter Pulse code"
-              entry={pulseEntry}
-              error={pulseError}
-              submitLabel="Open Pulse"
+              eyebrow="Restricted church administration"
+              title="Enter the Admin access code"
+              description={`Admin contains people and role management plus church-wide Pulse insights for ${organization?.name || 'this church'}. Enter the separate code provided by the organization administrator.`}
+              label="Admin code"
+              placeholder="Enter Admin code"
+              entry={adminEntry}
+              error={adminError}
+              submitLabel="Open Admin"
               onEntryChange={(value) => {
-                setPulseEntry(value);
-                setPulseError('');
+                setAdminEntry(value);
+                setAdminError('');
               }}
-              onSubmit={verifyPulseAccess}
-              onClose={closePulseGate}
+              onSubmit={verifyAdminAccess}
+              onClose={closeAdminGate}
             >
               {isOrganizationManager ? (
-                <aside className="pulse-access-admin" aria-label="Church Pulse administrator controls">
+                <aside className="pulse-access-admin" aria-label="Church administrator access controls">
                   <div>
                     <p className="dashboard-eyebrow">Administrator only</p>
-                    <strong>Church Pulse access code</strong>
-                    <small>Share this only with people approved to view church-wide rhythm signals.</small>
+                    <strong>Church Admin access code</strong>
+                    <small>Share this only with people approved to manage members or view church-wide rhythm signals.</small>
                   </div>
-                  <code>{pulseCode}</code>
+                  <code>{adminCode}</code>
                   <div className="pulse-access-admin-actions">
-                    <button type="button" onClick={copyPulseCode}>Copy</button>
-                    <button type="button" onClick={rotatePulseCode}>Rotate</button>
+                    <button type="button" onClick={copyAdminCode}>Copy</button>
+                    <button type="button" onClick={rotateAdminCode}>Rotate</button>
                   </div>
-                  {pulseAdminMessage ? (
-                    <p className="pulse-access-admin-message" role="status">{pulseAdminMessage}</p>
+                  {adminMessage ? (
+                    <p className="pulse-access-admin-message" role="status">{adminMessage}</p>
                   ) : null}
                 </aside>
               ) : null}
