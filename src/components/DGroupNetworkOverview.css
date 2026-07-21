@@ -21,7 +21,15 @@
 
 .dgroup-network-overview-copy {
   margin: 0;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+}
+
+.dgroup-network-overview-copy::after {
+  display: block;
   color: rgba(244, 245, 239, 0.65);
+  content: "The Mighty Network is inspired by David’s mighty men—a brotherhood known for courage, loyalty, and shared mission. It is led by Justine Earl Conol, our Youth Pastor.";
   font-size: 0.82rem;
   line-height: 1.72;
 }
