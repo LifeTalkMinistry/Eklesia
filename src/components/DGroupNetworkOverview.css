@@ -30,12 +30,31 @@
   display: none;
 }
 
+/* Keep the page focused on the network itself. The personal-placement card
+   stays in prototype data but is intentionally removed from this view. */
+.dgroup-network-panel > .dgroup-collapsible-section:nth-of-type(2) {
+  display: none;
+}
+
 .dgroup-network-overview .dgroup-network-inline-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
   margin-top: 1px;
 }
 
 .dgroup-network-overview .dgroup-network-inline-stats span {
+  min-width: 0;
+  padding: 12px 5px;
   background: rgba(2, 10, 6, 0.28);
+}
+
+.dgroup-network-overview .dgroup-network-inline-stats strong {
+  font-size: clamp(1.2rem, 5vw, 1.55rem);
+}
+
+.dgroup-network-overview .dgroup-network-inline-stats small {
+  font-size: clamp(0.48rem, 2vw, 0.6rem);
+  line-height: 1.2;
 }
 
 @media (max-width: 420px) {
@@ -46,5 +65,9 @@
 
   .dgroup-network-overview h2 {
     font-size: clamp(1.9rem, 10vw, 2.6rem);
+  }
+
+  .dgroup-network-overview .dgroup-network-inline-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
