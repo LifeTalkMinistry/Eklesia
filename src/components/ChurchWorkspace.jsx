@@ -14,7 +14,7 @@ import './TogetherWorkspace.css';
 const CHURCH_SECTIONS = [
   ['home', 'Home'],
   ['ministries', 'Ministries'],
-  ['groups', 'Groups'],
+  ['groups', 'D-Groups'],
   ['privacy', 'Privacy'],
   ['admin', 'Admin'],
 ];
