@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import DGroupNetworkPanel from './DGroupNetworkPanel.jsx';
 import OrganizationHub from './OrganizationHub.jsx';
 import './PulseAccessGate.css';
 
@@ -35,14 +36,12 @@ function restoreAdminAccessCode(organizationId) {
     const stored = normalizeAccessCode(window.localStorage.getItem(storageKey));
     if (stored) return stored;
 
-    const legacyCode = normalizeAccessCode(
-      window.localStorage.getItem(getLegacyPulseCodeStorageKey(organizationId)),
-    );
-    const initialCode = legacyCode || 'ADMIN1';
+    const legacy = normalizeAccessCode(window.localStorage.getItem(getLegacyPulseCodeStorageKey(organizationId)));
+    const initialCode = legacy || 'ADMIN1';
     window.localStorage.setItem(storageKey, initialCode);
     return initialCode;
   } catch (error) {
-    console.warn('Ekklesia Pulse could not restore the church Admin access code.', error);
+    console.warn('Ekklesia Pulse could not restore the Church Admin access code.', error);
     return 'ADMIN1';
   }
 }
@@ -68,16 +67,8 @@ function CodeAccessDialog({
   }, []);
 
   return (
-    <div
-      className="pulse-access-backdrop"
-      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
-    >
-      <section
-        className="pulse-access-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="workspace-code-access-title"
-      >
+    <div className="pulse-access-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section className="pulse-access-dialog" role="dialog" aria-modal="true" aria-labelledby="workspace-code-access-title">
         <div className="pulse-access-heading">
           <div>
             <p className="dashboard-eyebrow">{eyebrow}</p>
@@ -85,9 +76,7 @@ function CodeAccessDialog({
           </div>
           <button type="button" onClick={onClose} aria-label="Close access-code dialog">×</button>
         </div>
-
         <p className="pulse-access-copy">{description}</p>
-
         <form className="pulse-access-form" onSubmit={onSubmit}>
           <label htmlFor="workspace-access-code">{label}</label>
           <input
@@ -107,7 +96,6 @@ function CodeAccessDialog({
             <button className="primary-button" type="submit" disabled={!entry}>{submitLabel}</button>
           </div>
         </form>
-
         {children}
       </section>
     </div>
@@ -121,15 +109,14 @@ export default function OrganizationHubMinistryBridge({
   onOpenGroup,
   onNavigateApp,
   organization,
+  profile,
   ...props
 }) {
   const hostRef = useRef(null);
   const adminUnlockedRef = useRef(false);
   const pendingAdminButtonRef = useRef(null);
-
   const [adminCode, setAdminCode] = useState(() => restoreAdminAccessCode(organization?.id));
   const [adminUnlocked, setAdminUnlocked] = useState(false);
-  const [adminActive, setAdminActive] = useState(false);
   const [adminSection, setAdminSection] = useState('people');
   const [showAdminGate, setShowAdminGate] = useState(false);
   const [adminEntry, setAdminEntry] = useState('');
@@ -139,12 +126,13 @@ export default function OrganizationHubMinistryBridge({
 
   const currentRole = workspace?.currentMember?.organizationRole || 'Church Member';
   const isOrganizationManager = ['Organization Owner', 'Organization Admin'].includes(currentRole);
-  const activeMinistry = (workspace?.ministries || [])
-    .find((ministry) => ministry.id === ministryEntry.ministryId) || null;
+  const activeMinistry = (workspace?.ministries || []).find((ministry) => ministry.id === ministryEntry.ministryId) || null;
   const joinedGroupIds = new Set(workspace?.currentMember?.groupIds || []);
   const connectedJoinedGroup = activeMinistry
     ? (workspace?.groups || []).find((group) => (
-      group.connectedMinistryId === activeMinistry.id && joinedGroupIds.has(group.id)
+      group.groupType !== 'dgroup'
+      && group.connectedMinistryId === activeMinistry.id
+      && joinedGroupIds.has(group.id)
     )) || null
     : null;
 
@@ -153,13 +141,18 @@ export default function OrganizationHubMinistryBridge({
     setAdminCode(nextCode);
     setAdminUnlocked(false);
     adminUnlockedRef.current = false;
-    setAdminActive(false);
     setAdminSection('people');
     setShowAdminGate(false);
     setAdminEntry('');
     setAdminError('');
     setAdminMessage('');
     setMinistryEntry({ ministryId: '', code: '', error: '' });
+
+    try {
+      window.localStorage.removeItem(getLegacyViewStorageKey(organization?.id));
+    } catch (error) {
+      console.warn('Ekklesia Pulse could not clear the retired beta-view preference.', error);
+    }
   }, [organization?.id]);
 
   useEffect(() => {
@@ -170,7 +163,6 @@ export default function OrganizationHubMinistryBridge({
     if (activeSection === 'admin') return;
     adminUnlockedRef.current = false;
     setAdminUnlocked(false);
-    setAdminActive(false);
   }, [activeSection]);
 
   useEffect(() => {
@@ -190,59 +182,18 @@ export default function OrganizationHubMinistryBridge({
   }, [showAdminGate, ministryEntry.ministryId]);
 
   useEffect(() => {
-    const root = document.documentElement;
-    delete root.dataset.ekklesiaDemoView;
-    delete root.dataset.ekklesiaMemberSection;
-
-    try {
-      window.localStorage.removeItem(getLegacyViewStorageKey(organization?.id));
-    } catch (error) {
-      console.warn('Ekklesia Pulse could not clear the retired beta view preference.', error);
-    }
-
-    function restoreLeaderView() {
-      const shell = document.querySelector('.church-workspace-shell');
-      if (!shell) return;
-
-      shell.querySelectorAll('[data-beta-member-hidden="true"]').forEach((element) => {
-        element.hidden = false;
-        delete element.dataset.betaMemberHidden;
-      });
-
-      shell.querySelectorAll('.church-workspace-primary-nav > button, .organization-section-nav > button')
-        .forEach((button) => {
-          const originalLabel = button.dataset.betaNativeSectionLabel
-            || button.dataset.betaOriginalSectionLabel;
-          if (originalLabel && button.textContent.trim() !== originalLabel) {
-            button.textContent = originalLabel;
-          }
-          button.hidden = false;
-          delete button.dataset.betaMemberHidden;
-          delete button.dataset.betaNativeSectionLabel;
-          delete button.dataset.betaOriginalSectionLabel;
-        });
-
-      shell.querySelectorAll('[data-beta-admin-only="true"]').forEach((element) => {
-        delete element.dataset.betaAdminOnly;
-      });
-    }
-
-    restoreLeaderView();
-    const frame = window.requestAnimationFrame(restoreLeaderView);
-    return () => window.cancelAnimationFrame(frame);
-  }, [organization?.id]);
-
-  useEffect(() => {
     const host = hostRef.current;
     if (!host) return undefined;
-
     const shell = host.closest('.church-workspace-shell');
     let syncFrame = 0;
-    let adminFrame = 0;
     let ministryFrame = 0;
     let ministryTimer = 0;
-    let groupFrame = 0;
-    let groupTimer = 0;
+
+    function clickOrganizationSection(section) {
+      const targetButton = [...host.querySelectorAll('.organization-section-nav button')]
+        .find((button) => normalizeSectionLabel(button.textContent) === section);
+      if (targetButton && !targetButton.classList.contains('is-active')) targetButton.click();
+    }
 
     function enhanceMinistryCards() {
       const joinedIds = new Set(workspace?.currentMember?.ministryIds || []);
@@ -254,19 +205,15 @@ export default function OrganizationHubMinistryBridge({
         if (!ministry || !actions) return;
 
         const existingButton = actions.querySelector('[data-enter-ministry-room]');
-        const cardShowsMembership = Boolean(card.querySelector('.organization-membership-chip'));
-        const joined = joinedIds.has(ministry.id) || cardShowsMembership;
-
+        const joined = joinedIds.has(ministry.id) || Boolean(card.querySelector('.organization-membership-chip'));
         if (!joined) {
           existingButton?.remove();
           return;
         }
 
-        const buttonLabel = 'Enter Ministry Room';
         const ariaLabel = `Enter ${ministry.name} ministry room`;
-
         if (existingButton) {
-          existingButton.textContent = buttonLabel;
+          existingButton.textContent = 'Enter Ministry Room';
           existingButton.dataset.enterMinistryRoom = ministry.id;
           existingButton.setAttribute('aria-label', ariaLabel);
           return;
@@ -276,127 +223,50 @@ export default function OrganizationHubMinistryBridge({
         button.type = 'button';
         button.className = 'organization-enter-ministry-room';
         button.dataset.enterMinistryRoom = ministry.id;
-        button.textContent = buttonLabel;
+        button.textContent = 'Enter Ministry Room';
         button.setAttribute('aria-label', ariaLabel);
         actions.appendChild(button);
       });
     }
 
-    function enhanceGroupCards() {
-      const joinedIds = new Set(workspace?.currentMember?.groupIds || []);
-      const groupCards = [...host.querySelectorAll('.organization-group-card')];
-
-      groupCards.forEach((card, index) => {
-        const group = workspace?.groups?.[index];
-        if (!group) return;
-
-        const existingButton = card.querySelector('[data-open-group-room]');
-        const cardShowsMembership = Boolean(card.querySelector('.organization-membership-chip'));
-        const joined = joinedIds.has(group.id) || cardShowsMembership;
-
-        if (!joined) {
-          existingButton?.remove();
-          return;
-        }
-
-        const buttonLabel = 'Open Group';
-        const ariaLabel = `Open ${group.name} group`;
-
-        if (existingButton) {
-          existingButton.textContent = buttonLabel;
-          existingButton.dataset.openGroupRoom = group.id;
-          existingButton.setAttribute('aria-label', ariaLabel);
-          return;
-        }
-
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'organization-enter-ministry-room organization-open-group-room';
-        button.dataset.openGroupRoom = group.id;
-        button.textContent = buttonLabel;
-        button.setAttribute('aria-label', ariaLabel);
-
-        const codeControls = card.querySelector('.organization-group-code-controls');
-        if (codeControls) card.insertBefore(button, codeControls);
-        else card.appendChild(button);
-      });
-    }
-
-    function scheduleEnhancement(kind) {
-      const isMinistry = kind === 'ministries';
-      const runEnhancement = isMinistry ? enhanceMinistryCards : enhanceGroupCards;
-
-      if (isMinistry) {
-        window.cancelAnimationFrame(ministryFrame);
-        window.clearTimeout(ministryTimer);
-      } else {
-        window.cancelAnimationFrame(groupFrame);
-        window.clearTimeout(groupTimer);
-      }
-
+    function scheduleMinistryEnhancement() {
+      window.cancelAnimationFrame(ministryFrame);
+      window.clearTimeout(ministryTimer);
       let attempt = 0;
-      const maximumAttempts = isMinistry ? 10 : 6;
 
       function run() {
-        const frame = window.requestAnimationFrame(() => {
-          runEnhancement();
+        ministryFrame = window.requestAnimationFrame(() => {
+          enhanceMinistryCards();
           attempt += 1;
-          if (attempt < maximumAttempts) {
-            const timer = window.setTimeout(run, 45);
-            if (isMinistry) ministryTimer = timer;
-            else groupTimer = timer;
-          }
+          if (attempt < 10) ministryTimer = window.setTimeout(run, 45);
         });
-
-        if (isMinistry) ministryFrame = frame;
-        else groupFrame = frame;
       }
 
       run();
     }
 
-    function clickOrganizationSection(section) {
-      const targetButton = [...host.querySelectorAll('.organization-section-nav button')]
-        .find((button) => normalizeSectionLabel(button.textContent) === section);
-      if (targetButton && !targetButton.classList.contains('is-active')) targetButton.click();
-    }
-
-    function syncOrganizationSection(section) {
-      if (!section || section === 'home' || section === 'admin') return;
-
+    function syncVisibleSection() {
       window.cancelAnimationFrame(syncFrame);
       syncFrame = window.requestAnimationFrame(() => {
-        clickOrganizationSection(section);
-        if (section === 'ministries' || section === 'groups') scheduleEnhancement(section);
-      });
-    }
-
-    function syncAdminSection(section) {
-      window.cancelAnimationFrame(adminFrame);
-      adminFrame = window.requestAnimationFrame(() => {
-        clickOrganizationSection(section);
-        window.requestAnimationFrame(() => {
-          const heading = host.querySelector('.organization-section-stack h3');
-          if (heading) {
-            heading.setAttribute('tabindex', '-1');
-            heading.focus({ preventScroll: true });
-          }
-        });
+        if (activeSection === 'admin' && adminUnlockedRef.current) {
+          clickOrganizationSection(adminSection);
+          return;
+        }
+        if (activeSection === 'ministries' || activeSection === 'privacy') {
+          clickOrganizationSection(activeSection);
+          if (activeSection === 'ministries') scheduleMinistryEnhancement();
+        }
       });
     }
 
     function handleAdminGateCapture(event) {
       const button = event.target.closest('.church-workspace-primary-nav > button');
       if (!button || !shell?.contains(button)) return;
-
-      const section = normalizeSectionLabel(button.textContent);
-      if (section !== 'admin') return;
-      if (adminUnlockedRef.current) return;
+      if (normalizeSectionLabel(button.textContent) !== 'admin' || adminUnlockedRef.current) return;
 
       event.preventDefault();
       event.stopPropagation();
       if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
-
       pendingAdminButtonRef.current = button;
       setAdminEntry('');
       setAdminError('');
@@ -414,50 +284,22 @@ export default function OrganizationHubMinistryBridge({
         return;
       }
 
-      const groupRoomButton = event.target.closest('[data-open-group-room]');
-      if (groupRoomButton && host.contains(groupRoomButton)) {
-        event.preventDefault();
-        event.stopPropagation();
-        const groupId = groupRoomButton.dataset.openGroupRoom;
-        if (groupId) onOpenGroup?.(groupId);
-        return;
-      }
-
-      const sectionButton = event.target.closest('.organization-section-nav > button');
-      if (sectionButton && host.contains(sectionButton)) {
-        const section = normalizeSectionLabel(sectionButton.textContent);
-        if (section === 'ministries' || section === 'groups') scheduleEnhancement(section);
-        return;
-      }
-
       const ministrySummary = event.target.closest('.organization-ministry-summary');
-      if (ministrySummary && host.contains(ministrySummary)) {
-        scheduleEnhancement('ministries');
-      }
+      if (ministrySummary && host.contains(ministrySummary)) scheduleMinistryEnhancement();
     }
 
     shell?.addEventListener('click', handleAdminGateCapture, true);
     host.addEventListener('click', handleHostClick);
-
-    if (activeSection === 'admin' && adminUnlockedRef.current) {
-      setAdminActive(true);
-      syncAdminSection(adminSection);
-    } else {
-      setAdminActive(false);
-      syncOrganizationSection(activeSection);
-    }
+    syncVisibleSection();
 
     return () => {
       window.cancelAnimationFrame(syncFrame);
-      window.cancelAnimationFrame(adminFrame);
       window.cancelAnimationFrame(ministryFrame);
       window.clearTimeout(ministryTimer);
-      window.cancelAnimationFrame(groupFrame);
-      window.clearTimeout(groupTimer);
       shell?.removeEventListener('click', handleAdminGateCapture, true);
       host.removeEventListener('click', handleHostClick);
     };
-  }, [workspace, onOpenGroup, activeSection, adminSection]);
+  }, [workspace, activeSection, adminSection]);
 
   function verifyMinistryEntry(event) {
     event.preventDefault();
@@ -472,12 +314,10 @@ export default function OrganizationHubMinistryBridge({
     }
 
     setMinistryEntry({ ministryId: '', code: '', error: '' });
-
     if (connectedJoinedGroup) {
       onOpenGroup?.(connectedJoinedGroup.id);
       return;
     }
-
     onOpenMinistry?.(activeMinistry.id);
   }
 
@@ -492,7 +332,6 @@ export default function OrganizationHubMinistryBridge({
     setAdminUnlocked(true);
     setAdminError('');
     setShowAdminGate(false);
-
     const adminButton = pendingAdminButtonRef.current;
     pendingAdminButtonRef.current = null;
     window.requestAnimationFrame(() => adminButton?.click());
@@ -510,14 +349,12 @@ export default function OrganizationHubMinistryBridge({
 
   function rotateAdminCode() {
     if (!isOrganizationManager) return;
-
     const nextCode = generateAdminAccessCode();
     try {
       window.localStorage.setItem(getAdminCodeStorageKey(organization?.id), nextCode);
     } catch (error) {
       console.warn('Ekklesia Pulse could not save the rotated Admin code.', error);
     }
-
     adminUnlockedRef.current = false;
     setAdminUnlocked(false);
     setAdminCode(nextCode);
@@ -540,10 +377,21 @@ export default function OrganizationHubMinistryBridge({
   }
 
   const portalTarget = typeof document !== 'undefined' ? document.body : null;
+  const adminActive = activeSection === 'admin' && adminUnlocked;
+  const showDGroups = activeSection === 'groups';
 
   return (
     <>
       <div ref={hostRef} className="organization-hub-ministry-bridge">
+        {showDGroups ? (
+          <DGroupNetworkPanel
+            organization={organization}
+            workspace={workspace}
+            profile={profile}
+            onOpenGroup={onOpenGroup}
+          />
+        ) : null}
+
         {adminActive ? (
           <section className="organization-admin-shell" aria-label="Church administration">
             <div className="organization-admin-heading">
@@ -570,7 +418,9 @@ export default function OrganizationHubMinistryBridge({
           </section>
         ) : null}
 
-        <OrganizationHub organization={organization} {...props} />
+        <div hidden={showDGroups}>
+          <OrganizationHub organization={organization} profile={profile} {...props} />
+        </div>
       </div>
 
       {portalTarget ? createPortal(
@@ -608,11 +458,7 @@ export default function OrganizationHubMinistryBridge({
               entry={ministryEntry.code}
               error={ministryEntry.error}
               submitLabel={connectedJoinedGroup ? 'Open Group' : 'Open Ministry Room'}
-              onEntryChange={(value) => setMinistryEntry((current) => ({
-                ...current,
-                code: value,
-                error: '',
-              }))}
+              onEntryChange={(value) => setMinistryEntry((current) => ({ ...current, code: value, error: '' }))}
               onSubmit={verifyMinistryEntry}
               onClose={() => setMinistryEntry({ ministryId: '', code: '', error: '' })}
             />
@@ -621,9 +467,9 @@ export default function OrganizationHubMinistryBridge({
           {showAdminGate ? (
             <CodeAccessDialog
               eyebrow="Restricted church administration"
-              title="Enter the Admin access code"
-              description={`Admin contains people and role management plus church-wide Pulse insights for ${organization?.name || 'this church'}. Enter the separate code provided by the organization administrator.`}
-              label="Admin code"
+              title="Enter the Church Admin code"
+              description={`Admin contains organization people controls and church-wide Pulse insights for ${organization?.name || 'this church'}.`}
+              label="Church Admin code"
               placeholder="Enter Admin code"
               entry={adminEntry}
               error={adminError}
@@ -636,25 +482,21 @@ export default function OrganizationHubMinistryBridge({
               onClose={closeAdminGate}
             >
               {isOrganizationManager ? (
-                <aside className="pulse-access-admin" aria-label="Church administrator access controls">
+                <aside className="pulse-access-admin" aria-label="Church Admin access controls">
                   <div>
                     <p className="dashboard-eyebrow">Administrator only</p>
                     <strong>Church Admin access code</strong>
-                    <small>Share this only with people approved to manage members or view church-wide rhythm signals.</small>
+                    <small>Share this only with people approved to manage organization members and Pulse data.</small>
                   </div>
                   <code>{adminCode}</code>
                   <div className="pulse-access-admin-actions">
                     <button type="button" onClick={copyAdminCode}>Copy</button>
                     <button type="button" onClick={rotateAdminCode}>Rotate</button>
                   </div>
-                  {adminMessage ? (
-                    <p className="pulse-access-admin-message" role="status">{adminMessage}</p>
-                  ) : null}
+                  {adminMessage ? <p className="pulse-access-admin-message" role="status">{adminMessage}</p> : null}
                 </aside>
               ) : null}
-              <p className="pulse-access-prototype-note">
-                Local prototype note: this code is stored on this device and is not production-grade security.
-              </p>
+              <p className="pulse-access-prototype-note">Local prototype note: this code is stored on this device and is not production-grade security.</p>
             </CodeAccessDialog>
           ) : null}
         </>,
