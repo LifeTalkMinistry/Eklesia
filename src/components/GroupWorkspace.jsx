@@ -10,6 +10,12 @@ const GROUP_SECTIONS = [
   ['about', 'About'],
 ];
 
+const MEMBER_HISTORY_RANGES = [
+  ['week', 'This Week'],
+  ['four-weeks', '4 Weeks'],
+  ['three-months', '3 Months'],
+];
+
 const WEEKDAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const WEEKDAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const WEEKDAY_INDEX = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
@@ -22,14 +28,75 @@ function getTodayIndex() {
   return WEEKDAY_INDEX[weekday] ?? 0;
 }
 
+function normalizeSharedWeek(value) {
+  if (!Array.isArray(value)) return Array(7).fill(false);
+  return Array.from({ length: 7 }, (_, index) => Boolean(value[index]));
+}
+
 function getMemberWeek(member, todayIndex) {
   if (Array.isArray(member.weeklyCheckIns)) {
-    return Array.from({ length: 7 }, (_, index) => Boolean(member.weeklyCheckIns[index]));
+    return normalizeSharedWeek(member.weeklyCheckIns);
   }
   return Array.from(
     { length: 7 },
     (_, index) => index === todayIndex && Boolean(member.devotionCompletedWithin24Hours),
   );
+}
+
+function getSharedWeeklyHistory(member) {
+  const source = Array.isArray(member.sharedWeeklyHistory) ? member.sharedWeeklyHistory : [];
+  return Array.from({ length: 3 }, (_, index) => {
+    const entry = source[index];
+    const rawCheckIns = Array.isArray(entry) ? entry : entry?.checkIns;
+    const available = Array.isArray(rawCheckIns);
+    const checkIns = normalizeSharedWeek(rawCheckIns);
+    return {
+      id: `previous-week-${index + 1}`,
+      label: typeof entry?.label === 'string' && entry.label.trim()
+        ? entry.label.trim()
+        : `${index + 1} week${index ? 's' : ''} ago`,
+      checkIns,
+      completedCount: available ? checkIns.filter(Boolean).length : 0,
+      trackedDays: available ? 7 : 0,
+      available,
+    };
+  });
+}
+
+function getSharedMonthlyHistory(member) {
+  const source = Array.isArray(member.sharedMonthlyHistory) ? member.sharedMonthlyHistory : [];
+  const defaultLabels = ['This month', 'Previous month', 'Two months ago'];
+  return Array.from({ length: 3 }, (_, index) => {
+    const entry = source[index];
+    const completedDays = Number(entry?.completedDays);
+    const trackedDays = Number(entry?.trackedDays);
+    const available = Number.isFinite(completedDays)
+      && Number.isFinite(trackedDays)
+      && trackedDays > 0
+      && completedDays >= 0;
+    return {
+      id: `shared-month-${index}`,
+      label: typeof entry?.label === 'string' && entry.label.trim()
+        ? entry.label.trim()
+        : defaultLabels[index],
+      completedDays: available ? Math.min(completedDays, trackedDays) : 0,
+      trackedDays: available ? trackedDays : 0,
+      available,
+    };
+  });
+}
+
+function getThreeMonthTrend(months) {
+  const available = months.filter((month) => month.available);
+  if (available.length < 2) return 'Not enough shared history yet';
+
+  const newest = available[0].completedDays / available[0].trackedDays;
+  const oldest = available[available.length - 1].completedDays / available[available.length - 1].trackedDays;
+  const difference = newest - oldest;
+
+  if (difference >= 0.08) return 'Becoming more consistent';
+  if (difference <= -0.08) return 'Recently less active';
+  return 'Generally steady';
 }
 
 function getCurrentStreak(checkIns, todayIndex) {
@@ -70,22 +137,30 @@ function getRhythmLabel(member, elapsedDays) {
   return `${member.completedCount} completed ${member.completedCount === 1 ? 'day' : 'days'}`;
 }
 
-function WeeklyRhythm({ member, todayIndex, accessible = false }) {
+function WeeklyRhythm({
+  member,
+  todayIndex,
+  accessible = false,
+  checkIns = member.checkIns,
+  markFuture = true,
+  unavailable = false,
+  instanceId = 'current',
+}) {
   return (
     <div
-      className="daily-rhythm-week"
+      className={`daily-rhythm-week ${unavailable ? 'is-unavailable' : ''}`}
       aria-label={accessible ? `${member.name}'s shared weekly devotion rhythm` : undefined}
       aria-hidden={accessible ? undefined : 'true'}
     >
       {WEEKDAY_LABELS.map((label, dayIndex) => {
-        const future = dayIndex > todayIndex;
-        const completed = !future && member.checkIns[dayIndex];
-        const today = dayIndex === todayIndex;
-        const status = future ? 'upcoming' : completed ? 'completed' : 'not completed';
+        const future = markFuture && dayIndex > todayIndex;
+        const completed = !unavailable && !future && Boolean(checkIns?.[dayIndex]);
+        const today = markFuture && dayIndex === todayIndex;
+        const status = unavailable ? 'not shared' : future ? 'upcoming' : completed ? 'completed' : 'not completed';
         return (
-          <div className="daily-rhythm-day" key={`${member.id}-${dayIndex}`}>
+          <div className="daily-rhythm-day" key={`${member.id}-${instanceId}-${dayIndex}`}>
             <span
-              className={`daily-rhythm-circle ${completed ? 'is-complete' : ''} ${today ? 'is-today' : ''} ${future ? 'is-future' : ''}`}
+              className={`daily-rhythm-circle ${completed ? 'is-complete' : ''} ${today ? 'is-today' : ''} ${future ? 'is-future' : ''} ${unavailable ? 'is-unavailable' : ''}`}
               aria-label={accessible ? `${WEEKDAY_NAMES[dayIndex]}: ${status}` : undefined}
               aria-current={accessible && today ? 'date' : undefined}
             >
@@ -99,7 +174,106 @@ function WeeklyRhythm({ member, todayIndex, accessible = false }) {
   );
 }
 
+function FourWeekHistory({ member, elapsedDays, todayIndex }) {
+  const previousWeeks = getSharedWeeklyHistory(member);
+  const weeks = [
+    {
+      id: 'current-week',
+      label: 'This week',
+      checkIns: member.checkIns,
+      completedCount: member.completedCount,
+      trackedDays: elapsedDays,
+      available: true,
+      current: true,
+    },
+    ...previousWeeks,
+  ];
+  const availableWeeks = weeks.filter((week) => week.available);
+  const completedDays = availableWeeks.reduce((total, week) => total + week.completedCount, 0);
+  const trackedDays = availableWeeks.reduce((total, week) => total + week.trackedDays, 0);
+
+  return (
+    <section className="group-member-history-panel" aria-labelledby="group-member-four-week-heading">
+      <div className="group-workspace-section-heading">
+        <div>
+          <p className="dashboard-eyebrow">Shared weekly signals</p>
+          <h4 id="group-member-four-week-heading">Last 4 weeks</h4>
+        </div>
+        <strong>{completedDays} of {trackedDays || elapsedDays}</strong>
+      </div>
+      <p className="group-member-history-intro">
+        Only completed-day signals voluntarily shared with this group are shown.
+      </p>
+      <div className="group-member-week-history-list">
+        {weeks.map((week) => (
+          <article className={`group-member-week-history-row ${week.available ? '' : 'is-unavailable'}`} key={week.id}>
+            <div className="group-member-history-row-heading">
+              <strong>{week.label}</strong>
+              <span>{week.available ? `${week.completedCount} of ${week.trackedDays}` : 'Not shared'}</span>
+            </div>
+            <WeeklyRhythm
+              member={member}
+              todayIndex={week.current ? todayIndex : 6}
+              checkIns={week.checkIns}
+              markFuture={Boolean(week.current)}
+              unavailable={!week.available}
+              instanceId={week.id}
+            />
+            {!week.available ? <small>No earlier shared signal is available for this week.</small> : null}
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ThreeMonthHistory({ member }) {
+  const months = getSharedMonthlyHistory(member);
+  const trend = getThreeMonthTrend(months);
+  const availableCount = months.filter((month) => month.available).length;
+
+  return (
+    <section className="group-member-history-panel" aria-labelledby="group-member-three-month-heading">
+      <div className="group-workspace-section-heading">
+        <div>
+          <p className="dashboard-eyebrow">Care-focused trend</p>
+          <h4 id="group-member-three-month-heading">Last 3 months</h4>
+        </div>
+        <strong>{availableCount} of 3 shared</strong>
+      </div>
+      <div className="group-member-trend-summary">
+        <span>General trend</span>
+        <strong>{trend}</strong>
+        <small>Based only on shared completion totals—not devotion content.</small>
+      </div>
+      <div className="group-member-month-list">
+        {months.map((month) => {
+          const percentage = month.available
+            ? Math.round((month.completedDays / month.trackedDays) * 100)
+            : 0;
+          return (
+            <article className={month.available ? '' : 'is-unavailable'} key={month.id}>
+              <div>
+                <strong>{month.label}</strong>
+                <span>{month.available ? `${month.completedDays} of ${month.trackedDays} days` : 'No shared summary'}</span>
+              </div>
+              <div className="group-member-month-meter" aria-hidden="true">
+                <span style={{ width: `${percentage}%` }} />
+              </div>
+              <small>{month.available ? `${percentage}% shared rhythm` : 'This period remains unavailable.'}</small>
+            </article>
+          );
+        })}
+      </div>
+      <p className="group-member-history-boundary">
+        Detailed day-by-day history older than four weeks and yearly history remain private to the member.
+      </p>
+    </section>
+  );
+}
+
 function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack, isDGroup }) {
+  const [historyRange, setHistoryRange] = useState('week');
   const backButtonRef = useRef(null);
   const completedToday = Boolean(member.checkIns[todayIndex]);
 
@@ -120,17 +294,38 @@ function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack, isDGroup
           <p>{getRhythmLabel(member, elapsedDays)}</p>
         </div>
       </div>
-      <section className="group-member-week" aria-labelledby="group-member-week-heading">
-        <div className="group-workspace-section-heading">
-          <div><p className="dashboard-eyebrow">Devotional rhythm</p><h4 id="group-member-week-heading">This week</h4></div>
-          <strong>{member.completedCount} of {elapsedDays}</strong>
-        </div>
-        <WeeklyRhythm member={member} todayIndex={todayIndex} accessible />
-      </section>
-      <div className="group-member-stats">
-        <article><span>Current rhythm</span><strong>{member.currentStreak} {member.currentStreak === 1 ? 'day' : 'days'}</strong><small>Based on this week</small></article>
-        <article><span>Today</span><strong>{completedToday ? 'Completed' : 'Not yet'}</strong><small>{member.devotionCheckInLabel || member.status}</small></article>
-      </div>
+      <nav className="group-member-range-tabs" aria-label={`${member.name}'s shared progress range`}>
+        {MEMBER_HISTORY_RANGES.map(([id, label]) => (
+          <button
+            className={historyRange === id ? 'is-active' : ''}
+            type="button"
+            key={id}
+            aria-current={historyRange === id ? 'page' : undefined}
+            onClick={() => setHistoryRange(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+      {historyRange === 'week' ? (
+        <>
+          <section className="group-member-week" aria-labelledby="group-member-week-heading">
+            <div className="group-workspace-section-heading">
+              <div><p className="dashboard-eyebrow">Devotional rhythm</p><h4 id="group-member-week-heading">This week</h4></div>
+              <strong>{member.completedCount} of {elapsedDays}</strong>
+            </div>
+            <WeeklyRhythm member={member} todayIndex={todayIndex} accessible />
+          </section>
+          <div className="group-member-stats">
+            <article><span>Current rhythm</span><strong>{member.currentStreak} {member.currentStreak === 1 ? 'day' : 'days'}</strong><small>Based on this week</small></article>
+            <article><span>Today</span><strong>{completedToday ? 'Completed' : 'Not yet'}</strong><small>{member.devotionCheckInLabel || member.status}</small></article>
+          </div>
+        </>
+      ) : null}
+      {historyRange === 'four-weeks' ? (
+        <FourWeekHistory member={member} elapsedDays={elapsedDays} todayIndex={todayIndex} />
+      ) : null}
+      {historyRange === 'three-months' ? <ThreeMonthHistory member={member} /> : null}
       <section className="group-member-signal">
         <p className="dashboard-eyebrow">General growth signal</p>
         <h4>{member.growthSignal || getRhythmLabel(member, elapsedDays)}</h4>
@@ -138,7 +333,7 @@ function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack, isDGroup
       </section>
       <aside className="group-workspace-privacy-note">
         <strong>Progress summary only</strong>
-        <p>WGAP responses, prayers, reflection text, exact Bible passages, journal entries, and full devotion history remain private.</p>
+        <p>WGAP responses, prayers, reflection text, exact Bible passages, journal entries, and yearly personal history remain private.</p>
       </aside>
     </section>
   );
@@ -216,12 +411,24 @@ export default function GroupWorkspace({ organization, workspace, group, profile
   const memberIds = Array.isArray(group.memberIds) && group.memberIds.length ? new Set(group.memberIds) : null;
 
   const displayMembers = useMemo(() => {
+    const organizationMembersById = new Map((organization.members || []).map((member) => [member.id, member]));
     const members = (workspace.members || [])
       .filter((member) => !memberIds || memberIds.has(member.id))
-      .map((member) => member.id === 'current-member' ? { ...member, name: currentMemberName } : member);
+      .map((member) => {
+        const defaultMember = organizationMembersById.get(member.id) || {};
+        return {
+          ...defaultMember,
+          ...member,
+          name: member.id === 'current-member' ? currentMemberName : member.name,
+          sharedWeeklyHistory: member.sharedWeeklyHistory || defaultMember.sharedWeeklyHistory || [],
+          sharedMonthlyHistory: member.sharedMonthlyHistory || defaultMember.sharedMonthlyHistory || [],
+        };
+      });
     const currentMemberJoined = (workspace.currentMember?.groupIds || []).includes(group.id);
     if (currentMemberJoined && !members.some((member) => member.id === 'current-member')) {
+      const defaultMember = organizationMembersById.get('current-member') || {};
       members.unshift({
+        ...defaultMember,
         id: 'current-member',
         name: currentMemberName,
         status: 'Your current rhythm',
@@ -230,10 +437,12 @@ export default function GroupWorkspace({ organization, workspace, group, profile
         devotionCompletedWithin24Hours: false,
         devotionCheckInLabel: 'No shared signal available yet',
         weeklyCheckIns: [false, false, false, false, false, false, false],
+        sharedWeeklyHistory: defaultMember.sharedWeeklyHistory || [],
+        sharedMonthlyHistory: defaultMember.sharedMonthlyHistory || [],
       });
     }
     return members;
-  }, [workspace.members, workspace.currentMember, group.id, memberIds, currentMemberName]);
+  }, [organization.members, workspace.members, workspace.currentMember, group.id, memberIds, currentMemberName]);
 
   const leaderName = group.leaderId === 'current-member'
     ? currentMemberName
