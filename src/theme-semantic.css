@@ -1,0 +1,70 @@
+/*
+ * Ekklesia Pulse semantic tokens
+ *
+ * Inspired by established design-system architecture:
+ * - functional foreground, background, border, and status roles
+ * - contextual layer tokens for stacked surfaces
+ * - stable role names whose values change with the selected theme
+ */
+
+:root {
+  /* Canvas and foreground roles */
+  --ep-bg-canvas-default: var(--ep-primitive-canvas);
+  --ep-bg-canvas-art: var(--ep-primitive-canvas-art);
+  --ep-bg-canvas-inset: var(--ep-primitive-frame);
+  --ep-bg-canvas-inset-art: var(--ep-primitive-frame-art);
+  --ep-fg-default: var(--ep-primitive-fg-default);
+  --ep-fg-strong: var(--ep-primitive-fg-strong);
+  --ep-fg-muted: var(--ep-primitive-fg-muted);
+  --ep-fg-subtle: var(--ep-primitive-fg-subtle);
+
+  /* Carbon-style contextual layers */
+  --ep-layer-01: var(--ep-primitive-layer-01);
+  --ep-layer-02: var(--ep-primitive-layer-02);
+  --ep-layer-03: var(--ep-primitive-layer-03);
+  --ep-layer-feature: var(--ep-primitive-feature);
+  --ep-layer-feature-secondary: var(--ep-primitive-feature-alt);
+  --ep-layer-dialog: var(--ep-primitive-dialog);
+  --ep-layer-input: var(--ep-primitive-input);
+  --ep-layer-header: var(--ep-primitive-header);
+  --ep-layer-navigation: var(--ep-primitive-navigation);
+  --ep-layer-selected: var(--ep-primitive-nav-selected);
+
+  /* Primer-style functional color roles */
+  --ep-accent-fg: var(--ep-primitive-accent);
+  --ep-accent-secondary-fg: var(--ep-primitive-accent-secondary);
+  --ep-accent-muted: var(--ep-primitive-accent-muted);
+  --ep-accent-secondary-muted: var(--ep-primitive-accent-secondary-muted);
+  --ep-accent-emphasis: var(--ep-primitive-action);
+  --ep-fg-on-emphasis: var(--ep-primitive-on-action);
+  --ep-border-default: var(--ep-primitive-border);
+  --ep-border-emphasis: var(--ep-primitive-border-emphasis);
+  --ep-border-muted: var(--ep-primitive-divider);
+  --ep-focus-outline: var(--ep-primitive-focus);
+
+  /* Status roles */
+  --ep-danger-fg: var(--ep-primitive-danger);
+  --ep-danger-muted: var(--ep-primitive-danger-muted);
+  --ep-success-emphasis: var(--ep-primitive-success);
+  --ep-success-fg-on-emphasis: var(--ep-primitive-on-success);
+  --ep-success-muted: var(--ep-primitive-success-muted);
+  --ep-attention-fg: var(--ep-primitive-attention);
+  --ep-attention-muted: var(--ep-primitive-attention-muted);
+
+  /* Elevation, shape, and browser chrome */
+  --ep-shadow-overlay: var(--ep-primitive-shadow);
+  --ep-shadow-layer: var(--ep-primitive-layer-shadow);
+  --ep-scrollbar-track: var(--ep-primitive-scroll-track);
+  --ep-scrollbar-thumb: var(--ep-primitive-scroll-thumb);
+  --ep-radius-frame: var(--ep-primitive-radius-frame);
+  --ep-radius-layer: var(--ep-primitive-radius-layer);
+  --ep-radius-nested: var(--ep-primitive-radius-nested);
+  --ep-radius-control: var(--ep-primitive-radius-control);
+  --ep-radius-pill: 999px;
+  --ep-navigation-selected-fg: var(--ep-primitive-nav-selected-fg);
+
+  /* Motion roles */
+  --ep-duration-fast: 160ms;
+  --ep-duration-normal: 220ms;
+  --ep-easing-standard: ease;
+}
