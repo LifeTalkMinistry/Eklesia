@@ -34,7 +34,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* Light theme: keep each member rhythm visually distinct inside the list. */
+/* Light theme: keep each member rhythm visibly distinct inside the list. */
 :root[data-ui-theme="light"] .group-rhythm-card .daily-checkin-list {
   background: var(--ep-component-card-bg);
 }
@@ -47,15 +47,17 @@
 :root[data-ui-theme="light"] .group-rhythm-card .daily-rhythm-row:not(:last-child)::after {
   content: "";
   position: absolute;
-  right: 16px;
+  right: 14px;
   bottom: 0;
-  left: 16px;
-  height: 1px;
+  left: 14px;
+  height: 2px;
+  border-radius: 999px;
   background: color-mix(
     in srgb,
-    var(--ep-component-accent-fg) 20%,
-    var(--ep-component-card-border)
+    var(--ep-component-accent-fg) 38%,
+    var(--ep-component-card-border-emphasis)
   );
+  opacity: 0.92;
 }
 
 @media (max-width: 420px) {
@@ -77,7 +79,7 @@
   }
 
   :root[data-ui-theme="light"] .group-rhythm-card .daily-rhythm-row:not(:last-child)::after {
-    right: 13px;
-    left: 13px;
+    right: 12px;
+    left: 12px;
   }
 }
