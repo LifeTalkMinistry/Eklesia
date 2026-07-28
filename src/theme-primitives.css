@@ -1,0 +1,195 @@
+/*
+ * Ekklesia Pulse theme primitives
+ *
+ * Lowest-level values only. Application components must never consume these
+ * variables directly. They are resolved through semantic and component tokens.
+ */
+
+:root,
+:root[data-ui-theme="pulse-dark"] {
+  --ep-primitive-canvas: #07100c;
+  --ep-primitive-canvas-art: radial-gradient(circle at 16% 5%, rgba(91, 161, 117, .11), transparent 28%), linear-gradient(180deg, #07100c, #0a1510 58%, #07100c);
+  --ep-primitive-frame: #0b1711;
+  --ep-primitive-frame-art: linear-gradient(180deg, #0d1b14 0%, #09130e 100%);
+  --ep-primitive-header: rgba(7, 16, 12, .94);
+  --ep-primitive-navigation: rgba(8, 19, 13, .96);
+  --ep-primitive-layer-01: rgba(255, 255, 255, .038);
+  --ep-primitive-layer-02: #102019;
+  --ep-primitive-layer-03: rgba(3, 11, 7, .34);
+  --ep-primitive-feature: radial-gradient(circle at 92% 6%, rgba(232, 217, 170, .16), transparent 34%), radial-gradient(circle at 7% 100%, rgba(92, 166, 117, .13), transparent 39%), linear-gradient(145deg, #173323, #0a1b12);
+  --ep-primitive-feature-alt: radial-gradient(circle at 96% 0%, rgba(184, 216, 196, .12), transparent 38%), linear-gradient(145deg, #133020, #0a1a12);
+  --ep-primitive-dialog: linear-gradient(160deg, #102019, #09140f);
+  --ep-primitive-input: rgba(255, 255, 255, .048);
+  --ep-primitive-fg-default: #f4f6f1;
+  --ep-primitive-fg-strong: #fffdf5;
+  --ep-primitive-fg-muted: rgba(244, 245, 239, .64);
+  --ep-primitive-fg-subtle: rgba(244, 245, 239, .42);
+  --ep-primitive-accent: #b8d8c4;
+  --ep-primitive-accent-secondary: #e8d9aa;
+  --ep-primitive-accent-muted: rgba(184, 216, 196, .09);
+  --ep-primitive-accent-secondary-muted: rgba(232, 217, 170, .08);
+  --ep-primitive-action: #d7ead5;
+  --ep-primitive-on-action: #09150e;
+  --ep-primitive-border: rgba(255, 255, 255, .085);
+  --ep-primitive-border-emphasis: rgba(232, 217, 170, .22);
+  --ep-primitive-divider: rgba(255, 255, 255, .065);
+  --ep-primitive-danger: #efb4a7;
+  --ep-primitive-danger-muted: rgba(239, 180, 167, .08);
+  --ep-primitive-success: #b8d7be;
+  --ep-primitive-on-success: #0b1711;
+  --ep-primitive-success-muted: rgba(184, 215, 190, .08);
+  --ep-primitive-attention: #e8d9aa;
+  --ep-primitive-attention-muted: rgba(232, 217, 170, .08);
+  --ep-primitive-shadow: rgba(0, 0, 0, .38);
+  --ep-primitive-layer-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+  --ep-primitive-focus: rgba(232, 217, 170, .68);
+  --ep-primitive-scroll-track: #07100c;
+  --ep-primitive-scroll-thumb: #365144;
+  --ep-primitive-nav-selected: rgba(232, 217, 170, .09);
+  --ep-primitive-nav-selected-fg: #f1e5bc;
+  --ep-primitive-radius-frame: 28px;
+  --ep-primitive-radius-layer: 23px;
+  --ep-primitive-radius-nested: 17px;
+  --ep-primitive-radius-control: 14px;
+}
+
+:root[data-ui-theme="light"] {
+  --ep-primitive-canvas: #edf0ea;
+  --ep-primitive-canvas-art: linear-gradient(180deg, #eef2ec 0%, #e7ece5 100%);
+  --ep-primitive-frame: #fbfcf8;
+  --ep-primitive-frame-art: linear-gradient(180deg, #ffffff 0%, #f6f8f3 100%);
+  --ep-primitive-header: rgba(255, 255, 255, .96);
+  --ep-primitive-navigation: rgba(255, 255, 255, .97);
+  --ep-primitive-layer-01: #ffffff;
+  --ep-primitive-layer-02: #ffffff;
+  --ep-primitive-layer-03: #f2f5f0;
+  --ep-primitive-feature: linear-gradient(145deg, #e6f0e8 0%, #ffffff 58%, #f4eee2 100%);
+  --ep-primitive-feature-alt: linear-gradient(145deg, #edf5ee, #ffffff);
+  --ep-primitive-dialog: #ffffff;
+  --ep-primitive-input: #f7f9f6;
+  --ep-primitive-fg-default: #293a30;
+  --ep-primitive-fg-strong: #18271e;
+  --ep-primitive-fg-muted: rgba(41, 58, 48, .68);
+  --ep-primitive-fg-subtle: rgba(41, 58, 48, .48);
+  --ep-primitive-accent: #2f7250;
+  --ep-primitive-accent-secondary: #9b6b31;
+  --ep-primitive-accent-muted: rgba(47, 114, 80, .09);
+  --ep-primitive-accent-secondary-muted: rgba(155, 107, 49, .08);
+  --ep-primitive-action: #2f7250;
+  --ep-primitive-on-action: #ffffff;
+  --ep-primitive-border: rgba(39, 68, 50, .14);
+  --ep-primitive-border-emphasis: rgba(47, 114, 80, .28);
+  --ep-primitive-divider: rgba(39, 68, 50, .11);
+  --ep-primitive-danger: #a84336;
+  --ep-primitive-danger-muted: rgba(168, 67, 54, .08);
+  --ep-primitive-success: #2f7250;
+  --ep-primitive-on-success: #ffffff;
+  --ep-primitive-success-muted: rgba(47, 114, 80, .09);
+  --ep-primitive-attention: #9b6b31;
+  --ep-primitive-attention-muted: rgba(155, 107, 49, .09);
+  --ep-primitive-shadow: rgba(42, 55, 45, .13);
+  --ep-primitive-layer-shadow: 0 12px 30px rgba(42, 55, 45, .08);
+  --ep-primitive-focus: rgba(47, 114, 80, .58);
+  --ep-primitive-scroll-track: #e7ece5;
+  --ep-primitive-scroll-thumb: #91a197;
+  --ep-primitive-nav-selected: #e8f1ea;
+  --ep-primitive-nav-selected-fg: #245b3f;
+  --ep-primitive-radius-frame: 20px;
+  --ep-primitive-radius-layer: 18px;
+  --ep-primitive-radius-nested: 13px;
+  --ep-primitive-radius-control: 11px;
+}
+
+:root[data-ui-theme="midnight"] {
+  --ep-primitive-canvas: #040b17;
+  --ep-primitive-canvas-art: radial-gradient(circle at 74% -8%, rgba(111, 76, 194, .19), transparent 36%), radial-gradient(circle at 8% 24%, rgba(50, 111, 205, .17), transparent 32%), linear-gradient(180deg, #040b17, #071326 58%, #040b17);
+  --ep-primitive-frame: #071326;
+  --ep-primitive-frame-art: linear-gradient(180deg, #0b1a31 0%, #071326 100%);
+  --ep-primitive-header: rgba(4, 11, 23, .95);
+  --ep-primitive-navigation: rgba(7, 19, 38, .96);
+  --ep-primitive-layer-01: rgba(154, 190, 255, .055);
+  --ep-primitive-layer-02: #0d203d;
+  --ep-primitive-layer-03: rgba(3, 10, 24, .52);
+  --ep-primitive-feature: radial-gradient(circle at 92% 3%, rgba(197, 165, 255, .24), transparent 35%), radial-gradient(circle at 5% 100%, rgba(82, 146, 255, .18), transparent 43%), linear-gradient(145deg, #183765, #0b1d3a);
+  --ep-primitive-feature-alt: radial-gradient(circle at 100% 0%, rgba(138, 182, 255, .17), transparent 38%), linear-gradient(145deg, #132e58, #0b1c37);
+  --ep-primitive-dialog: linear-gradient(160deg, #102848, #08172e);
+  --ep-primitive-input: rgba(149, 185, 246, .065);
+  --ep-primitive-fg-default: #edf3ff;
+  --ep-primitive-fg-strong: #f7f9ff;
+  --ep-primitive-fg-muted: rgba(226, 235, 252, .7);
+  --ep-primitive-fg-subtle: rgba(226, 235, 252, .46);
+  --ep-primitive-accent: #86b7ff;
+  --ep-primitive-accent-secondary: #c7a5ff;
+  --ep-primitive-accent-muted: rgba(134, 183, 255, .11);
+  --ep-primitive-accent-secondary-muted: rgba(199, 165, 255, .1);
+  --ep-primitive-action: #82b3ff;
+  --ep-primitive-on-action: #061225;
+  --ep-primitive-border: rgba(181, 207, 250, .14);
+  --ep-primitive-border-emphasis: rgba(199, 165, 255, .3);
+  --ep-primitive-divider: rgba(181, 207, 250, .09);
+  --ep-primitive-danger: #ffaaa4;
+  --ep-primitive-danger-muted: rgba(255, 170, 164, .09);
+  --ep-primitive-success: #86b7ff;
+  --ep-primitive-on-success: #061225;
+  --ep-primitive-success-muted: rgba(134, 183, 255, .11);
+  --ep-primitive-attention: #c7a5ff;
+  --ep-primitive-attention-muted: rgba(199, 165, 255, .1);
+  --ep-primitive-shadow: rgba(0, 0, 0, .5);
+  --ep-primitive-layer-shadow: inset 0 1px 0 rgba(218, 230, 255, .045), 0 16px 45px rgba(0, 0, 0, .16);
+  --ep-primitive-focus: rgba(199, 165, 255, .76);
+  --ep-primitive-scroll-track: #040b17;
+  --ep-primitive-scroll-thumb: #30496d;
+  --ep-primitive-nav-selected: rgba(199, 165, 255, .13);
+  --ep-primitive-nav-selected-fg: #d4baff;
+  --ep-primitive-radius-frame: 30px;
+  --ep-primitive-radius-layer: 24px;
+  --ep-primitive-radius-nested: 16px;
+  --ep-primitive-radius-control: 15px;
+}
+
+:root[data-ui-theme="parchment"] {
+  --ep-primitive-canvas: #d8ccb4;
+  --ep-primitive-canvas-art: repeating-linear-gradient(0deg, rgba(96, 72, 38, .025) 0 1px, transparent 1px 4px), linear-gradient(180deg, #ded3bd, #d4c6ac);
+  --ep-primitive-frame: #f3ead8;
+  --ep-primitive-frame-art: repeating-linear-gradient(0deg, rgba(102, 75, 37, .018) 0 1px, transparent 1px 4px), linear-gradient(180deg, #f8f0df, #eee2cd);
+  --ep-primitive-header: rgba(248, 240, 223, .97);
+  --ep-primitive-navigation: rgba(242, 231, 210, .98);
+  --ep-primitive-layer-01: rgba(255, 250, 239, .82);
+  --ep-primitive-layer-02: #fff8ea;
+  --ep-primitive-layer-03: rgba(219, 204, 178, .52);
+  --ep-primitive-feature: radial-gradient(circle at 92% 2%, rgba(138, 99, 53, .14), transparent 34%), linear-gradient(145deg, #d9e3d5, #f8f0df 61%, #eadcc4);
+  --ep-primitive-feature-alt: linear-gradient(145deg, #e1e8db, #f8f0df);
+  --ep-primitive-dialog: #f8f0df;
+  --ep-primitive-input: rgba(255, 251, 242, .92);
+  --ep-primitive-fg-default: #4b3c2a;
+  --ep-primitive-fg-strong: #382d20;
+  --ep-primitive-fg-muted: rgba(75, 60, 42, .7);
+  --ep-primitive-fg-subtle: rgba(75, 60, 42, .5);
+  --ep-primitive-accent: #52705b;
+  --ep-primitive-accent-secondary: #865e30;
+  --ep-primitive-accent-muted: rgba(82, 112, 91, .1);
+  --ep-primitive-accent-secondary-muted: rgba(134, 94, 48, .09);
+  --ep-primitive-action: #52705b;
+  --ep-primitive-on-action: #fffaf0;
+  --ep-primitive-border: rgba(91, 68, 38, .18);
+  --ep-primitive-border-emphasis: rgba(134, 94, 48, .3);
+  --ep-primitive-divider: rgba(91, 68, 38, .14);
+  --ep-primitive-danger: #9d493b;
+  --ep-primitive-danger-muted: rgba(157, 73, 59, .08);
+  --ep-primitive-success: #52705b;
+  --ep-primitive-on-success: #fffaf0;
+  --ep-primitive-success-muted: rgba(82, 112, 91, .1);
+  --ep-primitive-attention: #865e30;
+  --ep-primitive-attention-muted: rgba(134, 94, 48, .09);
+  --ep-primitive-shadow: rgba(75, 54, 28, .16);
+  --ep-primitive-layer-shadow: 0 8px 20px rgba(75, 54, 28, .07);
+  --ep-primitive-focus: rgba(134, 94, 48, .62);
+  --ep-primitive-scroll-track: #d8ccb4;
+  --ep-primitive-scroll-thumb: #9b8769;
+  --ep-primitive-nav-selected: rgba(82, 112, 91, .12);
+  --ep-primitive-nav-selected-fg: #3f5d49;
+  --ep-primitive-radius-frame: 12px;
+  --ep-primitive-radius-layer: 13px;
+  --ep-primitive-radius-nested: 8px;
+  --ep-primitive-radius-control: 8px;
+}
