@@ -21,6 +21,9 @@ import './devotion-flip.css';
 import './notebook-devotion.css';
 import './font-preferences.css';
 import './theme-system.css';
+import './theme-primitives.css';
+import './theme-semantic.css';
+import './theme-component-tokens.css';
 import './theme-preferences.css';
 
 runBrandMigration();
