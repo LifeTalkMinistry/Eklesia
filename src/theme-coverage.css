@@ -1,0 +1,755 @@
+:root,
+:root[data-ekklesia-theme="pulse-dark"] {
+  --theme-surface-deep: rgba(3, 10, 6, 0.3);
+  --theme-surface-elevated: rgba(255, 255, 255, 0.055);
+  --theme-surface-hover: rgba(184, 216, 196, 0.075);
+  --theme-overlay: rgba(2, 7, 4, 0.84);
+  --theme-overlay-soft: rgba(2, 7, 4, 0.42);
+  --theme-focus: rgba(232, 217, 170, 0.66);
+  --theme-success: #b8d7be;
+  --theme-success-text: #0d1a12;
+  --theme-success-soft: rgba(184, 215, 190, 0.085);
+  --theme-warning: #e8d9aa;
+  --theme-warning-soft: rgba(232, 217, 170, 0.08);
+  --theme-code-bg: rgba(2, 9, 5, 0.42);
+  --theme-code-text: #f1e5bc;
+  --theme-panel-gradient: linear-gradient(145deg, rgba(24, 49, 34, 0.82), rgba(10, 24, 16, 0.92));
+  --theme-hero-alt: radial-gradient(circle at 100% 0%, rgba(232, 217, 170, 0.13), transparent 38%), linear-gradient(145deg, rgba(28, 62, 42, 0.96), rgba(13, 31, 22, 0.98));
+  --theme-billboard: radial-gradient(circle at 82% 15%, rgba(232, 217, 170, 0.16), transparent 30%), radial-gradient(circle at 4% 100%, rgba(112, 177, 132, 0.16), transparent 42%), linear-gradient(145deg, #183223 0%, #0d2116 50%, #08150e 100%);
+  --theme-billboard-overlay: linear-gradient(180deg, rgba(3, 10, 6, 0.02), rgba(3, 10, 6, 0.38));
+  --theme-feed-bg: #020704;
+  --theme-feed-announcement: linear-gradient(155deg, #173122 0%, #0c1c13 55%, #07110b 100%);
+  --theme-feed-devotion: linear-gradient(155deg, #2d2818, #171409 58%, #0d0c07);
+  --theme-feed-ministry: linear-gradient(155deg, #1d3428, #0f2118 55%, #08140d);
+  --theme-feed-group: linear-gradient(155deg, #1d2b32, #101b21 55%, #091014);
+  --theme-feed-video: linear-gradient(155deg, #2c1e2f, #18111d 55%, #0e0a11);
+  --theme-feed-overlay: linear-gradient(180deg, rgba(2, 7, 4, 0.12) 0%, transparent 28%, rgba(2, 7, 4, 0.08) 50%, rgba(2, 7, 4, 0.92) 100%);
+  --theme-feed-text: #ffffff;
+  --theme-feed-muted: rgba(255, 255, 255, 0.76);
+  --theme-feed-control: rgba(2, 7, 4, 0.38);
+  --theme-feed-control-border: rgba(255, 255, 255, 0.17);
+  --theme-progress-track: rgba(255, 255, 255, 0.08);
+  --theme-switch-track: rgba(255, 255, 255, 0.14);
+  --theme-switch-thumb: #8e9c92;
+}
+
+:root[data-ekklesia-theme="light"] {
+  --theme-surface-deep: rgba(224, 218, 204, 0.72);
+  --theme-surface-elevated: rgba(255, 255, 255, 0.92);
+  --theme-surface-hover: rgba(47, 114, 80, 0.09);
+  --theme-overlay: rgba(30, 42, 34, 0.5);
+  --theme-overlay-soft: rgba(37, 50, 41, 0.18);
+  --theme-focus: rgba(47, 114, 80, 0.55);
+  --theme-success: #2f7250;
+  --theme-success-text: #ffffff;
+  --theme-success-soft: rgba(47, 114, 80, 0.11);
+  --theme-warning: #a8793e;
+  --theme-warning-soft: rgba(168, 121, 62, 0.1);
+  --theme-code-bg: rgba(231, 225, 212, 0.9);
+  --theme-code-text: #62451f;
+  --theme-panel-gradient: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(236, 241, 233, 0.96));
+  --theme-hero-alt: radial-gradient(circle at 100% 0%, rgba(168, 121, 62, 0.12), transparent 38%), linear-gradient(145deg, #e4efe5, #fffdf7);
+  --theme-billboard: radial-gradient(circle at 82% 15%, rgba(168, 121, 62, 0.13), transparent 30%), radial-gradient(circle at 4% 100%, rgba(47, 114, 80, 0.12), transparent 42%), linear-gradient(145deg, #e2ece1 0%, #f6f2e8 52%, #fffdf8 100%);
+  --theme-billboard-overlay: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(244, 241, 232, 0.34));
+  --theme-feed-bg: #ede9df;
+  --theme-feed-announcement: linear-gradient(155deg, #e7f0e8 0%, #f9f5eb 58%, #f0ebe0 100%);
+  --theme-feed-devotion: linear-gradient(155deg, #f2ead8, #fffaf0 58%, #ece2ce);
+  --theme-feed-ministry: linear-gradient(155deg, #dfece3, #f6f8f2 58%, #e7eee7);
+  --theme-feed-group: linear-gradient(155deg, #e3eaf0, #f7f9fb 58%, #e8edf1);
+  --theme-feed-video: linear-gradient(155deg, #eee4ee, #faf6fa 58%, #eadfea);
+  --theme-feed-overlay: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 28%, rgba(240, 235, 224, 0.08) 50%, rgba(235, 230, 219, 0.94) 100%);
+  --theme-feed-text: #1d2a22;
+  --theme-feed-muted: rgba(38, 54, 44, 0.76);
+  --theme-feed-control: rgba(255, 255, 255, 0.7);
+  --theme-feed-control-border: rgba(40, 68, 51, 0.2);
+  --theme-progress-track: rgba(40, 68, 51, 0.11);
+  --theme-switch-track: rgba(40, 68, 51, 0.18);
+  --theme-switch-thumb: #819187;
+}
+
+:root[data-ekklesia-theme="midnight"] {
+  --theme-surface-deep: rgba(3, 10, 24, 0.42);
+  --theme-surface-elevated: rgba(255, 255, 255, 0.065);
+  --theme-surface-hover: rgba(138, 182, 255, 0.1);
+  --theme-overlay: rgba(3, 8, 19, 0.86);
+  --theme-overlay-soft: rgba(3, 8, 19, 0.46);
+  --theme-focus: rgba(200, 168, 255, 0.7);
+  --theme-success: #8ab6ff;
+  --theme-success-text: #07101f;
+  --theme-success-soft: rgba(138, 182, 255, 0.12);
+  --theme-warning: #c8a8ff;
+  --theme-warning-soft: rgba(200, 168, 255, 0.1);
+  --theme-code-bg: rgba(3, 9, 24, 0.5);
+  --theme-code-text: #d8c6ff;
+  --theme-panel-gradient: linear-gradient(145deg, rgba(16, 37, 70, 0.9), rgba(8, 20, 39, 0.96));
+  --theme-hero-alt: radial-gradient(circle at 100% 0%, rgba(200, 168, 255, 0.18), transparent 38%), linear-gradient(145deg, #17345e, #0c1b34);
+  --theme-billboard: radial-gradient(circle at 82% 15%, rgba(200, 168, 255, 0.2), transparent 30%), radial-gradient(circle at 4% 100%, rgba(79, 136, 230, 0.2), transparent 42%), linear-gradient(145deg, #132f56 0%, #0c1e3a 50%, #071327 100%);
+  --theme-billboard-overlay: linear-gradient(180deg, rgba(3, 8, 19, 0.02), rgba(3, 8, 19, 0.42));
+  --theme-feed-bg: #030816;
+  --theme-feed-announcement: linear-gradient(155deg, #183a69 0%, #10284b 55%, #08172e 100%);
+  --theme-feed-devotion: linear-gradient(155deg, #3c315f, #241d42 58%, #151129);
+  --theme-feed-ministry: linear-gradient(155deg, #203c5f, #122845 55%, #09192d);
+  --theme-feed-group: linear-gradient(155deg, #24364f, #15243a 55%, #0a1424);
+  --theme-feed-video: linear-gradient(155deg, #442c58, #281a39 55%, #170f24);
+  --theme-feed-overlay: linear-gradient(180deg, rgba(3, 8, 19, 0.12) 0%, transparent 28%, rgba(3, 8, 19, 0.08) 50%, rgba(3, 8, 19, 0.94) 100%);
+  --theme-feed-text: #f7f9ff;
+  --theme-feed-muted: rgba(226, 235, 252, 0.78);
+  --theme-feed-control: rgba(3, 8, 19, 0.4);
+  --theme-feed-control-border: rgba(185, 207, 245, 0.2);
+  --theme-progress-track: rgba(185, 207, 245, 0.11);
+  --theme-switch-track: rgba(185, 207, 245, 0.18);
+  --theme-switch-thumb: #7f91ad;
+}
+
+:root[data-ekklesia-theme="parchment"] {
+  --theme-surface-deep: rgba(102, 76, 42, 0.08);
+  --theme-surface-elevated: rgba(255, 250, 239, 0.9);
+  --theme-surface-hover: rgba(82, 112, 91, 0.1);
+  --theme-overlay: rgba(55, 41, 24, 0.55);
+  --theme-overlay-soft: rgba(71, 52, 30, 0.2);
+  --theme-focus: rgba(138, 99, 53, 0.58);
+  --theme-success: #52705b;
+  --theme-success-text: #fffaf0;
+  --theme-success-soft: rgba(82, 112, 91, 0.12);
+  --theme-warning: #8a6335;
+  --theme-warning-soft: rgba(138, 99, 53, 0.1);
+  --theme-code-bg: rgba(221, 207, 181, 0.74);
+  --theme-code-text: #66451f;
+  --theme-panel-gradient: linear-gradient(145deg, rgba(248, 240, 223, 0.96), rgba(227, 216, 193, 0.96));
+  --theme-hero-alt: radial-gradient(circle at 100% 0%, rgba(138, 99, 53, 0.16), transparent 38%), linear-gradient(145deg, #dbe6d8, #f8f0df);
+  --theme-billboard: radial-gradient(circle at 82% 15%, rgba(138, 99, 53, 0.16), transparent 30%), radial-gradient(circle at 4% 100%, rgba(82, 112, 91, 0.14), transparent 42%), linear-gradient(145deg, #d9e2d5 0%, #eee3cf 52%, #f8f0df 100%);
+  --theme-billboard-overlay: linear-gradient(180deg, rgba(255, 250, 239, 0.02), rgba(226, 211, 184, 0.36));
+  --theme-feed-bg: #d9ccb4;
+  --theme-feed-announcement: linear-gradient(155deg, #d7e2d5 0%, #eee5d2 58%, #dfd2b9 100%);
+  --theme-feed-devotion: linear-gradient(155deg, #e7d7bb, #f6ead4 58%, #ddc8a7);
+  --theme-feed-ministry: linear-gradient(155deg, #cfddcf, #e9e2cf 58%, #d7d2bb);
+  --theme-feed-group: linear-gradient(155deg, #d6dde0, #eee7d7 58%, #d8d5c9);
+  --theme-feed-video: linear-gradient(155deg, #e1d1dc, #efe3da 58%, #d9c7cf);
+  --theme-feed-overlay: linear-gradient(180deg, rgba(255, 250, 239, 0.02) 0%, transparent 28%, rgba(226, 211, 184, 0.08) 50%, rgba(218, 204, 179, 0.94) 100%);
+  --theme-feed-text: #382d20;
+  --theme-feed-muted: rgba(73, 59, 42, 0.76);
+  --theme-feed-control: rgba(255, 250, 239, 0.68);
+  --theme-feed-control-border: rgba(88, 67, 39, 0.22);
+  --theme-progress-track: rgba(88, 67, 39, 0.12);
+  --theme-switch-track: rgba(88, 67, 39, 0.18);
+  --theme-switch-thumb: #8b7b66;
+}
+
+/* Shared interaction and browser-level details */
+html {
+  scrollbar-color: var(--theme-accent) var(--theme-page);
+}
+
+body ::selection {
+  color: var(--theme-primary-text);
+  background: var(--theme-primary-bg);
+}
+
+body :focus-visible {
+  outline-color: var(--theme-focus) !important;
+}
+
+body input[type="checkbox"],
+body input[type="radio"],
+body input[type="range"] {
+  accent-color: var(--theme-accent) !important;
+}
+
+body code,
+body kbd,
+body samp {
+  border-color: var(--theme-border-accent) !important;
+  color: var(--theme-code-text) !important;
+  background: var(--theme-code-bg) !important;
+}
+
+/* Status semantics */
+.alpha-success-message,
+.alpha-privacy-note,
+.together-control-note,
+.together-checking-message,
+.together-prototype-notice,
+.together-growth-signal,
+.organization-status,
+.organization-membership-chip,
+.organization-verification-icon,
+.organization-verification-preview > small,
+.organization-role-chip,
+.group-workspace-joined,
+.church-joined-groups-heading > span,
+.church-joined-group-button b,
+.daily-checkin-count,
+.daily-checkin-loading,
+.is-perfect .daily-rhythm-score,
+.is-perfect .daily-checkin-member small,
+.ministry-workspace-membership,
+.ministry-workspace-heading span,
+.ministry-workspace-group-grid small,
+.ministry-workspace-group-grid span,
+.ministry-workspace-panel > span,
+.church-home-status,
+.church-home-section-heading > button,
+.church-home-section-heading > span,
+.member-visitor-identity > div > p:last-child,
+.member-visitor-section-heading > strong,
+.member-visitor-signal h4,
+.member-visitor-privacy strong,
+.archive-entry-copy small,
+.history-reference {
+  color: var(--theme-accent) !important;
+}
+
+.alpha-success-message,
+.alpha-privacy-note,
+.together-prototype-notice,
+.organization-status,
+.organization-membership-chip,
+.organization-verification-icon,
+.organization-role-chip,
+.group-workspace-joined,
+.church-joined-groups-heading > span,
+.daily-checkin-count,
+.daily-checkin-loading,
+.ministry-workspace-membership,
+.ministry-workspace-heading span,
+.church-home-status,
+.member-visitor-privacy {
+  border-color: color-mix(in srgb, var(--theme-success) 24%, transparent) !important;
+  background: var(--theme-success-soft) !important;
+}
+
+.alpha-global-warning,
+.alpha-storage-warning,
+.alpha-inline-message,
+.organization-pending-chip,
+.organization-policy-warning,
+.pulse-access-admin,
+.together-prototype-label,
+.church-workspace-demo,
+.church-workspace-demo-details,
+.together-alpha-notice,
+.why-alpha-note,
+.alpha-discard-confirmation {
+  border-color: color-mix(in srgb, var(--theme-warning) 26%, transparent) !important;
+  color: var(--theme-warning) !important;
+  background: var(--theme-warning-soft) !important;
+}
+
+/* Deep and elevated surfaces that previously retained green */
+.unified-church-entry,
+.unified-tool-grid button,
+.together-workspace-launcher,
+.together-preview-card,
+.organization-access-card,
+.organization-pulse-card,
+.organization-admin-shell,
+.pulse-access-dialog,
+.group-workspace-hero,
+.ministry-workspace-hero,
+.recommended-option,
+.history-word-card,
+.daily-checkin-card {
+  border-color: var(--theme-border-accent) !important;
+  background: var(--theme-hero-alt) !important;
+  color: var(--theme-text) !important;
+  box-shadow: 0 18px 48px var(--theme-shadow) !important;
+}
+
+.archive-year-drawer,
+.archive-month-drawer,
+.archive-day-drawer,
+.together-privacy-grid section,
+.together-message-options button,
+.organization-ministry-pulse-list article,
+.organization-scope-choice,
+.organization-circle-selection,
+.organization-group-card,
+.organization-group-preview,
+.organization-role-explanation,
+.organization-group-explainer,
+.organization-manager-code,
+.organization-admin-subnav,
+.church-joined-group-button,
+.group-workspace-quick-details > span,
+.group-workspace-nav,
+.group-workspace-member-list,
+.ministry-workspace-summary div,
+.ministry-workspace-metrics article,
+.ministry-workspace-group-grid article,
+.ministry-workspace-member-list article,
+.church-home-announcement-card,
+.church-home-acknowledgement-list,
+.church-home-event-list,
+.church-home-spaces-grid > button,
+.daily-checkin-list,
+.member-visitor-identity,
+.member-visitor-rhythm,
+.member-visitor-signal,
+.member-visitor-privacy,
+.member-visitor-stats article,
+.wgap-field,
+.wgap-field textarea,
+.history-review-card,
+.devotion-archive-entry,
+.journey-history-empty,
+.selection-instructions,
+.verse-selection-bar,
+.devotion-option:not(.recommended-option) {
+  border-color: var(--theme-border) !important;
+  background: var(--theme-surface-deep) !important;
+  color: var(--theme-text) !important;
+  box-shadow: none !important;
+}
+
+.archive-year-drawer,
+.organization-admin-shell,
+.pulse-access-dialog,
+.together-dialog,
+.organization-dialog,
+.church-workspace-dialog,
+.alpha-dialog {
+  background: var(--theme-panel-gradient) !important;
+}
+
+/* Hover and selected surfaces */
+.daily-rhythm-row-button:hover,
+.archive-drawer-button:hover,
+.devotion-archive-entry:hover,
+.chapter-verse-button:hover,
+.church-joined-group-button:hover,
+.church-joined-group-button:focus-visible,
+.organization-scope-choice.is-selected,
+.together-message-options button.selected,
+.group-workspace-back:hover,
+.group-workspace-back:focus-visible,
+.ministry-workspace-nav button.is-active,
+.organization-section-nav button.is-active,
+.organization-section-nav button[aria-current="page"],
+.organization-section-nav button[aria-selected="true"] {
+  border-color: color-mix(in srgb, var(--theme-accent) 34%, transparent) !important;
+  background: var(--theme-surface-hover) !important;
+  color: var(--theme-heading) !important;
+}
+
+/* Active controls and completion indicators */
+.group-workspace-nav button.is-active,
+.organization-admin-subnav button.is-active,
+.daily-rhythm-circle.is-complete,
+.day-circle.is-complete,
+.devotion-complete-message > span,
+.ministry-workspace-member-list article > span,
+.organization-enter-ministry-room,
+.organization-primary-small,
+.ministry-workspace-group-grid button,
+.church-home-primary-action,
+.church-pulse-post-actions button.is-active > span {
+  border-color: transparent !important;
+  color: var(--theme-success-text) !important;
+  background: var(--theme-success) !important;
+}
+
+.daily-rhythm-circle.is-today:not(.is-complete),
+.chapter-verse-button.selected-range,
+.chapter-verse-button.range-start,
+.chapter-verse-button.range-end,
+.archive-day-drawer.is-expanded,
+.archive-month-drawer.is-expanded,
+.archive-year-drawer.is-expanded {
+  border-color: color-mix(in srgb, var(--theme-warning) 42%, transparent) !important;
+  color: var(--theme-warning) !important;
+  background: var(--theme-warning-soft) !important;
+}
+
+.chapter-verse-button.range-start {
+  box-shadow: inset 4px 0 0 var(--theme-warning) !important;
+}
+
+.chapter-verse-button.range-end {
+  box-shadow: inset -4px 0 0 var(--theme-warning) !important;
+}
+
+/* Icons, badges, chips and decorative marks */
+.unified-church-entry-icon,
+.unified-tool-grid button > span,
+.together-workspace-mark,
+.together-privacy-icon,
+.together-message-icon,
+.together-avatar,
+.organization-ministry-icon,
+.organization-care-note > span,
+.organization-private-content-card > span,
+.organization-avatar,
+.organization-group-explainer > span,
+.daily-checkin-avatar,
+.member-visitor-avatar,
+.option-icon,
+.wgap-letter,
+.history-review-heading > span,
+.journey-history-empty > span,
+.church-home-acknowledgement-list article > span,
+.alpha-information-grid article > span {
+  border-color: var(--theme-border-accent) !important;
+  color: var(--theme-accent-strong) !important;
+  background: color-mix(in srgb, var(--theme-accent-strong) 9%, transparent) !important;
+}
+
+.alpha-badge,
+.soft-badge,
+.organization-demo-badge,
+.organization-pending-chip,
+.organization-policy-warning,
+.church-workspace-demo,
+.together-alpha-disclosure-icon,
+.journey-back-button,
+.member-visitor-back,
+.daily-rhythm-chevron,
+.archive-chevron,
+.history-arrow,
+.organization-text-action,
+.together-text-button,
+.church-home-announcement-card button,
+.church-home-event-list button,
+.church-home-admin-items button,
+.church-home-admin-shortcuts button,
+.church-home-code-row button {
+  color: var(--theme-accent-strong) !important;
+}
+
+/* Inputs, code fields and switches */
+.alpha-field select option {
+  color: var(--theme-text) !important;
+  background: var(--theme-surface-strong) !important;
+}
+
+.together-join-card input,
+.pulse-access-form input,
+.organization-dialog-form textarea,
+.wgap-field textarea {
+  border-color: var(--theme-border) !important;
+  color: var(--theme-text) !important;
+  background: var(--theme-input) !important;
+}
+
+.organization-code-row code,
+.organization-circle-code code,
+.organization-manager-code code,
+.pulse-access-admin code {
+  border-color: var(--theme-border-accent) !important;
+  color: var(--theme-code-text) !important;
+  background: var(--theme-code-bg) !important;
+}
+
+.organization-switch {
+  background: var(--theme-switch-track) !important;
+}
+
+.organization-switch::after {
+  background: var(--theme-switch-thumb) !important;
+}
+
+.organization-policy-row input:checked + .organization-switch {
+  background: color-mix(in srgb, var(--theme-success) 34%, transparent) !important;
+}
+
+.organization-policy-row input:checked + .organization-switch::after {
+  background: var(--theme-success) !important;
+}
+
+.organization-radio-dot {
+  border-color: color-mix(in srgb, var(--theme-text) 28%, transparent) !important;
+}
+
+.organization-scope-choice.is-selected .organization-radio-dot {
+  border-color: var(--theme-accent) !important;
+  background: var(--theme-accent) !important;
+  box-shadow: inset 0 0 0 4px var(--theme-surface-strong) !important;
+}
+
+/* Navigation and progress */
+.unified-bottom-nav button:nth-child(3)::before {
+  background: color-mix(in srgb, var(--theme-accent) 70%, transparent) !important;
+}
+
+.unified-bottom-nav button:nth-child(3).active::before {
+  background: var(--theme-accent-strong) !important;
+}
+
+.organization-progress-track {
+  background: var(--theme-progress-track) !important;
+}
+
+.organization-progress-track span {
+  background: linear-gradient(90deg, var(--theme-accent), var(--theme-accent-strong)) !important;
+}
+
+/* Church workspace */
+.church-workspace-shell {
+  background: var(--theme-page) !important;
+  color: var(--theme-text) !important;
+}
+
+.church-workspace-header,
+.church-workspace-content .organization-section-nav {
+  border-color: var(--theme-border) !important;
+  background: var(--theme-header) !important;
+}
+
+.church-workspace-exit,
+.church-workspace-exit::after,
+.church-workspace-role,
+.church-workspace-dialog-heading > button {
+  color: var(--theme-text) !important;
+}
+
+.church-workspace-exit span,
+.church-workspace-label {
+  color: var(--theme-accent) !important;
+}
+
+.church-workspace-platform,
+.church-workspace-demo-details,
+.church-workspace-dialog-copy,
+.church-workspace-dialog-note p,
+.church-workspace-detail-list dt {
+  color: var(--theme-muted) !important;
+}
+
+.church-workspace-dialog-backdrop,
+.organization-dialog-backdrop,
+.together-dialog-backdrop,
+.alpha-dialog-backdrop,
+.pulse-access-backdrop {
+  background: var(--theme-overlay) !important;
+}
+
+.church-workspace-dialog-note,
+.together-dialog-note,
+.organization-group-explainer,
+.organization-role-explanation {
+  border-color: color-mix(in srgb, var(--theme-accent) 22%, transparent) !important;
+  background: var(--theme-accent-soft) !important;
+}
+
+/* Church Home */
+.church-home-billboard:not([style*="background-image"]) {
+  border-color: var(--theme-border-accent) !important;
+  background: var(--theme-billboard) !important;
+}
+
+.church-home-billboard:not([style*="background-image"])::after {
+  background: var(--theme-billboard-overlay) !important;
+}
+
+:root[data-ekklesia-theme="light"] .church-home-billboard:not([style*="background-image"]) .church-home-billboard-copy h2,
+:root[data-ekklesia-theme="light"] .church-home-billboard:not([style*="background-image"]) .church-home-billboard-topline span,
+:root[data-ekklesia-theme="light"] .church-home-billboard:not([style*="background-image"]) .church-home-billboard-copy > p:last-child,
+:root[data-ekklesia-theme="parchment"] .church-home-billboard:not([style*="background-image"]) .church-home-billboard-copy h2,
+:root[data-ekklesia-theme="parchment"] .church-home-billboard:not([style*="background-image"]) .church-home-billboard-topline span,
+:root[data-ekklesia-theme="parchment"] .church-home-billboard:not([style*="background-image"]) .church-home-billboard-copy > p:last-child {
+  color: var(--theme-heading) !important;
+}
+
+.church-home-billboard-schedule,
+.church-home-billboard-dots button.is-active {
+  color: var(--theme-accent-strong) !important;
+  background: var(--theme-accent-strong) !important;
+}
+
+.church-home-section,
+.church-home-admin,
+.church-home-announcement-card,
+.church-home-acknowledgement-list,
+.church-home-event-list,
+.church-home-spaces-grid > button {
+  border-color: var(--theme-border) !important;
+  background: var(--theme-surface) !important;
+}
+
+.church-home-privacy-note {
+  border-color: color-mix(in srgb, var(--theme-accent) 18%, transparent) !important;
+  color: var(--theme-muted) !important;
+  background: var(--theme-accent-soft) !important;
+}
+
+/* Church Pulse immersive feed */
+.church-pulse-feed {
+  background: var(--theme-feed-bg) !important;
+}
+
+.church-pulse-post {
+  background: var(--theme-feed-announcement) !important;
+}
+
+.church-pulse-post-devotion {
+  background: var(--theme-feed-devotion) !important;
+}
+
+.church-pulse-post-ministry {
+  background: var(--theme-feed-ministry) !important;
+}
+
+.church-pulse-post-group {
+  background: var(--theme-feed-group) !important;
+}
+
+.church-pulse-post-video {
+  background: var(--theme-feed-video) !important;
+}
+
+.church-pulse-post::after {
+  background: var(--theme-feed-overlay) !important;
+}
+
+.church-pulse-feed-tabs,
+.church-pulse-feed-info,
+.church-pulse-post-actions button > span {
+  border-color: var(--theme-feed-control-border) !important;
+  background: var(--theme-feed-control) !important;
+}
+
+.church-pulse-feed-tabs button,
+.church-pulse-feed-tabs span,
+.church-pulse-post-copy h2,
+.church-pulse-post-copy > small,
+.church-pulse-post-actions button,
+.church-pulse-post-visual > b {
+  color: var(--theme-feed-text) !important;
+}
+
+.church-pulse-post-copy > p:not(.dashboard-eyebrow),
+.church-pulse-feed-privacy {
+  color: var(--theme-feed-muted) !important;
+}
+
+.church-pulse-post-copy .dashboard-eyebrow {
+  color: var(--theme-accent) !important;
+}
+
+.church-pulse-post-copy em,
+.church-pulse-post-visual > span,
+.church-unified-bottom-nav button.is-active {
+  color: var(--theme-accent-strong) !important;
+}
+
+.church-pulse-post-visual {
+  background: radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--theme-accent-strong) 22%, transparent), transparent 25%), radial-gradient(circle at 20% 82%, color-mix(in srgb, var(--theme-accent) 22%, transparent), transparent 34%) !important;
+}
+
+.church-pulse-post-visual > span {
+  border-color: var(--theme-feed-control-border) !important;
+  background: var(--theme-feed-control) !important;
+  box-shadow: 0 20px 60px var(--theme-shadow) !important;
+}
+
+.church-pulse-feed-privacy {
+  border-color: var(--theme-feed-control-border) !important;
+  background: color-mix(in srgb, var(--theme-feed-bg) 88%, transparent) !important;
+}
+
+/* Devotion, Bible, WGAP and Journey */
+.devotion-complete-card {
+  border-color: color-mix(in srgb, var(--theme-success) 26%, transparent) !important;
+  background: var(--theme-success-soft) !important;
+}
+
+.devotion-complete-message > span {
+  color: var(--theme-success-text) !important;
+  background: var(--theme-success) !important;
+}
+
+.option-icon,
+.wgap-letter,
+.history-review-heading > span {
+  border-color: var(--theme-border-accent) !important;
+}
+
+.selection-instructions,
+.wgap-field textarea[readonly] {
+  border-color: color-mix(in srgb, var(--theme-accent) 20%, transparent) !important;
+  background: var(--theme-accent-soft) !important;
+}
+
+.chapter-verse-button {
+  color: var(--theme-text) !important;
+}
+
+.verse-selection-bar {
+  border-color: var(--theme-border-accent) !important;
+  background: var(--theme-nav) !important;
+  box-shadow: 0 18px 42px var(--theme-shadow) !important;
+}
+
+.archive-year-drawer {
+  border-color: var(--theme-border-accent) !important;
+  background: var(--theme-panel-gradient) !important;
+}
+
+.archive-month-drawer,
+.archive-day-drawer {
+  background: var(--theme-surface-deep) !important;
+}
+
+/* Alpha and settings */
+.alpha-dialog,
+.alpha-setup-card,
+.alpha-information-card {
+  color: var(--theme-text) !important;
+}
+
+.alpha-danger-note,
+.alpha-delete-trigger,
+.alpha-danger-button,
+.church-workspace-danger,
+.together-danger-button {
+  border-color: color-mix(in srgb, var(--theme-danger) 30%, transparent) !important;
+  color: var(--theme-danger) !important;
+  background: var(--theme-danger-soft) !important;
+}
+
+.alpha-danger-button {
+  color: #fff7f5 !important;
+  background: color-mix(in srgb, var(--theme-danger) 74%, #5d211b) !important;
+}
+
+.font-option,
+.font-search-field,
+.font-category-tabs,
+.theme-option {
+  border-color: var(--theme-border) !important;
+  background: var(--theme-surface) !important;
+}
+
+.font-option.is-selected,
+.theme-option.is-selected,
+.font-category-tabs button.is-active {
+  border-color: color-mix(in srgb, var(--theme-accent) 40%, transparent) !important;
+  background: var(--theme-accent-soft) !important;
+}
+
+/* Decorative pseudo-elements */
+.welcome-shell::before,
+.today-card::after,
+.together-workspace-launcher::before {
+  border-color: color-mix(in srgb, var(--theme-accent-strong) 16%, transparent) !important;
+  box-shadow: 0 0 0 54px color-mix(in srgb, var(--theme-accent-strong) 3%, transparent), 0 0 0 108px color-mix(in srgb, var(--theme-accent-strong) 2%, transparent) !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html,
+  body,
+  .app-shell,
+  .dashboard-shell,
+  .dashboard-frame,
+  .devotion-shell,
+  .devotion-frame,
+  .church-workspace-shell,
+  .church-workspace-frame,
+  .bottom-nav,
+  .church-unified-bottom-nav,
+  .alpha-dialog,
+  .organization-dialog,
+  .together-dialog,
+  .pulse-access-dialog {
+    transition: background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease !important;
+  }
+}
