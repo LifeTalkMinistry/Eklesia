@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import { runBrandMigration } from './services/brandMigration.js';
+import { initializeFontPreferences } from './services/fontPreferencesService.js';
 import './index.css';
 import './alpha.css';
 import './together-demo-disclosure.css';
@@ -17,8 +18,10 @@ import './rhythm-sync.css';
 import './additional-devotion.css';
 import './devotion-flip.css';
 import './notebook-devotion.css';
+import './font-preferences.css';
 
 runBrandMigration();
+initializeFontPreferences();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
