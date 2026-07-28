@@ -64,10 +64,127 @@ body *::after {
   line-height: 1.65;
 }
 
+.font-library-controls {
+  display: grid;
+  gap: 13px;
+  margin-top: 18px;
+}
+
+.font-search-field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 15px;
+  background: rgba(3, 10, 6, 0.3);
+}
+
+.font-search-field > span {
+  color: rgba(244, 245, 239, 0.45);
+  font-size: 1.05rem;
+}
+
+.font-search-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 0;
+  border: 0;
+  outline: 0;
+  color: #fffdf5;
+  background: transparent;
+  font-size: 0.84rem;
+}
+
+.font-search-field input::placeholder {
+  color: rgba(244, 245, 239, 0.35);
+}
+
+.font-search-field input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.font-search-field button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 9px;
+  color: rgba(244, 245, 239, 0.58);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 1rem;
+}
+
+.font-category-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 1px 1px 5px;
+  scrollbar-width: none;
+}
+
+.font-category-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.font-category-tabs button {
+  flex: 0 0 auto;
+  cursor: pointer;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 999px;
+  color: rgba(244, 245, 239, 0.52);
+  background: rgba(255, 255, 255, 0.025);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.font-category-tabs button small {
+  margin-left: 3px;
+  color: rgba(244, 245, 239, 0.34);
+  font-size: 0.62rem;
+}
+
+.font-category-tabs button.is-active {
+  border-color: rgba(184, 216, 196, 0.3);
+  color: #dceadf;
+  background: rgba(184, 216, 196, 0.08);
+}
+
+.font-category-tabs button.is-active small {
+  color: #b8d8c4;
+}
+
+.font-library-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.font-library-summary span {
+  color: #dce9df;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.font-library-summary small {
+  overflow: hidden;
+  color: rgba(244, 245, 239, 0.38);
+  font-size: 0.68rem;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .font-option-list {
   display: grid;
   gap: 9px;
-  margin-top: 18px;
+  margin-top: 10px;
 }
 
 .font-option {
@@ -142,16 +259,63 @@ body *::after {
   font-weight: 700;
 }
 
+.font-library-empty {
+  margin-top: 12px;
+  padding: 22px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 17px;
+  text-align: center;
+}
+
+.font-library-empty strong {
+  color: #fffdf5;
+}
+
+.font-library-empty p {
+  margin: 7px 0 0;
+  color: rgba(244, 245, 239, 0.48);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.font-library-empty .secondary-button {
+  margin-top: 14px;
+}
+
+.font-dialog-actions {
+  position: sticky;
+  bottom: -1px;
+  z-index: 2;
+  margin-top: 18px;
+  padding-top: 14px;
+  background: linear-gradient(180deg, transparent, rgba(8, 17, 13, 0.96) 24%);
+}
+
 .font-dialog-actions .primary-button {
   margin-top: 0;
 }
 
 @media (max-width: 480px) {
+  .font-preference-preview {
+    padding: 17px;
+  }
+
   .font-option {
     grid-template-columns: auto minmax(0, 1fr);
   }
 
   .font-option-sample {
     display: none;
+  }
+
+  .font-library-summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .font-library-summary small {
+    max-width: 100%;
+    text-align: left;
   }
 }
