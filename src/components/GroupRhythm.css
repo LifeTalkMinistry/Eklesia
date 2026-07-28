@@ -34,6 +34,205 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Shared member history ranges. */
+.group-member-range-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--ep-component-card-border);
+  border-radius: 16px;
+  background: var(--ep-component-card-nested-bg);
+}
+
+.group-member-range-tabs button {
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--ep-component-muted-fg);
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.group-member-range-tabs button:hover,
+.group-member-range-tabs button:focus-visible {
+  color: var(--ep-component-heading-fg);
+  outline: none;
+}
+
+.group-member-range-tabs button.is-active {
+  color: var(--ep-component-control-primary-fg);
+  background: var(--ep-component-control-primary-bg);
+  box-shadow: 0 6px 16px var(--ep-shadow-overlay);
+}
+
+.group-member-history-panel {
+  display: grid;
+  gap: 14px;
+  padding: 17px;
+  border: 1px solid var(--ep-component-card-border);
+  border-radius: 18px;
+  color: var(--ep-component-body-fg);
+  background: var(--ep-component-card-bg);
+  box-shadow: var(--ep-component-card-shadow);
+}
+
+.group-member-history-panel .group-workspace-section-heading h4 {
+  color: var(--ep-component-heading-fg);
+}
+
+.group-member-history-panel .group-workspace-section-heading > strong {
+  color: var(--ep-component-accent-fg);
+}
+
+.group-member-history-intro,
+.group-member-history-boundary {
+  margin: 0;
+  color: var(--ep-component-muted-fg);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.group-member-week-history-list {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--ep-component-card-border);
+  border-radius: 16px;
+  background: var(--ep-component-card-nested-bg);
+}
+
+.group-member-week-history-row {
+  display: grid;
+  gap: 9px;
+  padding: 14px;
+  border-bottom: 1px solid var(--ep-component-card-border);
+}
+
+.group-member-week-history-row:last-child {
+  border-bottom: 0;
+}
+
+.group-member-week-history-row > small {
+  color: var(--ep-component-muted-fg);
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+.group-member-history-row-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.group-member-history-row-heading strong {
+  color: var(--ep-component-heading-fg);
+  font-size: 0.78rem;
+}
+
+.group-member-history-row-heading span {
+  color: var(--ep-component-accent-fg);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.group-member-week-history-row .daily-rhythm-week {
+  margin-top: 0;
+}
+
+.group-member-week-history-row.is-unavailable {
+  opacity: 0.72;
+}
+
+.group-member-week-history-row .daily-rhythm-circle.is-unavailable {
+  opacity: 0.58;
+}
+
+.group-member-trend-summary {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid var(--ep-component-card-border);
+  border-radius: 15px;
+  background: var(--ep-component-card-nested-bg);
+}
+
+.group-member-trend-summary span,
+.group-member-month-list article small {
+  color: var(--ep-component-muted-fg);
+  font-size: 0.64rem;
+}
+
+.group-member-trend-summary span {
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.group-member-trend-summary strong {
+  color: var(--ep-component-heading-fg);
+  font-size: 1rem;
+}
+
+.group-member-trend-summary small {
+  color: var(--ep-component-muted-fg);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.group-member-month-list {
+  display: grid;
+  gap: 10px;
+}
+
+.group-member-month-list article {
+  display: grid;
+  gap: 8px;
+  padding: 13px;
+  border: 1px solid var(--ep-component-card-border);
+  border-radius: 15px;
+  background: var(--ep-component-card-nested-bg);
+}
+
+.group-member-month-list article > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.group-member-month-list article strong {
+  color: var(--ep-component-heading-fg);
+  font-size: 0.78rem;
+}
+
+.group-member-month-list article span {
+  color: var(--ep-component-muted-fg);
+  font-size: 0.68rem;
+}
+
+.group-member-month-list article.is-unavailable {
+  opacity: 0.72;
+}
+
+.group-member-month-meter {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ep-component-card-border) 70%, transparent);
+}
+
+.group-member-month-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ep-component-control-primary-bg);
+}
+
 /* Light theme: keep each member rhythm visibly distinct inside the list. */
 :root[data-ui-theme="light"] .group-rhythm-card .daily-checkin-list {
   background: var(--ep-component-card-bg);
@@ -96,7 +295,8 @@
 }
 
 :root[data-ui-theme="light"] .group-rhythm-card .group-member-week,
-:root[data-ui-theme="light"] .group-rhythm-card .group-member-signal {
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-signal,
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-history-panel {
   border-color: var(--ep-component-card-border-emphasis) !important;
   color: var(--ep-component-body-fg) !important;
   background: linear-gradient(
@@ -108,17 +308,42 @@
 }
 
 :root[data-ui-theme="light"] .group-rhythm-card .group-member-week .group-workspace-section-heading h4,
-:root[data-ui-theme="light"] .group-rhythm-card .group-member-signal h4 {
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-signal h4,
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-history-panel .group-workspace-section-heading h4 {
   color: var(--ep-component-heading-fg) !important;
 }
 
-:root[data-ui-theme="light"] .group-rhythm-card .group-member-week .group-workspace-section-heading > strong {
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-week .group-workspace-section-heading > strong,
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-history-panel .group-workspace-section-heading > strong {
   color: var(--ep-component-accent-fg) !important;
 }
 
 :root[data-ui-theme="light"] .group-rhythm-card .group-member-week .daily-rhythm-week {
   padding: 4px 0 0;
   background: transparent !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-range-tabs {
+  border-color: var(--ep-component-card-border) !important;
+  background: var(--ep-component-card-bg) !important;
+  box-shadow: 0 8px 22px var(--ep-shadow-overlay);
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-range-tabs button {
+  color: var(--ep-component-muted-fg) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-range-tabs button.is-active {
+  color: var(--ep-component-control-primary-fg) !important;
+  background: var(--ep-component-control-primary-bg) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-week-history-list,
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-week-history-row,
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-trend-summary,
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-month-list article {
+  border-color: var(--ep-component-card-border) !important;
+  background: var(--ep-component-card-bg) !important;
 }
 
 :root[data-ui-theme="light"] .group-rhythm-card .group-member-stats {
@@ -177,6 +402,25 @@
 
   .group-rhythm-card .group-member-stats {
     grid-template-columns: 1fr;
+  }
+
+  .group-member-range-tabs button {
+    padding-inline: 6px;
+    font-size: 0.68rem;
+  }
+
+  .group-member-history-panel {
+    padding: 14px;
+  }
+
+  .group-member-week-history-row {
+    padding: 12px 10px;
+  }
+
+  .group-member-month-list article > div:first-child {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
   }
 
   :root[data-ui-theme="light"] .group-rhythm-card .daily-rhythm-row:not(:last-child)::after {
