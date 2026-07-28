@@ -24,6 +24,7 @@ import './theme-system.css';
 import './theme-primitives.css';
 import './theme-semantic.css';
 import './theme-component-tokens.css';
+import './theme-light.css';
 import './theme-preferences.css';
 
 runBrandMigration();
