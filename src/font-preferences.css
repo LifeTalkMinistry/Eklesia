@@ -3,64 +3,52 @@
   font-family: var(--ekklesia-user-font);
 }
 
-/*
- * The member's selected font applies across the complete app. The only
- * typography intentionally protected is the Ekklesia Pulse brand lockup in
- * the top application header.
- */
+/* The selected font affects the complete app except the top brand lockup. */
 body,
 body *,
 body *::before,
-body *::after {
-  font-family: var(--ekklesia-user-font) !important;
-}
+body *::after { font-family: var(--ekklesia-user-font) !important; }
 
 .brand-button,
 .brand-button *,
 .brand-button *::before,
-.brand-button *::after {
-  font-family: Georgia, "Times New Roman", serif !important;
-}
+.brand-button *::after { font-family: Georgia, "Times New Roman", serif !important; }
 
-/* Keep every font choice recognizable inside the picker itself. */
 .font-preference-preview,
-.font-preference-preview * {
-  font-family: var(--font-preview-family, var(--ekklesia-user-font)) !important;
-}
-
+.font-preference-preview * { font-family: var(--font-preview-family, var(--ekklesia-user-font)) !important; }
 .font-option-copy b,
-.font-option-sample {
-  font-family: var(--font-option-family, var(--ekklesia-user-font)) !important;
-}
+.font-option-sample { font-family: var(--font-option-family, var(--ekklesia-user-font)) !important; }
 
 .font-preference-preview {
   display: grid;
   gap: 8px;
   margin-top: 20px;
   padding: 20px;
-  border: 1px solid rgba(232, 217, 170, 0.14);
-  border-radius: 19px;
-  background: radial-gradient(circle at 100% 0, rgba(232, 217, 170, 0.1), transparent 42%), rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-card-radius);
+  color: var(--ui-text);
+  background: var(--ui-feature-alt);
+  box-shadow: var(--ui-card-shadow);
 }
 
 .font-preference-preview span {
-  color: #b8d8c4;
-  font-size: 0.68rem;
+  color: var(--ui-accent);
+  font-size: .68rem;
   font-weight: 900;
-  letter-spacing: 0.12em;
+  letter-spacing: .12em;
   text-transform: uppercase;
 }
 
 .font-preference-preview strong {
-  color: #fffdf5;
+  color: var(--ui-heading);
   font-size: 1.15rem;
   line-height: 1.4;
 }
 
 .font-preference-preview p {
   margin: 0;
-  color: rgba(244, 245, 239, 0.6);
-  font-size: 0.83rem;
+  color: var(--ui-muted);
+  font-size: .83rem;
   line-height: 1.65;
 }
 
@@ -77,44 +65,34 @@ body *::after {
   gap: 10px;
   min-height: 48px;
   padding: 0 13px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 15px;
-  background: rgba(3, 10, 6, 0.3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-input);
 }
 
-.font-search-field > span {
-  color: rgba(244, 245, 239, 0.45);
-  font-size: 1.05rem;
-}
-
+.font-search-field > span { color: var(--ui-subtle); font-size: 1.05rem; }
 .font-search-field input {
   width: 100%;
   min-width: 0;
   padding: 12px 0;
-  border: 0;
+  border: 0 !important;
   outline: 0;
-  color: #fffdf5;
-  background: transparent;
-  font-size: 0.84rem;
+  color: var(--ui-text) !important;
+  background: transparent !important;
+  font-size: .84rem;
 }
-
-.font-search-field input::placeholder {
-  color: rgba(244, 245, 239, 0.35);
-}
-
-.font-search-field input::-webkit-search-cancel-button {
-  display: none;
-}
-
+.font-search-field input::placeholder { color: var(--ui-subtle) !important; }
+.font-search-field input::-webkit-search-cancel-button { display: none; }
 .font-search-field button {
   display: grid;
   width: 30px;
   height: 30px;
   place-items: center;
   cursor: pointer;
-  border-radius: 9px;
-  color: rgba(244, 245, 239, 0.58);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--ui-border);
+  border-radius: calc(var(--ui-control-radius) - 3px);
+  color: var(--ui-muted);
+  background: var(--ui-card);
   font-size: 1rem;
 }
 
@@ -122,41 +100,28 @@ body *::after {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 1px 1px 5px;
+  padding: 5px;
   scrollbar-width: none;
 }
-
-.font-category-tabs::-webkit-scrollbar {
-  display: none;
-}
-
+.font-category-tabs::-webkit-scrollbar { display: none; }
 .font-category-tabs button {
   flex: 0 0 auto;
   cursor: pointer;
   padding: 9px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.075);
-  border-radius: 999px;
-  color: rgba(244, 245, 239, 0.52);
-  background: rgba(255, 255, 255, 0.025);
-  font-size: 0.72rem;
+  border: 1px solid transparent;
+  border-radius: var(--ui-pill-radius);
+  color: var(--ui-subtle);
+  background: transparent;
+  font-size: .72rem;
   font-weight: 800;
 }
-
-.font-category-tabs button small {
-  margin-left: 3px;
-  color: rgba(244, 245, 239, 0.34);
-  font-size: 0.62rem;
-}
-
+.font-category-tabs button small { margin-left: 3px; color: var(--ui-subtle); font-size: .62rem; }
 .font-category-tabs button.is-active {
-  border-color: rgba(184, 216, 196, 0.3);
-  color: #dceadf;
-  background: rgba(184, 216, 196, 0.08);
+  border-color: var(--ui-border-strong);
+  color: var(--ui-nav-active-text);
+  background: var(--ui-nav-active);
 }
-
-.font-category-tabs button.is-active small {
-  color: #b8d8c4;
-}
+.font-category-tabs button.is-active small { color: var(--ui-accent); }
 
 .font-library-summary {
   display: flex;
@@ -165,28 +130,17 @@ body *::after {
   gap: 12px;
   margin-top: 15px;
 }
-
-.font-library-summary span {
-  color: #dce9df;
-  font-size: 0.75rem;
-  font-weight: 900;
-}
-
+.font-library-summary span { color: var(--ui-heading); font-size: .75rem; font-weight: 900; }
 .font-library-summary small {
   overflow: hidden;
-  color: rgba(244, 245, 239, 0.38);
-  font-size: 0.68rem;
+  color: var(--ui-subtle);
+  font-size: .68rem;
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.font-option-list {
-  display: grid;
-  gap: 9px;
-  margin-top: 10px;
-}
-
+.font-option-list { display: grid; gap: 9px; margin-top: 10px; }
 .font-option {
   display: grid;
   width: 100%;
@@ -196,126 +150,49 @@ body *::after {
   min-height: 70px;
   padding: 13px 14px;
   cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.075);
-  border-radius: 16px;
-  color: inherit;
-  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-card-inner-radius);
+  color: var(--ui-text);
+  background: var(--ui-card);
   text-align: left;
+  box-shadow: var(--ui-card-shadow);
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 }
-
-.font-option:hover {
-  transform: translateY(-1px);
-  border-color: rgba(232, 217, 170, 0.17);
-}
-
+.font-option:hover { transform: translateY(-1px); border-color: var(--ui-border-strong); }
 .font-option.is-selected {
-  border-color: rgba(184, 216, 196, 0.34);
-  background: rgba(184, 216, 196, 0.075);
+  border-color: color-mix(in srgb, var(--ui-accent) 38%, transparent);
+  background: var(--ui-accent-soft);
 }
-
 .font-option-radio {
   width: 19px;
   height: 19px;
-  border: 2px solid rgba(244, 245, 239, 0.24);
-  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--ui-text) 26%, transparent);
+  border-radius: var(--ui-pill-radius);
   box-shadow: inset 0 0 0 4px transparent;
 }
-
 .font-option.is-selected .font-option-radio {
-  border-color: #b8d8c4;
-  background: #b8d8c4;
-  box-shadow: inset 0 0 0 4px #0d1b14;
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
+  box-shadow: inset 0 0 0 4px var(--ui-frame);
 }
-
-.font-option-copy {
-  min-width: 0;
-}
-
-.font-option-copy b {
-  display: block;
-  color: #fffdf5;
-  font-size: 0.92rem;
-}
-
+.font-option-copy { min-width: 0; }
+.font-option-copy b { display: block; color: var(--ui-heading); font-size: .92rem; }
 .font-option-copy small {
   display: block;
   margin-top: 4px;
-  color: rgba(244, 245, 239, 0.43);
-  font-size: 0.72rem;
+  color: var(--ui-muted);
+  font-size: .72rem;
   line-height: 1.45;
 }
-
 .font-option-sample {
   display: grid;
   width: 42px;
   height: 42px;
   place-items: center;
-  border: 1px solid rgba(232, 217, 170, 0.13);
-  border-radius: 13px;
-  color: #eadfb8;
-  background: rgba(232, 217, 170, 0.055);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-control-radius);
+  color: var(--ui-accent-2);
+  background: var(--ui-accent-2-soft);
   font-size: 1rem;
   font-weight: 700;
-}
-
-.font-library-empty {
-  margin-top: 12px;
-  padding: 22px;
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 17px;
-  text-align: center;
-}
-
-.font-library-empty strong {
-  color: #fffdf5;
-}
-
-.font-library-empty p {
-  margin: 7px 0 0;
-  color: rgba(244, 245, 239, 0.48);
-  font-size: 0.78rem;
-  line-height: 1.5;
-}
-
-.font-library-empty .secondary-button {
-  margin-top: 14px;
-}
-
-.font-dialog-actions {
-  position: sticky;
-  bottom: -1px;
-  z-index: 2;
-  margin-top: 18px;
-  padding-top: 14px;
-  background: linear-gradient(180deg, transparent, rgba(8, 17, 13, 0.96) 24%);
-}
-
-.font-dialog-actions .primary-button {
-  margin-top: 0;
-}
-
-@media (max-width: 480px) {
-  .font-preference-preview {
-    padding: 17px;
-  }
-
-  .font-option {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .font-option-sample {
-    display: none;
-  }
-
-  .font-library-summary {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  .font-library-summary small {
-    max-width: 100%;
-    text-align: left;
-  }
 }

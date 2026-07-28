@@ -20,10 +20,8 @@ import './additional-devotion.css';
 import './devotion-flip.css';
 import './notebook-devotion.css';
 import './font-preferences.css';
+import './theme-system.css';
 import './theme-preferences.css';
-import './theme-coverage.css';
-import './theme-feature-coverage.css';
-import './theme-component-coherence.css';
 
 runBrandMigration();
 initializeThemePreferences();
