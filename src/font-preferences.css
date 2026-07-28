@@ -3,6 +3,36 @@
   font-family: var(--ekklesia-user-font);
 }
 
+/*
+ * The member's selected font applies across the complete app. The only
+ * typography intentionally protected is the Ekklesia Pulse brand lockup in
+ * the top application header.
+ */
+body,
+body *,
+body *::before,
+body *::after {
+  font-family: var(--ekklesia-user-font) !important;
+}
+
+.brand-button,
+.brand-button *,
+.brand-button *::before,
+.brand-button *::after {
+  font-family: Georgia, "Times New Roman", serif !important;
+}
+
+/* Keep every font choice recognizable inside the picker itself. */
+.font-preference-preview,
+.font-preference-preview * {
+  font-family: var(--font-preview-family, var(--ekklesia-user-font)) !important;
+}
+
+.font-option-copy b,
+.font-option-sample {
+  font-family: var(--font-option-family, var(--ekklesia-user-font)) !important;
+}
+
 .font-preference-preview {
   display: grid;
   gap: 8px;
