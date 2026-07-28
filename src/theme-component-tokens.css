@@ -1,0 +1,126 @@
+/*
+ * Ekklesia Pulse component tokens
+ *
+ * Components consume these role-specific values. The final section is a
+ * temporary compatibility bridge for existing components that still reference
+ * the former --ui-* variables. New code must use --ep-component-* tokens.
+ */
+
+:root {
+  /* Application shell */
+  --ep-component-app-canvas-bg: var(--ep-bg-canvas-default);
+  --ep-component-app-canvas-art: var(--ep-bg-canvas-art);
+  --ep-component-frame-bg: var(--ep-bg-canvas-inset);
+  --ep-component-frame-art: var(--ep-bg-canvas-inset-art);
+  --ep-component-frame-border: var(--ep-border-default);
+  --ep-component-frame-radius: var(--ep-radius-frame);
+  --ep-component-frame-shadow: 0 22px 70px var(--ep-shadow-overlay);
+
+  /* Header and navigation */
+  --ep-component-header-bg: var(--ep-layer-header);
+  --ep-component-navigation-bg: var(--ep-layer-navigation);
+  --ep-component-navigation-fg: var(--ep-fg-subtle);
+  --ep-component-navigation-selected-bg: var(--ep-layer-selected);
+  --ep-component-navigation-selected-fg: var(--ep-navigation-selected-fg);
+  --ep-component-navigation-radius: var(--ep-radius-layer);
+
+  /* Cards and contextual layers */
+  --ep-component-card-bg: var(--ep-layer-01);
+  --ep-component-card-strong-bg: var(--ep-layer-02);
+  --ep-component-card-nested-bg: var(--ep-layer-03);
+  --ep-component-card-border: var(--ep-border-default);
+  --ep-component-card-border-emphasis: var(--ep-border-emphasis);
+  --ep-component-card-divider: var(--ep-border-muted);
+  --ep-component-card-radius: var(--ep-radius-layer);
+  --ep-component-card-nested-radius: var(--ep-radius-nested);
+  --ep-component-card-shadow: var(--ep-shadow-layer);
+  --ep-component-feature-bg: var(--ep-layer-feature);
+  --ep-component-feature-secondary-bg: var(--ep-layer-feature-secondary);
+
+  /* Dialogs and form controls */
+  --ep-component-dialog-bg: var(--ep-layer-dialog);
+  --ep-component-dialog-overlay: color-mix(in srgb, var(--ep-bg-canvas-default) 84%, transparent);
+  --ep-component-input-bg: var(--ep-layer-input);
+  --ep-component-control-radius: var(--ep-radius-control);
+  --ep-component-control-primary-bg: var(--ep-accent-emphasis);
+  --ep-component-control-primary-fg: var(--ep-fg-on-emphasis);
+  --ep-component-control-secondary-bg: var(--ep-layer-01);
+  --ep-component-control-secondary-fg: var(--ep-fg-default);
+  --ep-component-focus-outline: var(--ep-focus-outline);
+
+  /* Text, accents, and statuses */
+  --ep-component-heading-fg: var(--ep-fg-strong);
+  --ep-component-body-fg: var(--ep-fg-default);
+  --ep-component-muted-fg: var(--ep-fg-muted);
+  --ep-component-subtle-fg: var(--ep-fg-subtle);
+  --ep-component-accent-fg: var(--ep-accent-fg);
+  --ep-component-accent-secondary-fg: var(--ep-accent-secondary-fg);
+  --ep-component-accent-muted-bg: var(--ep-accent-muted);
+  --ep-component-accent-secondary-muted-bg: var(--ep-accent-secondary-muted);
+  --ep-component-success-bg: var(--ep-success-emphasis);
+  --ep-component-success-fg: var(--ep-success-fg-on-emphasis);
+  --ep-component-success-muted-bg: var(--ep-success-muted);
+  --ep-component-danger-fg: var(--ep-danger-fg);
+  --ep-component-danger-muted-bg: var(--ep-danger-muted);
+  --ep-component-attention-fg: var(--ep-attention-fg);
+  --ep-component-attention-muted-bg: var(--ep-attention-muted);
+
+  /* Browser chrome */
+  --ep-component-scrollbar-track: var(--ep-scrollbar-track);
+  --ep-component-scrollbar-thumb: var(--ep-scrollbar-thumb);
+}
+
+/*
+ * Compatibility bridge
+ *
+ * Same specificity as the previous theme selectors and loaded afterward, so
+ * the established token contract becomes the source of truth immediately.
+ */
+:root,
+:root[data-ekklesia-ui-skin] {
+  --ui-canvas: var(--ep-component-app-canvas-bg);
+  --ui-canvas-art: var(--ep-component-app-canvas-art);
+  --ui-frame: var(--ep-component-frame-bg);
+  --ui-frame-art: var(--ep-component-frame-art);
+  --ui-header: var(--ep-component-header-bg);
+  --ui-nav: var(--ep-component-navigation-bg);
+  --ui-card: var(--ep-component-card-bg);
+  --ui-card-strong: var(--ep-component-card-strong-bg);
+  --ui-card-muted: var(--ep-component-card-nested-bg);
+  --ui-feature: var(--ep-component-feature-bg);
+  --ui-feature-alt: var(--ep-component-feature-secondary-bg);
+  --ui-dialog: var(--ep-component-dialog-bg);
+  --ui-input: var(--ep-component-input-bg);
+  --ui-heading: var(--ep-component-heading-fg);
+  --ui-text: var(--ep-component-body-fg);
+  --ui-muted: var(--ep-component-muted-fg);
+  --ui-subtle: var(--ep-component-subtle-fg);
+  --ui-accent: var(--ep-component-accent-fg);
+  --ui-accent-2: var(--ep-component-accent-secondary-fg);
+  --ui-accent-soft: var(--ep-component-accent-muted-bg);
+  --ui-accent-2-soft: var(--ep-component-accent-secondary-muted-bg);
+  --ui-primary: var(--ep-component-control-primary-bg);
+  --ui-primary-text: var(--ep-component-control-primary-fg);
+  --ui-border: var(--ep-component-card-border);
+  --ui-border-strong: var(--ep-component-card-border-emphasis);
+  --ui-divider: var(--ep-component-card-divider);
+  --ui-danger: var(--ep-component-danger-fg);
+  --ui-danger-soft: var(--ep-component-danger-muted-bg);
+  --ui-success: var(--ep-component-success-bg);
+  --ui-success-text: var(--ep-component-success-fg);
+  --ui-success-soft: var(--ep-component-success-muted-bg);
+  --ui-warning: var(--ep-component-attention-fg);
+  --ui-warning-soft: var(--ep-component-attention-muted-bg);
+  --ui-shadow: var(--ep-shadow-overlay);
+  --ui-card-shadow: var(--ep-component-card-shadow);
+  --ui-focus: var(--ep-component-focus-outline);
+  --ui-scroll-track: var(--ep-component-scrollbar-track);
+  --ui-scroll-thumb: var(--ep-component-scrollbar-thumb);
+  --ui-frame-radius: var(--ep-component-frame-radius);
+  --ui-card-radius: var(--ep-component-card-radius);
+  --ui-card-inner-radius: var(--ep-component-card-nested-radius);
+  --ui-control-radius: var(--ep-component-control-radius);
+  --ui-pill-radius: var(--ep-radius-pill);
+  --ui-nav-active: var(--ep-component-navigation-selected-bg);
+  --ui-nav-active-text: var(--ep-component-navigation-selected-fg);
+}
