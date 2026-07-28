@@ -34,6 +34,42 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+:root[data-ui-theme="light"] .group-rhythm-card .daily-checkin-avatar {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-attention-fg) !important;
+  background: var(--ep-component-attention-muted-bg) !important;
+  box-shadow: 0 3px 10px var(--ep-shadow-overlay);
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .daily-rhythm-circle {
+  border-color: var(--ep-component-card-border) !important;
+  color: var(--ep-component-muted-fg) !important;
+  background: var(--ep-component-card-nested-bg) !important;
+  opacity: 1;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .daily-rhythm-circle.is-today:not(.is-complete) {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-attention-fg) !important;
+  background: var(--ep-component-attention-muted-bg) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ep-component-attention-fg) 12%, transparent) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .daily-rhythm-circle.is-complete {
+  border-color: var(--ep-component-control-primary-bg) !important;
+  color: var(--ep-component-control-primary-fg) !important;
+  background: var(--ep-component-control-primary-bg) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .daily-rhythm-circle.is-future {
+  opacity: 0.62;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .daily-rhythm-day small {
+  color: var(--ep-component-muted-fg) !important;
+  opacity: 0.9;
+}
+
 @media (max-width: 420px) {
   .group-rhythm-card .daily-rhythm-row {
     padding: 18px 13px 20px;
