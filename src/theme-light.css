@@ -1,0 +1,298 @@
+/*
+ * Light theme refinement
+ *
+ * The Light skin uses dark text on clean white/sage surfaces. Only immersive
+ * content such as Church Pulse uses an intentional inverse treatment.
+ */
+
+:root[data-ui-theme="light"] {
+  --light-surface-tint: color-mix(in srgb, var(--ep-component-control-primary-bg) 7%, var(--ep-component-card-bg));
+  --light-surface-tint-strong: color-mix(in srgb, var(--ep-component-control-primary-bg) 12%, var(--ep-component-card-bg));
+  --light-feature-warm: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--ep-component-control-primary-bg) 10%, var(--ep-component-card-bg)),
+    var(--ep-component-card-bg) 58%,
+    color-mix(in srgb, var(--ep-component-attention-fg) 8%, var(--ep-component-card-bg))
+  );
+  --light-immersive-bg: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--ep-component-control-primary-bg) 58%, var(--ep-component-heading-fg)),
+    color-mix(in srgb, var(--ep-component-control-primary-bg) 26%, var(--ep-component-heading-fg)) 58%,
+    var(--ep-component-heading-fg)
+  );
+  --light-immersive-bg-warm: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--ep-component-attention-fg) 46%, var(--ep-component-heading-fg)),
+    color-mix(in srgb, var(--ep-component-attention-fg) 18%, var(--ep-component-heading-fg)) 58%,
+    var(--ep-component-heading-fg)
+  );
+  --light-inverse-fg: var(--ep-component-control-primary-fg);
+  --light-inverse-muted: color-mix(in srgb, var(--ep-component-control-primary-fg) 78%, transparent);
+  --light-inverse-subtle: color-mix(in srgb, var(--ep-component-control-primary-fg) 56%, transparent);
+  --light-inverse-border: color-mix(in srgb, var(--ep-component-control-primary-fg) 20%, transparent);
+  --light-inverse-control: color-mix(in srgb, var(--ep-component-control-primary-fg) 13%, transparent);
+}
+
+/* Global Light hierarchy */
+:root[data-ui-theme="light"] .dashboard-frame,
+:root[data-ui-theme="light"] .devotion-frame,
+:root[data-ui-theme="light"] .church-workspace-frame,
+:root[data-ui-theme="light"] .notebook-flow-frame,
+:root[data-ui-theme="light"] .notebook-devotion-frame {
+  background: var(--ep-component-frame-art) !important;
+}
+
+:root[data-ui-theme="light"] .dashboard-eyebrow,
+:root[data-ui-theme="light"] .verse-reference,
+:root[data-ui-theme="light"] .church-workspace-label {
+  color: var(--ep-component-accent-fg) !important;
+}
+
+:root[data-ui-theme="light"] .week-score,
+:root[data-ui-theme="light"] .option-note,
+:root[data-ui-theme="light"] .panel-intro,
+:root[data-ui-theme="light"] .status-message,
+:root[data-ui-theme="light"] .devotion-option .option-topline > span:last-child,
+:root[data-ui-theme="light"] .devotion-option .option-topline > small:last-child {
+  color: var(--ep-component-muted-fg) !important;
+}
+
+/* Home */
+:root[data-ui-theme="light"] .today-card,
+:root[data-ui-theme="light"] .today-card-reminder,
+:root[data-ui-theme="light"] .today-card-devotion {
+  background: var(--light-feature-warm) !important;
+  box-shadow: 0 16px 42px var(--ep-shadow-overlay) !important;
+}
+
+:root[data-ui-theme="light"] .daily-verse-preview,
+:root[data-ui-theme="light"] .reminder-message {
+  color: var(--ep-component-body-fg) !important;
+  opacity: 1 !important;
+}
+
+:root[data-ui-theme="light"] .section-block {
+  border-color: var(--ep-component-card-border) !important;
+  background: var(--ep-component-card-bg) !important;
+  box-shadow: var(--ep-component-card-shadow) !important;
+}
+
+:root[data-ui-theme="light"] .day-circle:not(.is-complete) {
+  color: var(--ep-component-subtle-fg) !important;
+  background: var(--ep-component-card-nested-bg) !important;
+}
+
+:root[data-ui-theme="light"] .day-circle.is-today:not(.is-complete) {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-attention-fg) !important;
+  background: var(--ep-component-attention-muted-bg) !important;
+}
+
+/* Devotion choice */
+:root[data-ui-theme="light"] .devotion-option,
+:root[data-ui-theme="light"] .personal-option {
+  border-color: var(--ep-component-card-border) !important;
+  background: var(--ep-component-card-bg) !important;
+  box-shadow: var(--ep-component-card-shadow) !important;
+}
+
+:root[data-ui-theme="light"] .recommended-option,
+:root[data-ui-theme="light"] .additional-notebook-choice {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  background: var(--light-feature-warm) !important;
+}
+
+:root[data-ui-theme="light"] .devotion-option h3,
+:root[data-ui-theme="light"] .personal-option h3,
+:root[data-ui-theme="light"] .recommended-option h3 {
+  color: var(--ep-component-heading-fg) !important;
+}
+
+:root[data-ui-theme="light"] .devotion-option .choice-action:not(.primary-button):not(.card-button) {
+  border-color: var(--ep-component-card-border) !important;
+  color: var(--ep-component-heading-fg) !important;
+  background: var(--ep-component-card-bg) !important;
+}
+
+/* WGAP */
+:root[data-ui-theme="light"] .wgap-word-card {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-body-fg) !important;
+  background: var(--light-feature-warm) !important;
+  box-shadow: 0 16px 42px var(--ep-shadow-overlay) !important;
+}
+
+:root[data-ui-theme="light"] .wgap-word-card .wgap-section-title strong,
+:root[data-ui-theme="light"] .wgap-word-card .wgap-section-title label,
+:root[data-ui-theme="light"] .wgap-word-card blockquote,
+:root[data-ui-theme="light"] .wgap-word-card p:not(.dashboard-eyebrow) {
+  color: var(--ep-component-heading-fg) !important;
+  opacity: 1 !important;
+}
+
+:root[data-ui-theme="light"] .wgap-field {
+  border-color: var(--ep-component-card-border) !important;
+  background: var(--ep-component-card-bg) !important;
+  box-shadow: var(--ep-component-card-shadow) !important;
+}
+
+:root[data-ui-theme="light"] .wgap-field .wgap-section-title strong,
+:root[data-ui-theme="light"] .wgap-field .wgap-section-title label {
+  color: var(--ep-component-heading-fg) !important;
+}
+
+:root[data-ui-theme="light"] .wgap-field textarea {
+  color: var(--ep-component-body-fg) !important;
+  background: var(--ep-component-input-bg) !important;
+}
+
+:root[data-ui-theme="light"] .wgap-field textarea::placeholder {
+  color: var(--ep-component-subtle-fg) !important;
+  opacity: 1 !important;
+}
+
+/* Church workspace and Home */
+:root[data-ui-theme="light"] .church-workspace-back,
+:root[data-ui-theme="light"] .church-workspace-identity h1,
+:root[data-ui-theme="light"] .church-workspace-identity h2 {
+  color: var(--ep-component-heading-fg) !important;
+}
+
+:root[data-ui-theme="light"] .church-workspace-primary-nav,
+:root[data-ui-theme="light"] .organization-section-nav {
+  border-color: var(--ep-component-card-border) !important;
+  background: var(--ep-component-navigation-bg) !important;
+  box-shadow: 0 10px 28px var(--ep-shadow-overlay) !important;
+}
+
+:root[data-ui-theme="light"] .church-home-billboard:not([style*="background-image"]) {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-body-fg) !important;
+  background: var(--light-feature-warm) !important;
+}
+
+:root[data-ui-theme="light"] .church-home-billboard:not([style*="background-image"]) .dashboard-eyebrow,
+:root[data-ui-theme="light"] .church-home-billboard:not([style*="background-image"]) h2,
+:root[data-ui-theme="light"] .church-home-billboard:not([style*="background-image"]) h3,
+:root[data-ui-theme="light"] .church-home-billboard:not([style*="background-image"]) p,
+:root[data-ui-theme="light"] .church-home-billboard:not([style*="background-image"]) small,
+:root[data-ui-theme="light"] .church-home-billboard:not([style*="background-image"]) strong {
+  color: var(--ep-component-heading-fg) !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+}
+
+:root[data-ui-theme="light"] .church-home-billboard:not([style*="background-image"]) .dashboard-eyebrow {
+  color: var(--ep-component-accent-fg) !important;
+}
+
+:root[data-ui-theme="light"] .church-home-billboard-controls button,
+:root[data-ui-theme="light"] .church-home-billboard-counter {
+  border-color: var(--ep-component-card-border) !important;
+  color: var(--ep-component-body-fg) !important;
+  background: var(--ep-component-card-bg) !important;
+}
+
+/* Church Pulse: intentionally immersive, with guaranteed inverse contrast. */
+:root[data-ui-theme="light"] .church-pulse-feed {
+  background: var(--ep-component-heading-fg) !important;
+}
+
+:root[data-ui-theme="light"] .church-pulse-post {
+  color: var(--light-inverse-fg) !important;
+  background: var(--light-immersive-bg) !important;
+}
+
+:root[data-ui-theme="light"] .church-pulse-post-devotion,
+:root[data-ui-theme="light"] .church-pulse-post-video {
+  background: var(--light-immersive-bg-warm) !important;
+}
+
+:root[data-ui-theme="light"] .church-pulse-post::after {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ep-component-heading-fg) 5%, transparent),
+    transparent 30%,
+    color-mix(in srgb, var(--ep-component-heading-fg) 92%, transparent) 100%
+  ) !important;
+}
+
+:root[data-ui-theme="light"] .church-pulse-feed-tabs,
+:root[data-ui-theme="light"] .church-pulse-feed-info,
+:root[data-ui-theme="light"] .church-pulse-post-actions button > span {
+  border-color: var(--light-inverse-border) !important;
+  color: var(--light-inverse-fg) !important;
+  background: var(--light-inverse-control) !important;
+}
+
+:root[data-ui-theme="light"] .church-pulse-feed-tabs button,
+:root[data-ui-theme="light"] .church-pulse-feed-tabs span,
+:root[data-ui-theme="light"] .church-pulse-post-copy h2,
+:root[data-ui-theme="light"] .church-pulse-post-copy > small,
+:root[data-ui-theme="light"] .church-pulse-post-actions button,
+:root[data-ui-theme="light"] .church-pulse-post-actions button small {
+  color: var(--light-inverse-fg) !important;
+  text-shadow: none !important;
+}
+
+:root[data-ui-theme="light"] .church-pulse-feed-tabs button:not(.is-active),
+:root[data-ui-theme="light"] .church-pulse-post-copy > p:not(.dashboard-eyebrow) {
+  color: var(--light-inverse-muted) !important;
+}
+
+:root[data-ui-theme="light"] .church-pulse-post-copy .dashboard-eyebrow,
+:root[data-ui-theme="light"] .church-pulse-post-copy em,
+:root[data-ui-theme="light"] .church-pulse-post-visual > span {
+  color: color-mix(in srgb, var(--ep-component-attention-fg) 72%, var(--light-inverse-fg)) !important;
+}
+
+:root[data-ui-theme="light"] .church-pulse-post-visual > span {
+  border-color: var(--light-inverse-border) !important;
+  background: var(--light-inverse-control) !important;
+}
+
+/* Tools */
+:root[data-ui-theme="light"] .unified-tools-page > h2 {
+  color: var(--ep-component-heading-fg) !important;
+}
+
+:root[data-ui-theme="light"] .unified-tool-grid button {
+  border-color: var(--ep-component-card-border) !important;
+  color: var(--ep-component-body-fg) !important;
+  background: linear-gradient(145deg, var(--ep-component-card-bg), var(--light-surface-tint)) !important;
+  box-shadow: var(--ep-component-card-shadow) !important;
+}
+
+:root[data-ui-theme="light"] .unified-tool-grid button:hover,
+:root[data-ui-theme="light"] .unified-tool-grid button:focus-visible {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  background: linear-gradient(145deg, var(--ep-component-card-bg), var(--light-surface-tint-strong)) !important;
+}
+
+:root[data-ui-theme="light"] .unified-tool-grid strong {
+  color: var(--ep-component-heading-fg) !important;
+}
+
+:root[data-ui-theme="light"] .unified-tool-grid small {
+  color: var(--ep-component-muted-fg) !important;
+}
+
+:root[data-ui-theme="light"] .unified-tool-grid button > span {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-attention-fg) !important;
+  background: var(--ep-component-attention-muted-bg) !important;
+}
+
+/* Profile */
+:root[data-ui-theme="light"] .alpha-profile-card,
+:root[data-ui-theme="light"] .settings-list,
+:root[data-ui-theme="light"] .alpha-data-controls {
+  border-color: var(--ep-component-card-border) !important;
+  background: var(--ep-component-card-bg) !important;
+  box-shadow: var(--ep-component-card-shadow) !important;
+}
+
+:root[data-ui-theme="light"] .alpha-profile-details > div + div,
+:root[data-ui-theme="light"] .settings-list button + button {
+  border-top-color: var(--ep-component-card-divider) !important;
+}
