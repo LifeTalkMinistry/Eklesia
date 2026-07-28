@@ -23,6 +23,7 @@ import './font-preferences.css';
 import './theme-preferences.css';
 import './theme-coverage.css';
 import './theme-feature-coverage.css';
+import './theme-component-coherence.css';
 
 runBrandMigration();
 initializeThemePreferences();
