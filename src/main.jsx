@@ -20,6 +20,7 @@ import './additional-devotion.css';
 import './devotion-flip.css';
 import './notebook-devotion.css';
 import './font-preferences.css';
+import './components/GroupRhythm.css';
 import './theme-system.css';
 import './theme-primitives.css';
 import './theme-semantic.css';
