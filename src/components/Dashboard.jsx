@@ -7,6 +7,7 @@ import ChurchPulseFeed from './ChurchPulseFeed.jsx';
 import DeleteLocalDataDialog from './DeleteLocalDataDialog.jsx';
 import EditProfileDialog from './EditProfileDialog.jsx';
 import FeedbackDialog from './FeedbackDialog.jsx';
+import FontPreferencesDialog from './FontPreferencesDialog.jsx';
 import Journey from './Journey.jsx';
 import RestartIntroductionDialog from './RestartIntroductionDialog.jsx';
 import TodayDevotionCard from './TodayDevotionCard.jsx';
@@ -141,6 +142,7 @@ function ToolsHome({ onOpenJourney, onOpenBible }) {
 function Profile({ profile, storageAvailable, onProfileUpdated, onRestartIntroduction, onDeleteLocalData }) {
   const [dialog, setDialog] = useState('');
   const editRef = useRef(null);
+  const fontRef = useRef(null);
   const alphaRef = useRef(null);
   const feedbackRef = useRef(null);
   const restartRef = useRef(null);
@@ -164,12 +166,14 @@ function Profile({ profile, storageAvailable, onProfileUpdated, onRestartIntrodu
       </section>
       <div className="settings-list alpha-settings-list">
         <button ref={editRef} type="button" onClick={() => setDialog('edit')}><span><b>Edit profile</b><small>Change the identity used on this device</small></span><span aria-hidden="true">›</span></button>
+        <button ref={fontRef} type="button" onClick={() => setDialog('font')}><span><b>Font style</b><small>Choose a comfortable font for this device</small></span><span aria-hidden="true">›</span></button>
         <button ref={alphaRef} type="button" onClick={() => setDialog('alpha')}><span><b>About the Private Alpha</b><small>Review storage, test scope, and limitations</small></span><span aria-hidden="true">›</span></button>
         <button ref={feedbackRef} type="button" onClick={() => setDialog('feedback')}><span><b>Send alpha feedback</b><small>Share a privacy-safe diagnostic message</small></span><span aria-hidden="true">›</span></button>
         <button ref={restartRef} type="button" onClick={() => setDialog('restart')}><span><b>Restart introduction</b><small>Show the welcome experience again</small></span><span aria-hidden="true">›</span></button>
       </div>
-      <section className="alpha-data-controls" aria-labelledby="data-controls-heading"><p className="dashboard-eyebrow">Data controls</p><h3 id="data-controls-heading">Information saved by Ekklesia Pulse</h3><p>Devotions, WGAP reflections, notebook photos, Journey history, Bible position, profile details, and church prototype state remain in this browser.</p><button ref={deleteRef} className="alpha-delete-trigger" type="button" onClick={() => setDialog('delete')}>Delete my local data</button></section>
+      <section className="alpha-data-controls" aria-labelledby="data-controls-heading"><p className="dashboard-eyebrow">Data controls</p><h3 id="data-controls-heading">Information saved by Ekklesia Pulse</h3><p>Devotions, WGAP reflections, notebook photos, Journey history, Bible position, profile details, font preference, and church prototype state remain in this browser.</p><button ref={deleteRef} className="alpha-delete-trigger" type="button" onClick={() => setDialog('delete')}>Delete my local data</button></section>
       <EditProfileDialog open={dialog === 'edit'} profile={profile} onClose={() => setDialog('')} onSaved={onProfileUpdated} triggerRef={editRef} />
+      <FontPreferencesDialog open={dialog === 'font'} onClose={() => setDialog('')} triggerRef={fontRef} />
       <AlphaInformation mode="dialog" open={dialog === 'alpha'} onClose={() => setDialog('')} triggerRef={alphaRef} />
       <FeedbackDialog open={dialog === 'feedback'} onClose={() => setDialog('')} triggerRef={feedbackRef} currentSection="Profile" />
       <RestartIntroductionDialog open={dialog === 'restart'} onClose={() => setDialog('')} onRestart={onRestartIntroduction} triggerRef={restartRef} />
