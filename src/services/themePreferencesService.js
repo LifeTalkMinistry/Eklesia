@@ -4,34 +4,34 @@ export const THEME_OPTIONS = Object.freeze([
   Object.freeze({
     id: 'pulse-dark',
     label: 'Pulse Dark',
-    description: 'The original premium Ekklesia Pulse green experience.',
+    description: 'Organic dark surfaces, warm highlights, and the original Pulse character.',
     colorScheme: 'dark',
-    browserColor: '#08110d',
-    preview: ['#08110d', '#102019', '#b8d8c4', '#e8d9aa'],
+    browserColor: '#07100c',
+    preview: ['#07100c', '#102019', '#b8d8c4', '#e8d9aa'],
   }),
   Object.freeze({
     id: 'light',
     label: 'Light',
-    description: 'Warm, bright surfaces with clear dark text.',
+    description: 'Clean white cards, restrained shadows, and bright open spacing.',
     colorScheme: 'light',
-    browserColor: '#f4f1e8',
-    preview: ['#f4f1e8', '#fffdf7', '#2f7250', '#a8793e'],
+    browserColor: '#edf0ea',
+    preview: ['#edf0ea', '#ffffff', '#2f7250', '#9b6b31'],
   }),
   Object.freeze({
     id: 'midnight',
     label: 'Midnight',
-    description: 'Deep navy surfaces with calm blue highlights.',
+    description: 'Deep navy structure, cool blue controls, and violet active states.',
     colorScheme: 'dark',
-    browserColor: '#07101f',
-    preview: ['#07101f', '#0d1b32', '#8ab6ff', '#c8a8ff'],
+    browserColor: '#040b17',
+    preview: ['#040b17', '#0d203d', '#86b7ff', '#c7a5ff'],
   }),
   Object.freeze({
     id: 'parchment',
     label: 'Parchment',
-    description: 'A warm, book-inspired palette for reflective reading.',
+    description: 'Book-like cream surfaces, flatter cards, and warm editorial details.',
     colorScheme: 'light',
-    browserColor: '#e9dfc9',
-    preview: ['#e9dfc9', '#f8f0df', '#8a6335', '#52705b'],
+    browserColor: '#d8ccb4',
+    preview: ['#d8ccb4', '#fff8ea', '#52705b', '#865e30'],
   }),
 ]);
 
@@ -72,16 +72,32 @@ function updateBrowserThemeColor(color) {
   meta.setAttribute('content', color);
 }
 
-export function applyThemePreferences(preferences) {
-  const normalized = normalizePreferences(preferences);
-  const option = getThemeOption(normalized.themeId);
+function applyViewportSkin(option) {
+  if (typeof document === 'undefined') return;
 
-  if (typeof document !== 'undefined') {
-    document.documentElement.dataset.ekklesiaTheme = option.id;
-    document.documentElement.style.colorScheme = option.colorScheme;
-    updateBrowserThemeColor(option.browserColor);
+  const root = document.documentElement;
+  root.dataset.ekklesiaTheme = option.id;
+  root.dataset.ekklesiaUiSkin = option.id;
+  root.style.colorScheme = option.colorScheme;
+  root.style.backgroundColor = option.browserColor;
+
+  if (document.body) {
+    document.body.dataset.ekklesiaTheme = option.id;
+    document.body.style.backgroundColor = option.browserColor;
   }
 
+  const appRoot = document.getElementById('root');
+  if (appRoot) {
+    appRoot.dataset.ekklesiaTheme = option.id;
+    appRoot.style.backgroundColor = option.browserColor;
+  }
+
+  updateBrowserThemeColor(option.browserColor);
+}
+
+export function applyThemePreferences(preferences) {
+  const normalized = normalizePreferences(preferences);
+  applyViewportSkin(getThemeOption(normalized.themeId));
   return normalized;
 }
 
