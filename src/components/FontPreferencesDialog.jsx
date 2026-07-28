@@ -62,13 +62,17 @@ export default function FontPreferencesDialog({ open, onClose, triggerRef }) {
       </div>
 
       <p id="font-preferences-description" className="alpha-dialog-copy">
-        Select a comfortable font for normal app text. Ekklesia Pulse branding and major display headings keep their original style.
+        Your selection changes the font throughout the entire app. Only the Ekklesia Pulse brand at the top keeps its original style.
       </p>
 
-      <div className="font-preference-preview" style={{ fontFamily: selectedFont.family }} aria-live="polite">
+      <div
+        className="font-preference-preview"
+        style={{ '--font-preview-family': selectedFont.family }}
+        aria-live="polite"
+      >
         <span>Live preview</span>
         <strong>Faith grows through hearing the Word.</strong>
-        <p>Read devotionals, Scripture, announcements, and reflections in a style that feels comfortable to you.</p>
+        <p>Headings, buttons, Scripture, navigation, announcements, reflections, and other app text will use this font.</p>
       </div>
 
       <div className="font-option-list" role="radiogroup" aria-label="Available fonts">
@@ -80,14 +84,15 @@ export default function FontPreferencesDialog({ open, onClose, triggerRef }) {
             role="radio"
             aria-checked={selectedFontId === option.id}
             key={option.id}
+            style={{ '--font-option-family': option.family }}
             onClick={() => previewFont(option.id)}
           >
             <span className="font-option-radio" aria-hidden="true" />
             <span className="font-option-copy">
-              <b style={{ fontFamily: option.family }}>{option.label}</b>
+              <b>{option.label}</b>
               <small>{option.description}</small>
             </span>
-            <span className="font-option-sample" style={{ fontFamily: option.family }} aria-hidden="true">Aa</span>
+            <span className="font-option-sample" aria-hidden="true">Aa</span>
           </button>
         ))}
       </div>
