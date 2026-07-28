@@ -18,6 +18,10 @@ function font(id, label, category, description, family = label) {
   });
 }
 
+function systemFont(id, label, category, description, family) {
+  return Object.freeze({ id, label, category, description, family });
+}
+
 function serifFont(id, label, description, family = label) {
   return Object.freeze({
     id,
@@ -53,6 +57,9 @@ function displayFont(id, label, description, family = label) {
 
 export const FONT_OPTIONS = Object.freeze([
   font('pulse-default', 'Pulse Default', 'popular', 'The original clean Ekklesia Pulse style.', 'Inter'),
+  systemFont('arial', 'Arial', 'popular', 'Simple, familiar, and compact.', 'Arial, Helvetica, sans-serif'),
+  systemFont('verdana', 'Verdana', 'popular', 'Wide letterforms that are comfortable on small screens.', 'Verdana, Geneva, sans-serif'),
+  systemFont('trebuchet', 'Trebuchet', 'popular', 'Friendly and easy to scan.', '"Trebuchet MS", "Segoe UI", sans-serif'),
   font('roboto', 'Roboto', 'popular', 'Familiar, balanced, and dependable.'),
   font('open-sans', 'Open Sans', 'popular', 'Open letterforms for comfortable reading.'),
   font('lato', 'Lato', 'popular', 'Warm, professional, and highly versatile.'),
@@ -89,6 +96,8 @@ export const FONT_OPTIONS = Object.freeze([
   font('assistant', 'Assistant', 'readable', 'Compact, clean, and easy to scan.'),
   font('hind', 'Hind', 'readable', 'Tall, open characters suited to longer reading.'),
 
+  systemFont('georgia', 'Georgia', 'serif', 'A reflective, book-like reading style.', 'Georgia, "Times New Roman", serif'),
+  systemFont('times', 'Times New Roman', 'serif', 'A traditional printed-page style.', '"Times New Roman", Times, serif'),
   serifFont('merriweather', 'Merriweather', 'A sturdy book-like font for Scripture and devotionals.'),
   serifFont('lora', 'Lora', 'Reflective and contemporary with gentle curves.'),
   serifFont('playfair-display', 'Playfair Display', 'Elegant contrast for a refined editorial feel.'),
