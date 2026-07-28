@@ -3,6 +3,13 @@
  * gutters read as two accidental vertical rails on phone-sized screens, so the
  * frame becomes edge-to-edge while spacing moves into its real content regions.
  */
+
+:root[data-ui-theme="light"] .church-workspace-exit,
+:root[data-ui-theme="light"] .church-workspace-exit::after {
+  color: var(--ep-component-heading-fg) !important;
+  opacity: 1 !important;
+}
+
 @media (max-width: 520px) {
   :root[data-ui-theme="light"] .church-workspace-shell {
     padding-right: 0 !important;
