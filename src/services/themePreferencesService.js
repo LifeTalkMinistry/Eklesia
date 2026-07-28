@@ -72,23 +72,36 @@ function updateBrowserThemeColor(color) {
   meta.setAttribute('content', color);
 }
 
+function applyThemeAttributes(element, option) {
+  if (!element) return;
+
+  // Ekklesia-specific identifiers retained for existing selectors.
+  element.dataset.ekklesiaTheme = option.id;
+  element.dataset.ekklesiaUiSkin = option.id;
+
+  // Design-system attributes mirror mature multi-theme systems.
+  element.dataset.uiTheme = option.id;
+  element.dataset.colorMode = option.colorScheme;
+  element.dataset.lightTheme = option.colorScheme === 'light' ? option.id : 'light';
+  element.dataset.darkTheme = option.colorScheme === 'dark' ? option.id : 'pulse-dark';
+}
+
 function applyViewportSkin(option) {
   if (typeof document === 'undefined') return;
 
   const root = document.documentElement;
-  root.dataset.ekklesiaTheme = option.id;
-  root.dataset.ekklesiaUiSkin = option.id;
+  applyThemeAttributes(root, option);
   root.style.colorScheme = option.colorScheme;
   root.style.backgroundColor = option.browserColor;
 
   if (document.body) {
-    document.body.dataset.ekklesiaTheme = option.id;
+    applyThemeAttributes(document.body, option);
     document.body.style.backgroundColor = option.browserColor;
   }
 
   const appRoot = document.getElementById('root');
   if (appRoot) {
-    appRoot.dataset.ekklesiaTheme = option.id;
+    applyThemeAttributes(appRoot, option);
     appRoot.style.backgroundColor = option.browserColor;
   }
 
