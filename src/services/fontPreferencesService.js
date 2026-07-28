@@ -1,43 +1,10 @@
+import { FONT_OPTIONS } from '../config/fontCatalog.js';
 import { getBrowserStorage, STORAGE_KEYS } from './storageRegistry.js';
 
-export const FONT_OPTIONS = Object.freeze([
-  Object.freeze({
-    id: 'pulse-default',
-    label: 'Pulse Default',
-    description: 'The original clean Ekklesia Pulse style.',
-    family: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  }),
-  Object.freeze({
-    id: 'arial',
-    label: 'Arial',
-    description: 'Simple, familiar, and compact.',
-    family: 'Arial, Helvetica, sans-serif',
-  }),
-  Object.freeze({
-    id: 'verdana',
-    label: 'Verdana',
-    description: 'Wide letterforms that are comfortable on small screens.',
-    family: 'Verdana, Geneva, sans-serif',
-  }),
-  Object.freeze({
-    id: 'trebuchet',
-    label: 'Trebuchet',
-    description: 'Friendly and easy to scan.',
-    family: '"Trebuchet MS", "Segoe UI", sans-serif',
-  }),
-  Object.freeze({
-    id: 'georgia',
-    label: 'Georgia',
-    description: 'A reflective, book-like reading style.',
-    family: 'Georgia, "Times New Roman", serif',
-  }),
-  Object.freeze({
-    id: 'times',
-    label: 'Times New Roman',
-    description: 'A traditional printed-page style.',
-    family: '"Times New Roman", Times, serif',
-  }),
-]);
+export { FONT_OPTIONS } from '../config/fontCatalog.js';
+
+const GOOGLE_FONT_STYLESHEET_ID = 'ekklesia-google-fonts';
+const loadedFontFamilies = new Set();
 
 export const DEFAULT_FONT_PREFERENCES = Object.freeze({ fontId: 'pulse-default' });
 
@@ -46,6 +13,39 @@ function normalizePreferences(preferences = {}) {
     ? preferences.fontId
     : DEFAULT_FONT_PREFERENCES.fontId;
   return { fontId };
+}
+
+function encodeGoogleFamily(family) {
+  return encodeURIComponent(family).replace(/%20/g, '+');
+}
+
+function syncGoogleFontStylesheet() {
+  if (typeof document === 'undefined' || loadedFontFamilies.size === 0) return;
+
+  let stylesheet = document.getElementById(GOOGLE_FONT_STYLESHEET_ID);
+  if (!stylesheet) {
+    stylesheet = document.createElement('link');
+    stylesheet.id = GOOGLE_FONT_STYLESHEET_ID;
+    stylesheet.rel = 'stylesheet';
+    document.head.appendChild(stylesheet);
+  }
+
+  const families = [...loadedFontFamilies]
+    .sort((first, second) => first.localeCompare(second))
+    .map((family) => `family=${encodeGoogleFamily(family)}`)
+    .join('&');
+  const nextHref = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+  if (stylesheet.href !== nextHref) stylesheet.href = nextHref;
+}
+
+export function loadFontOptions(options = []) {
+  let changed = false;
+  options.forEach((option) => {
+    if (!option?.googleFamily || loadedFontFamilies.has(option.googleFamily)) return;
+    loadedFontFamilies.add(option.googleFamily);
+    changed = true;
+  });
+  if (changed) syncGoogleFontStylesheet();
 }
 
 export function getFontOption(fontId) {
@@ -68,6 +68,7 @@ export function getFontPreferences() {
 export function applyFontPreferences(preferences) {
   const normalized = normalizePreferences(preferences);
   const option = getFontOption(normalized.fontId);
+  loadFontOptions([option]);
 
   if (typeof document !== 'undefined') {
     document.documentElement.style.setProperty('--ekklesia-user-font', option.family);
