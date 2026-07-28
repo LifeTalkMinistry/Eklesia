@@ -158,6 +158,16 @@ export const mockEcosystems = [
         devotionCompletedWithin24Hours: true,
         devotionCheckInLabel: 'Completed today',
         weeklyCheckIns: [true, true, true, true, true, true, true],
+        sharedWeeklyHistory: [
+          { label: '1 week ago', checkIns: [true, true, false, true, true, false, true] },
+          { label: '2 weeks ago', checkIns: [true, true, true, false, true, true, false] },
+          { label: '3 weeks ago', checkIns: [false, true, true, false, true, true, false] },
+        ],
+        sharedMonthlyHistory: [
+          { label: 'This month', completedDays: 14, trackedDays: 21 },
+          { label: 'Previous month', completedDays: 20, trackedDays: 30 },
+          { label: 'Two months ago', completedDays: 17, trackedDays: 30 },
+        ],
         canEncourage: false,
       },
       {
@@ -184,6 +194,16 @@ export const mockEcosystems = [
         devotionCompletedWithin24Hours: true,
         devotionCheckInLabel: 'Completed within the last 24 hours',
         weeklyCheckIns: [true, false, true, false, true, false, true],
+        sharedWeeklyHistory: [
+          { label: '1 week ago', checkIns: [true, false, true, true, true, false, true] },
+          { label: '2 weeks ago', checkIns: [true, true, true, false, true, false, true] },
+          { label: '3 weeks ago', checkIns: [true, false, true, false, true, false, false] },
+        ],
+        sharedMonthlyHistory: [
+          { label: 'This month', completedDays: 16, trackedDays: 21 },
+          { label: 'Previous month', completedDays: 20, trackedDays: 30 },
+          { label: 'Two months ago', completedDays: 18, trackedDays: 30 },
+        ],
         canEncourage: true,
       },
       {
@@ -204,6 +224,16 @@ export const mockEcosystems = [
         devotionCompletedWithin24Hours: true,
         devotionCheckInLabel: 'Completed today',
         weeklyCheckIns: [true, true, false, true, true, false, true],
+        sharedWeeklyHistory: [
+          { label: '1 week ago', checkIns: [true, true, false, true, false, true, true] },
+          { label: '2 weeks ago', checkIns: [true, false, true, true, true, false, true] },
+          { label: '3 weeks ago', checkIns: [true, true, true, false, true, false, false] },
+        ],
+        sharedMonthlyHistory: [
+          { label: 'This month', completedDays: 15, trackedDays: 21 },
+          { label: 'Previous month', completedDays: 21, trackedDays: 30 },
+          { label: 'Two months ago', completedDays: 20, trackedDays: 30 },
+        ],
         canEncourage: true,
       },
       {
@@ -224,6 +254,16 @@ export const mockEcosystems = [
         devotionCompletedWithin24Hours: false,
         devotionCheckInLabel: 'No devotion check-in yet in this 24-hour window',
         weeklyCheckIns: [false, true, false, false, false, false, false],
+        sharedWeeklyHistory: [
+          { label: '1 week ago', checkIns: [false, true, false, true, false, false, false] },
+          { label: '2 weeks ago', checkIns: [true, false, false, true, false, false, false] },
+          { label: '3 weeks ago', checkIns: [true, false, true, false, false, false, false] },
+        ],
+        sharedMonthlyHistory: [
+          { label: 'This month', completedDays: 6, trackedDays: 21 },
+          { label: 'Previous month', completedDays: 11, trackedDays: 30 },
+          { label: 'Two months ago', completedDays: 14, trackedDays: 30 },
+        ],
         canEncourage: true,
       },
     ],
