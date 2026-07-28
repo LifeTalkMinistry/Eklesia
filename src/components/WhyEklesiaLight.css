@@ -1,0 +1,149 @@
+/* Light-theme presentation for the dashboard information trigger and Why Ekklesia dialog. */
+
+:root[data-ui-theme="light"] .why-eklesia-trigger {
+  border-color: var(--ep-component-card-border) !important;
+  color: var(--ep-component-attention-fg) !important;
+  background: var(--ep-component-card-bg) !important;
+  box-shadow: 0 6px 18px var(--ep-shadow-overlay) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-trigger:hover,
+:root[data-ui-theme="light"] .why-eklesia-trigger:focus-visible {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  background: var(--light-surface-tint) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-trigger .information-glyph {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-attention-fg) !important;
+  background: var(--ep-component-attention-muted-bg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-overlay {
+  background: color-mix(in srgb, var(--ep-component-heading-fg) 24%, transparent) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-panel {
+  border-color: var(--ep-component-card-border) !important;
+  color: var(--ep-component-body-fg) !important;
+  background: linear-gradient(
+    165deg,
+    var(--ep-component-card-bg),
+    color-mix(in srgb, var(--ep-component-control-primary-bg) 5%, var(--ep-component-card-bg))
+  ) !important;
+  box-shadow: 0 30px 90px var(--ep-shadow-overlay) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-header {
+  border-bottom-color: var(--ep-component-card-divider) !important;
+  background: color-mix(in srgb, var(--ep-component-card-bg) 94%, transparent) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-eyebrow,
+:root[data-ui-theme="light"] .why-eklesia-label {
+  color: var(--ep-component-accent-fg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-header h2,
+:root[data-ui-theme="light"] .why-eklesia-section h3,
+:root[data-ui-theme="light"] .why-eklesia-reminder strong,
+:root[data-ui-theme="light"] .why-eklesia-privacy-card h4 {
+  color: var(--ep-component-heading-fg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-close {
+  border-color: var(--ep-component-card-border) !important;
+  color: var(--ep-component-attention-fg) !important;
+  background: var(--ep-component-card-bg) !important;
+  box-shadow: 0 6px 18px var(--ep-shadow-overlay) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-close:hover,
+:root[data-ui-theme="light"] .why-eklesia-close:focus-visible {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  background: var(--ep-component-attention-muted-bg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-content {
+  scrollbar-color: var(--ep-component-scrollbar-thumb) var(--ep-component-scrollbar-track) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-intro,
+:root[data-ui-theme="light"] .why-eklesia-section > p:last-child,
+:root[data-ui-theme="light"] .why-eklesia-reminder p,
+:root[data-ui-theme="light"] .why-eklesia-privacy-card li {
+  color: var(--ep-component-muted-fg) !important;
+  opacity: 1 !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-section {
+  border-top-color: var(--ep-component-card-divider) !important;
+}
+
+:root[data-ui-theme="light"] .why-alpha-note {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-body-fg) !important;
+  background: linear-gradient(145deg, var(--ep-component-attention-muted-bg), var(--ep-component-card-bg)) !important;
+  box-shadow: none !important;
+}
+
+:root[data-ui-theme="light"] .why-alpha-note p {
+  color: var(--ep-component-muted-fg) !important;
+}
+
+:root[data-ui-theme="light"] .why-alpha-note .alpha-badge {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-attention-fg) !important;
+  background: var(--ep-component-attention-muted-bg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-note {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  background: linear-gradient(145deg, var(--ep-component-attention-muted-bg), var(--light-surface-tint)) !important;
+  box-shadow: inset 4px 0 0 var(--ep-component-attention-fg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-note p {
+  color: var(--ep-component-body-fg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-signature {
+  color: var(--ep-component-attention-fg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-signature span {
+  color: var(--ep-component-muted-fg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-privacy-card {
+  border-color: var(--ep-component-card-border) !important;
+  background: var(--light-surface-tint) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-privacy-card.is-protected {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  background: var(--ep-component-attention-muted-bg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-privacy-card li::before {
+  background: var(--ep-component-accent-fg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-privacy-card.is-protected li::before {
+  background: var(--ep-component-attention-fg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-control-note {
+  color: var(--ep-component-accent-fg) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-reminder {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  background: var(--light-feature-warm) !important;
+  box-shadow: var(--ep-component-card-shadow) !important;
+}
+
+:root[data-ui-theme="light"] .why-eklesia-continue {
+  color: var(--ep-component-control-primary-fg) !important;
+  background: var(--ep-component-control-primary-bg) !important;
+}

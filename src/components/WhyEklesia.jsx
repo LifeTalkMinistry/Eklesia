@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import AlphaBadge from './AlphaBadge.jsx';
 import './WhyEklesia.css';
+import './WhyEklesiaLight.css';
 import './WhyEklesiaOnboarding.css';
 
 export default function WhyEklesia({
