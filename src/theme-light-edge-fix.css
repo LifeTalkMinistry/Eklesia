@@ -1,0 +1,36 @@
+/* Light-theme mobile church shell correction.
+ * The shared church workspace keeps desktop canvas gutters. In Light mode those
+ * gutters read as two accidental vertical rails on phone-sized screens, so the
+ * frame becomes edge-to-edge while spacing moves into its real content regions.
+ */
+@media (max-width: 520px) {
+  :root[data-ui-theme="light"] .church-workspace-shell {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+    background: var(--ep-component-frame-bg) !important;
+  }
+
+  :root[data-ui-theme="light"] .church-workspace-frame {
+    width: 100% !important;
+    max-width: none !important;
+    border-right: 0 !important;
+    border-left: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  :root[data-ui-theme="light"] .church-workspace-header {
+    padding-right: max(16px, env(safe-area-inset-right)) !important;
+    padding-left: max(16px, env(safe-area-inset-left)) !important;
+  }
+
+  :root[data-ui-theme="light"] .church-workspace-content {
+    padding-right: max(16px, env(safe-area-inset-right)) !important;
+    padding-left: max(16px, env(safe-area-inset-left)) !important;
+  }
+
+  :root[data-ui-theme="light"][data-ekklesia-member-section="pulse"] .church-workspace-content {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+}
