@@ -60,6 +60,107 @@
   opacity: 0.92;
 }
 
+/* Light theme: selected-member progress summary. */
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-summary {
+  color: var(--ep-component-body-fg) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-workspace-back-link {
+  border-color: var(--ep-component-card-border) !important;
+  color: var(--ep-component-heading-fg) !important;
+  background: var(--ep-component-card-bg) !important;
+  box-shadow: 0 6px 18px var(--ep-shadow-overlay) !important;
+  opacity: 1 !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-workspace-back-link:hover,
+:root[data-ui-theme="light"] .group-rhythm-card .group-workspace-back-link:focus-visible {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-accent-fg) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-identity > span {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-attention-fg) !important;
+  background: var(--ep-component-attention-muted-bg) !important;
+  box-shadow: 0 5px 16px var(--ep-shadow-overlay) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-identity h3 {
+  color: var(--ep-component-heading-fg) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-identity p:last-child {
+  color: var(--ep-component-muted-fg) !important;
+  opacity: 1 !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-week,
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-signal {
+  border-color: var(--ep-component-card-border-emphasis) !important;
+  color: var(--ep-component-body-fg) !important;
+  background: linear-gradient(
+    145deg,
+    var(--ep-component-card-bg),
+    var(--light-surface-tint)
+  ) !important;
+  box-shadow: var(--ep-component-card-shadow) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-week .group-workspace-section-heading h4,
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-signal h4 {
+  color: var(--ep-component-heading-fg) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-week .group-workspace-section-heading > strong {
+  color: var(--ep-component-accent-fg) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-week .daily-rhythm-week {
+  padding: 4px 0 0;
+  background: transparent !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-stats {
+  gap: 12px;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-stats article {
+  border-color: var(--ep-component-card-border) !important;
+  background: var(--ep-component-card-bg) !important;
+  box-shadow: 0 8px 22px var(--ep-shadow-overlay) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-stats span {
+  color: var(--ep-component-accent-fg) !important;
+  opacity: 1 !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-stats strong {
+  color: var(--ep-component-heading-fg) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-stats small,
+:root[data-ui-theme="light"] .group-rhythm-card .group-member-signal p:last-child {
+  color: var(--ep-component-muted-fg) !important;
+  opacity: 1 !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-workspace-privacy-note {
+  border-color: var(--ep-component-card-border) !important;
+  background: var(--light-surface-tint) !important;
+  box-shadow: 0 8px 22px var(--ep-shadow-overlay) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-workspace-privacy-note strong {
+  color: var(--ep-component-heading-fg) !important;
+}
+
+:root[data-ui-theme="light"] .group-rhythm-card .group-workspace-privacy-note p {
+  color: var(--ep-component-muted-fg) !important;
+  opacity: 1 !important;
+}
+
 @media (max-width: 420px) {
   .group-rhythm-card .daily-rhythm-row {
     padding: 18px 13px 20px;
