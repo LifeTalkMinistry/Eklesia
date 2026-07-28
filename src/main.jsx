@@ -22,6 +22,7 @@ import './notebook-devotion.css';
 import './font-preferences.css';
 import './theme-preferences.css';
 import './theme-coverage.css';
+import './theme-feature-coverage.css';
 
 runBrandMigration();
 initializeThemePreferences();
