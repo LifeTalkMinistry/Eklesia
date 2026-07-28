@@ -8,7 +8,8 @@
     "dev": "vite",
     "import:bible": "node scripts/import-bsb.mjs",
     "validate:bible": "node scripts/validate-bible.mjs",
-    "build": "npm run validate:bible && vite build",
+    "validate:theme": "node scripts/validate-theme-contract.mjs",
+    "build": "npm run validate:bible && npm run validate:theme && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
