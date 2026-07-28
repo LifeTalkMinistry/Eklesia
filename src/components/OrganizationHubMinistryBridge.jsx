@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import DGroupNetworkPanel from './DGroupNetworkPanel.jsx';
 import OrganizationHub from './OrganizationHub.jsx';
+import { saveOrganizationPrototypeState } from '../services/organizationPrototypeService.js';
 import './PulseAccessGate.css';
 
 function getLegacyViewStorageKey(organizationId) {
@@ -14,6 +15,10 @@ function getAdminCodeStorageKey(organizationId) {
 
 function getLegacyPulseCodeStorageKey(organizationId) {
   return `ekklesia-church-pulse-code:${organizationId || 'church'}`;
+}
+
+function clone(value) {
+  return value == null ? value : JSON.parse(JSON.stringify(value));
 }
 
 function normalizeSectionLabel(value) {
@@ -102,6 +107,37 @@ function CodeAccessDialog({
   );
 }
 
+function MembershipLeaveDialog({ target, error, onClose, onConfirm }) {
+  const stayButtonRef = useRef(null);
+  const groupLabel = target.type === 'dgroup' ? 'D-Group' : 'ministry';
+
+  useEffect(() => {
+    stayButtonRef.current?.focus();
+  }, []);
+
+  return (
+    <div className="pulse-access-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section className="pulse-access-dialog" role="dialog" aria-modal="true" aria-labelledby="membership-leave-title">
+        <div className="pulse-access-heading">
+          <div>
+            <p className="dashboard-eyebrow">Membership</p>
+            <h2 id="membership-leave-title">Leave {target.name}?</h2>
+          </div>
+          <button type="button" onClick={onClose} aria-label={`Close leave ${groupLabel} dialog`}>×</button>
+        </div>
+        <p className="pulse-access-copy">
+          Your saved membership on this device will be removed. You will need the current {groupLabel} code before joining again.
+        </p>
+        {error ? <p className="pulse-access-error" role="alert">{error}</p> : null}
+        <div className="pulse-access-actions">
+          <button ref={stayButtonRef} className="secondary-button" type="button" onClick={onClose}>Stay joined</button>
+          <button className="church-workspace-danger" type="button" onClick={onConfirm}>Leave {groupLabel}</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function OrganizationHubMinistryBridge({
   workspace,
   activeSection,
@@ -122,19 +158,31 @@ export default function OrganizationHubMinistryBridge({
   const [adminEntry, setAdminEntry] = useState('');
   const [adminError, setAdminError] = useState('');
   const [adminMessage, setAdminMessage] = useState('');
-  const [ministryEntry, setMinistryEntry] = useState({ ministryId: '', code: '', error: '' });
+  const [membershipTarget, setMembershipTarget] = useState(null);
+  const [membershipError, setMembershipError] = useState('');
+  const [membershipMessage, setMembershipMessage] = useState('');
 
   const currentRole = workspace?.currentMember?.organizationRole || 'Church Member';
   const isOrganizationManager = ['Organization Owner', 'Organization Admin'].includes(currentRole);
-  const activeMinistry = (workspace?.ministries || []).find((ministry) => ministry.id === ministryEntry.ministryId) || null;
+  const currentRoles = workspace?.currentMember?.roles || [];
+  const joinedMinistryIds = new Set(workspace?.currentMember?.ministryIds || []);
   const joinedGroupIds = new Set(workspace?.currentMember?.groupIds || []);
-  const connectedJoinedGroup = activeMinistry
-    ? (workspace?.groups || []).find((group) => (
-      group.groupType !== 'dgroup'
-      && group.connectedMinistryId === activeMinistry.id
-      && joinedGroupIds.has(group.id)
-    )) || null
-    : null;
+  const assignedDGroup = (workspace?.groups || []).find((group) => (
+    group.groupType === 'dgroup'
+    && group.id === workspace?.currentMember?.assignedDGroupId
+  )) || null;
+  const canLeaveAssignedDGroup = Boolean(
+    assignedDGroup
+    && !workspace?.currentMember?.ledDGroupId
+    && assignedDGroup.leaderId !== 'current-member',
+  );
+  const hubMembershipKey = useMemo(() => [
+    organization?.id || 'church',
+    ...(workspace?.currentMember?.ministryIds || []),
+    '|',
+    ...(workspace?.currentMember?.groupIds || []),
+    workspace?.currentMember?.assignedDGroupId || '',
+  ].join(':'), [organization?.id, workspace]);
 
   useEffect(() => {
     const nextCode = restoreAdminAccessCode(organization?.id);
@@ -146,7 +194,9 @@ export default function OrganizationHubMinistryBridge({
     setAdminEntry('');
     setAdminError('');
     setAdminMessage('');
-    setMinistryEntry({ ministryId: '', code: '', error: '' });
+    setMembershipTarget(null);
+    setMembershipError('');
+    setMembershipMessage('');
 
     try {
       window.localStorage.removeItem(getLegacyViewStorageKey(organization?.id));
@@ -166,7 +216,7 @@ export default function OrganizationHubMinistryBridge({
   }, [activeSection]);
 
   useEffect(() => {
-    if (!showAdminGate && !ministryEntry.ministryId) return undefined;
+    if (!showAdminGate && !membershipTarget) return undefined;
 
     function handleEscape(event) {
       if (event.key !== 'Escape') return;
@@ -174,20 +224,21 @@ export default function OrganizationHubMinistryBridge({
       setAdminEntry('');
       setAdminError('');
       setAdminMessage('');
-      setMinistryEntry({ ministryId: '', code: '', error: '' });
+      setMembershipTarget(null);
+      setMembershipError('');
     }
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [showAdminGate, ministryEntry.ministryId]);
+  }, [showAdminGate, membershipTarget]);
 
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return undefined;
     const shell = host.closest('.church-workspace-shell');
     let syncFrame = 0;
-    let ministryFrame = 0;
-    let ministryTimer = 0;
+    let enhancementFrame = 0;
+    let enhancementTimer = 0;
 
     function clickOrganizationSection(section) {
       const targetButton = [...host.querySelectorAll('.organization-section-nav button')]
@@ -196,7 +247,6 @@ export default function OrganizationHubMinistryBridge({
     }
 
     function enhanceMinistryCards() {
-      const joinedIds = new Set(workspace?.currentMember?.ministryIds || []);
       const ministryCards = [...host.querySelectorAll('.organization-ministry-card')];
 
       ministryCards.forEach((card, index) => {
@@ -204,41 +254,69 @@ export default function OrganizationHubMinistryBridge({
         const actions = card.querySelector('.organization-inline-actions');
         if (!ministry || !actions) return;
 
-        const existingButton = actions.querySelector('[data-enter-ministry-room]');
-        const joined = joinedIds.has(ministry.id) || Boolean(card.querySelector('.organization-membership-chip'));
+        const joined = joinedMinistryIds.has(ministry.id) || Boolean(card.querySelector('.organization-membership-chip'));
+        const existingEnter = actions.querySelector('[data-enter-ministry-room]');
+        const existingLeave = actions.querySelector('[data-leave-ministry]');
+        const isMinistryLeader = currentRoles.some((role) => role.role === 'Ministry Leader' && role.scopeId === ministry.id);
+
         if (!joined) {
-          existingButton?.remove();
+          existingEnter?.remove();
+          existingLeave?.remove();
           return;
         }
 
-        const ariaLabel = `Enter ${ministry.name} ministry room`;
-        if (existingButton) {
-          existingButton.textContent = 'Enter Ministry Room';
-          existingButton.dataset.enterMinistryRoom = ministry.id;
-          existingButton.setAttribute('aria-label', ariaLabel);
+        const enterLabel = `Enter ${ministry.name} ministry room`;
+        const enterButton = existingEnter || document.createElement('button');
+        enterButton.type = 'button';
+        enterButton.className = 'organization-enter-ministry-room';
+        enterButton.dataset.enterMinistryRoom = ministry.id;
+        enterButton.textContent = 'Enter Ministry Room';
+        enterButton.setAttribute('aria-label', enterLabel);
+        if (!existingEnter) actions.appendChild(enterButton);
+
+        if (isMinistryLeader) {
+          existingLeave?.remove();
           return;
         }
 
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'organization-enter-ministry-room';
-        button.dataset.enterMinistryRoom = ministry.id;
-        button.textContent = 'Enter Ministry Room';
-        button.setAttribute('aria-label', ariaLabel);
-        actions.appendChild(button);
+        const leaveButton = existingLeave || document.createElement('button');
+        leaveButton.type = 'button';
+        leaveButton.className = 'organization-text-action';
+        leaveButton.dataset.leaveMinistry = ministry.id;
+        leaveButton.textContent = 'Leave ministry';
+        leaveButton.setAttribute('aria-label', `Leave ${ministry.name}`);
+        if (!existingLeave) actions.appendChild(leaveButton);
       });
     }
 
-    function scheduleMinistryEnhancement() {
-      window.cancelAnimationFrame(ministryFrame);
-      window.clearTimeout(ministryTimer);
+    function enhanceDGroupControls() {
+      const actions = host.querySelector('.dgroup-my-place-actions');
+      const existingLeave = host.querySelector('[data-leave-dgroup]');
+
+      if (!actions || !canLeaveAssignedDGroup || !assignedDGroup) {
+        existingLeave?.remove();
+        return;
+      }
+
+      const button = existingLeave || document.createElement('button');
+      button.type = 'button';
+      button.dataset.leaveDgroup = assignedDGroup.id;
+      button.textContent = 'Leave D-Group';
+      button.setAttribute('aria-label', `Leave ${assignedDGroup.name}`);
+      if (!existingLeave) actions.appendChild(button);
+    }
+
+    function scheduleEnhancements() {
+      window.cancelAnimationFrame(enhancementFrame);
+      window.clearTimeout(enhancementTimer);
       let attempt = 0;
 
       function run() {
-        ministryFrame = window.requestAnimationFrame(() => {
-          enhanceMinistryCards();
+        enhancementFrame = window.requestAnimationFrame(() => {
+          if (activeSection === 'ministries') enhanceMinistryCards();
+          if (activeSection === 'groups') enhanceDGroupControls();
           attempt += 1;
-          if (attempt < 10) ministryTimer = window.setTimeout(run, 45);
+          if (attempt < 10) enhancementTimer = window.setTimeout(run, 45);
         });
       }
 
@@ -254,8 +332,8 @@ export default function OrganizationHubMinistryBridge({
         }
         if (activeSection === 'ministries' || activeSection === 'privacy') {
           clickOrganizationSection(activeSection);
-          if (activeSection === 'ministries') scheduleMinistryEnhancement();
         }
+        scheduleEnhancements();
       });
     }
 
@@ -280,12 +358,39 @@ export default function OrganizationHubMinistryBridge({
         event.preventDefault();
         event.stopPropagation();
         const ministryId = ministryRoomButton.dataset.enterMinistryRoom;
-        if (ministryId) setMinistryEntry({ ministryId, code: '', error: '' });
+        if (ministryId && joinedMinistryIds.has(ministryId)) onOpenMinistry?.(ministryId);
+        return;
+      }
+
+      const leaveMinistryButton = event.target.closest('[data-leave-ministry]');
+      if (leaveMinistryButton && host.contains(leaveMinistryButton)) {
+        event.preventDefault();
+        event.stopPropagation();
+        const ministry = (workspace?.ministries || []).find((item) => item.id === leaveMinistryButton.dataset.leaveMinistry);
+        if (ministry) {
+          setMembershipError('');
+          setMembershipTarget({ type: 'ministry', id: ministry.id, name: ministry.name });
+        }
+        return;
+      }
+
+      const leaveDGroupButton = event.target.closest('[data-leave-dgroup]');
+      if (leaveDGroupButton && host.contains(leaveDGroupButton)) {
+        event.preventDefault();
+        event.stopPropagation();
+        const group = (workspace?.groups || []).find((item) => item.id === leaveDGroupButton.dataset.leaveDgroup);
+        if (group) {
+          setMembershipError('');
+          setMembershipTarget({ type: 'dgroup', id: group.id, name: group.name });
+        }
         return;
       }
 
       const ministrySummary = event.target.closest('.organization-ministry-summary');
-      if (ministrySummary && host.contains(ministrySummary)) scheduleMinistryEnhancement();
+      const dGroupToggle = event.target.closest('.dgroup-section-toggle');
+      if ((ministrySummary && host.contains(ministrySummary)) || (dGroupToggle && host.contains(dGroupToggle))) {
+        scheduleEnhancements();
+      }
     }
 
     shell?.addEventListener('click', handleAdminGateCapture, true);
@@ -294,32 +399,12 @@ export default function OrganizationHubMinistryBridge({
 
     return () => {
       window.cancelAnimationFrame(syncFrame);
-      window.cancelAnimationFrame(ministryFrame);
-      window.clearTimeout(ministryTimer);
+      window.cancelAnimationFrame(enhancementFrame);
+      window.clearTimeout(enhancementTimer);
       shell?.removeEventListener('click', handleAdminGateCapture, true);
       host.removeEventListener('click', handleHostClick);
     };
-  }, [workspace, activeSection, adminSection]);
-
-  function verifyMinistryEntry(event) {
-    event.preventDefault();
-    if (!activeMinistry) return;
-
-    if (normalizeAccessCode(ministryEntry.code) !== normalizeAccessCode(activeMinistry.code)) {
-      setMinistryEntry((current) => ({
-        ...current,
-        error: 'That code does not match this ministry. Ask the ministry leader for the current code.',
-      }));
-      return;
-    }
-
-    setMinistryEntry({ ministryId: '', code: '', error: '' });
-    if (connectedJoinedGroup) {
-      onOpenGroup?.(connectedJoinedGroup.id);
-      return;
-    }
-    onOpenMinistry?.(activeMinistry.id);
-  }
+  }, [workspace, activeSection, adminSection, joinedMinistryIds, currentRoles, assignedDGroup, canLeaveAssignedDGroup, onOpenMinistry]);
 
   function verifyAdminAccess(event) {
     event.preventDefault();
@@ -335,6 +420,64 @@ export default function OrganizationHubMinistryBridge({
     const adminButton = pendingAdminButtonRef.current;
     pendingAdminButtonRef.current = null;
     window.requestAnimationFrame(() => adminButton?.click());
+  }
+
+  function confirmLeaveMembership() {
+    if (!membershipTarget || !organization?.id) return;
+    const next = clone(workspace);
+
+    if (membershipTarget.type === 'ministry') {
+      const isLeader = (next.currentMember?.roles || []).some((role) => (
+        role.role === 'Ministry Leader' && role.scopeId === membershipTarget.id
+      ));
+      if (isLeader) {
+        setMembershipError('A ministry leader must transfer or remove the leadership role before leaving this ministry.');
+        return;
+      }
+
+      next.currentMember = {
+        ...next.currentMember,
+        ministryIds: (next.currentMember?.ministryIds || []).filter((id) => id !== membershipTarget.id),
+      };
+      next.ministries = (next.ministries || []).map((ministry) => (
+        ministry.id === membershipTarget.id
+          ? { ...ministry, memberCount: Math.max(0, Number(ministry.memberCount || 0) - 1) }
+          : ministry
+      ));
+    } else {
+      const group = (next.groups || []).find((item) => item.id === membershipTarget.id);
+      const leadsGroup = next.currentMember?.ledDGroupId === membershipTarget.id || group?.leaderId === 'current-member';
+      if (leadsGroup || next.currentMember?.ledDGroupId) {
+        setMembershipError('A D-Group leader must transfer leadership before leaving their assigned discipleship relationship.');
+        return;
+      }
+
+      next.currentMember = {
+        ...next.currentMember,
+        assignedDGroupId: next.currentMember?.assignedDGroupId === membershipTarget.id ? '' : next.currentMember?.assignedDGroupId || '',
+        groupIds: (next.currentMember?.groupIds || []).filter((id) => id !== membershipTarget.id),
+      };
+      next.groups = (next.groups || []).map((item) => {
+        if (item.id !== membershipTarget.id) return item;
+        const memberIds = (item.memberIds || []).filter((id) => id !== 'current-member');
+        return { ...item, memberIds, memberCount: memberIds.length };
+      });
+      next.memberVisibility = {
+        ...(next.memberVisibility || {}),
+        selectedGroupIds: (next.memberVisibility?.selectedGroupIds || []).filter((id) => id !== membershipTarget.id),
+      };
+    }
+
+    const result = saveOrganizationPrototypeState(organization.id, next);
+    if (!result.ok) {
+      setMembershipError(result.error?.message || 'This membership could not be removed from this device.');
+      return;
+    }
+
+    const label = membershipTarget.type === 'dgroup' ? 'D-Group' : 'ministry';
+    setMembershipMessage(`You left ${membershipTarget.name}. The ${label} code will be required to join again.`);
+    setMembershipTarget(null);
+    setMembershipError('');
   }
 
   async function copyAdminCode() {
@@ -383,6 +526,8 @@ export default function OrganizationHubMinistryBridge({
   return (
     <>
       <div ref={hostRef} className="organization-hub-ministry-bridge">
+        {membershipMessage ? <p className="organization-status" role="status">{membershipMessage}</p> : null}
+
         {showDGroups ? (
           <DGroupNetworkPanel
             organization={organization}
@@ -419,7 +564,7 @@ export default function OrganizationHubMinistryBridge({
         ) : null}
 
         <div hidden={showDGroups}>
-          <OrganizationHub organization={organization} profile={profile} {...props} />
+          <OrganizationHub key={hubMembershipKey} organization={organization} profile={profile} {...props} />
         </div>
       </div>
 
@@ -446,21 +591,15 @@ export default function OrganizationHubMinistryBridge({
             ))}
           </nav>
 
-          {ministryEntry.ministryId && activeMinistry ? (
-            <CodeAccessDialog
-              eyebrow="Ministry room access"
-              title={`Enter ${activeMinistry.name}`}
-              description={connectedJoinedGroup
-                ? `Enter the ministry code once. After verification, you will go directly to ${connectedJoinedGroup.name}.`
-                : 'Enter the ministry code to open this ministry room.'}
-              label="Ministry code"
-              placeholder="Enter ministry code"
-              entry={ministryEntry.code}
-              error={ministryEntry.error}
-              submitLabel={connectedJoinedGroup ? 'Open Group' : 'Open Ministry Room'}
-              onEntryChange={(value) => setMinistryEntry((current) => ({ ...current, code: value, error: '' }))}
-              onSubmit={verifyMinistryEntry}
-              onClose={() => setMinistryEntry({ ministryId: '', code: '', error: '' })}
+          {membershipTarget ? (
+            <MembershipLeaveDialog
+              target={membershipTarget}
+              error={membershipError}
+              onClose={() => {
+                setMembershipTarget(null);
+                setMembershipError('');
+              }}
+              onConfirm={confirmLeaveMembership}
             />
           ) : null}
 
