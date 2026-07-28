@@ -5,6 +5,7 @@ import {
   resetOnboarding,
 } from './profileService.js';
 import { resetFontPreferences } from './fontPreferencesService.js';
+import { resetThemePreferences } from './themePreferencesService.js';
 import { isNotebookImageStorageAvailable, deleteAllNotebookImages } from './notebookImageService.js';
 import { clearActiveWorkspace } from './organizationPrototypeService.js';
 import {
@@ -103,6 +104,7 @@ export async function deleteAllEkklesiaPulseLocalData() {
   }
 
   resetFontPreferences({ removeStorage: false });
+  resetThemePreferences({ removeStorage: false });
 
   const localStorageCleared = failedKeys.length === 0;
   if (localStorageCleared) clearLocalProfile({ removeStorage: false });

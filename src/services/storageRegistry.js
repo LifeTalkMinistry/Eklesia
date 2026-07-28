@@ -10,6 +10,7 @@ export const STORAGE_KEYS = Object.freeze({
   organizationPrototype: 'ekklesiaPulse.organizationPrototype',
   brandMigrationVersion: 'ekklesiaPulse.brandMigrationVersion',
   fontPreferences: 'ekklesiaPulse.fontPreferences',
+  themePreferences: 'ekklesiaPulse.themePreferences',
   legacyWgapHistory: 'ekklesiaPulse-wgap-history-v1',
 });
 
