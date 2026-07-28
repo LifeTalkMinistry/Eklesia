@@ -86,7 +86,7 @@ export default function FontPreferencesDialog({ open, onClose, triggerRef }) {
       </div>
 
       <p id="font-preferences-description" className="alpha-dialog-copy">
-        Browse 60 fonts from familiar favorites to distinctive handwritten and display styles. Your choice changes the entire app except the Ekklesia Pulse brand at the top.
+        Browse {FONT_OPTIONS.length} fonts from familiar favorites to distinctive handwritten and display styles. Your choice changes the entire app except the Ekklesia Pulse brand at the top.
       </p>
 
       <div
@@ -108,7 +108,7 @@ export default function FontPreferencesDialog({ open, onClose, triggerRef }) {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search 60 fonts"
+            placeholder={`Search ${FONT_OPTIONS.length} fonts`}
             autoComplete="off"
           />
           {query ? <button type="button" onClick={() => setQuery('')} aria-label="Clear font search">×</button> : null}
