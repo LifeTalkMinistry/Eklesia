@@ -22,6 +22,7 @@ import './notebook-devotion.css';
 import './font-preferences.css';
 import './components/GroupRhythm.css';
 import './messaging-thread-navigation.css';
+import './components/MessagingAttachmentsLayoutFix.css';
 import './theme-system.css';
 import './theme-primitives.css';
 import './theme-semantic.css';
