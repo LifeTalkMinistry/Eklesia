@@ -9,6 +9,7 @@ import EditProfileDialog from './EditProfileDialog.jsx';
 import FeedbackDialog from './FeedbackDialog.jsx';
 import FontPreferencesDialog from './FontPreferencesDialog.jsx';
 import Journey from './Journey.jsx';
+import MessagingLauncher from './MessagingLauncher.jsx';
 import RestartIntroductionDialog from './RestartIntroductionDialog.jsx';
 import ThemePreferencesDialog from './ThemePreferencesDialog.jsx';
 import TodayDevotionCard from './TodayDevotionCard.jsx';
@@ -174,7 +175,7 @@ function Profile({ profile, storageAvailable, onProfileUpdated, onRestartIntrodu
         <button ref={feedbackRef} type="button" onClick={() => setDialog('feedback')}><span><b>Send alpha feedback</b><small>Share a privacy-safe diagnostic message</small></span><span aria-hidden="true">›</span></button>
         <button ref={restartRef} type="button" onClick={() => setDialog('restart')}><span><b>Restart introduction</b><small>Show the welcome experience again</small></span><span aria-hidden="true">›</span></button>
       </div>
-      <section className="alpha-data-controls" aria-labelledby="data-controls-heading"><p className="dashboard-eyebrow">Data controls</p><h3 id="data-controls-heading">Information saved by Ekklesia Pulse</h3><p>Devotions, WGAP reflections, notebook photos, Journey history, Bible position, profile details, font and theme preferences, and church prototype state remain in this browser.</p><button ref={deleteRef} className="alpha-delete-trigger" type="button" onClick={() => setDialog('delete')}>Delete my local data</button></section>
+      <section className="alpha-data-controls" aria-labelledby="data-controls-heading"><p className="dashboard-eyebrow">Data controls</p><h3 id="data-controls-heading">Information saved by Ekklesia Pulse</h3><p>Devotions, WGAP reflections, notebook photos, Journey history, Bible position, profile details, font and theme preferences, prototype messages, and church prototype state remain in this browser.</p><button ref={deleteRef} className="alpha-delete-trigger" type="button" onClick={() => setDialog('delete')}>Delete my local data</button></section>
       <EditProfileDialog open={dialog === 'edit'} profile={profile} onClose={() => setDialog('')} onSaved={onProfileUpdated} triggerRef={editRef} />
       <ThemePreferencesDialog open={dialog === 'theme'} onClose={() => setDialog('')} triggerRef={themeRef} />
       <FontPreferencesDialog open={dialog === 'font'} onClose={() => setDialog('')} triggerRef={fontRef} />
@@ -246,7 +247,10 @@ export default function Dashboard({ profile, storageAvailable, activeTab, setAct
         {showHomeHeader ? (
           <header className="dashboard-header">
             <div className="alpha-brand-cluster"><button className="brand-button" type="button" onClick={onExit} aria-label="Return to welcome screen"><span className="brand-mark">E</span><span>{APP_NAME}</span></button><AlphaBadge compact /></div>
-            <button className="notification-button why-eklesia-trigger" type="button" aria-label="Why Ekklesia Pulse?" onClick={() => setShowWhyEklesia(true)} ref={whyEklesiaButtonRef}><span className="information-glyph" aria-hidden="true">i</span></button>
+            <div className="dashboard-header-actions">
+              <MessagingLauncher currentUserName={profile?.displayName || 'You'} />
+              <button className="notification-button why-eklesia-trigger" type="button" aria-label="Why Ekklesia Pulse?" onClick={() => setShowWhyEklesia(true)} ref={whyEklesiaButtonRef}><span className="information-glyph" aria-hidden="true">i</span></button>
+            </div>
           </header>
         ) : null}
         <div className="dashboard-content">{!storageAvailable ? <p className="alpha-storage-warning alpha-dashboard-storage-warning" role="status">This browser is currently preventing Ekklesia Pulse from saving information.</p> : null}{content}</div>
