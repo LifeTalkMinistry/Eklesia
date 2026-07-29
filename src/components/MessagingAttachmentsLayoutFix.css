@@ -1,0 +1,29 @@
+.messaging-composer > .messaging-reply-preview {
+  display: flex;
+  grid-template-columns: none;
+}
+
+.messaging-composer > .messaging-pending-attachments {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.messaging-composer > .messaging-emoji-picker {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(32px, 1fr));
+}
+
+.messaging-composer > .messaging-composer-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+@media (max-width: 520px) {
+  .messaging-composer > .messaging-emoji-picker {
+    grid-template-columns: repeat(4, minmax(38px, 1fr));
+  }
+
+  .messaging-composer > .messaging-composer-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}
