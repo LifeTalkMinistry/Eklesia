@@ -40,7 +40,13 @@
   /* Dialogs and form controls */
   --ep-component-dialog-bg: var(--ep-layer-dialog);
   --ep-component-dialog-overlay: color-mix(in srgb, var(--ep-bg-canvas-default) 84%, transparent);
+  --ep-component-overlay-bg: var(--ep-component-dialog-overlay);
+  --ep-component-dialog-radius: var(--ep-radius-layer);
+  --ep-component-dialog-shadow: 0 22px 70px var(--ep-shadow-overlay);
   --ep-component-input-bg: var(--ep-layer-input);
+  --ep-component-input-fg: var(--ep-fg-default);
+  --ep-component-input-border: var(--ep-border-default);
+  --ep-component-input-radius: var(--ep-radius-control);
   --ep-component-control-radius: var(--ep-radius-control);
   --ep-component-control-primary-bg: var(--ep-accent-emphasis);
   --ep-component-control-primary-fg: var(--ep-fg-on-emphasis);
