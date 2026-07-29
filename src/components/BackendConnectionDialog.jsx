@@ -21,7 +21,7 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
   const emailRef = useRef(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) return undefined;
     let cancelled = false;
 
     async function loadConnection() {
@@ -53,7 +53,7 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
         : await loginBackendAccount({ email, password });
       setSession(result.session);
       setPassword('');
-      setMessage('Backend connection established. Church membership can now sync with this account.');
+      setMessage('Your Ekklesia account is connected on this device.');
       onSessionChanged?.(result.session);
     } catch (error) {
       setMessage(error.message || 'The account could not be connected.');
@@ -62,11 +62,12 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
     }
   }
 
-  function disconnect() {
+  function signOut() {
     disconnectBackendAccount();
     setSession(null);
-    setMessage('This device is disconnected. Ekklesia Pulse will use local prototype data.');
+    setMessage('You have been signed out on this device.');
     onSessionChanged?.(null);
+    onClose?.();
   }
 
   const statusLabel = !connection.configured
@@ -84,14 +85,14 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
     >
       <div className="alpha-dialog-topline">
         <div>
-          <p className="dashboard-eyebrow">Cloud connection</p>
-          <h2 id="backend-connection-title">Connect your Ekklesia account</h2>
+          <p className="dashboard-eyebrow">Account connection</p>
+          <h2 id="backend-connection-title">Your Ekklesia account</h2>
         </div>
-        <button className="alpha-dialog-close" type="button" onClick={onClose} aria-label="Close cloud connection">×</button>
+        <button className="alpha-dialog-close" type="button" onClick={onClose} aria-label="Close account connection">×</button>
       </div>
 
       <p id="backend-connection-description" className="alpha-dialog-copy">
-        A connected account restores church membership from the backend. Personal devotions remain local during this foundation stage.
+        Your account restores church membership, enables member messaging and calls, and protects access to this app. Personal devotions remain local during this foundation stage.
       </p>
 
       <section className={`backend-status-card ${connection.online ? 'is-online' : ''}`} aria-live="polite">
@@ -105,25 +106,25 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
         </p>
       ) : session ? (
         <section className="backend-account-card">
-          <p className="dashboard-eyebrow">Connected account</p>
+          <p className="dashboard-eyebrow">Signed-in account</p>
           <h3>{session.profile?.displayName || session.user?.name}</h3>
           <p>{session.user?.email}</p>
           <dl>
             <div><dt>Church</dt><dd>{session.church?.name || 'Not joined yet'}</dd></div>
             <div><dt>Data source</dt><dd>Backend when online</dd></div>
           </dl>
-          <button className="secondary-button" type="button" onClick={disconnect}>Disconnect this device</button>
+          <button className="secondary-button" type="button" onClick={signOut}>Sign out this device</button>
         </section>
       ) : (
         <form className="backend-auth-form" onSubmit={submit}>
           <div className="backend-auth-switch" role="tablist" aria-label="Account action">
-            <button type="button" className={mode === 'login' ? 'is-active' : ''} onClick={() => setMode('login')}>Sign in</button>
+            <button type="button" className={mode === 'login' ? 'is-active' : ''} onClick={() => setMode('login')}>Log in</button>
             <button type="button" className={mode === 'register' ? 'is-active' : ''} onClick={() => setMode('register')}>Create account</button>
           </div>
           {mode === 'register' ? <label>Name<input value={name} onChange={(event) => setName(event.target.value)} minLength="2" maxLength="100" required /></label> : null}
           <label>Email<input ref={emailRef} type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required /></label>
           <label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'register' ? 'new-password' : 'current-password'} minLength="8" required /></label>
-          <button className="primary-button" type="submit" disabled={busy || !connection.online}>{busy ? 'Connecting…' : mode === 'register' ? 'Create and connect' : 'Connect account'}</button>
+          <button className="primary-button" type="submit" disabled={busy || !connection.online}>{busy ? 'Connecting…' : mode === 'register' ? 'Create account' : 'Log in'}</button>
         </form>
       )}
 

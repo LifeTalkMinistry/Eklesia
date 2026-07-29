@@ -1,5 +1,6 @@
 export const STORAGE_KEYS = Object.freeze({
   localProfile: 'ekklesiaPulse.localProfile',
+  introductionSeen: 'ekklesiaPulse.introductionSeen',
   onboardingComplete: 'ekklesiaPulse.onboardingComplete',
   alphaNoticeAccepted: 'ekklesiaPulse.alphaNoticeAccepted',
   devotions: 'ekklesiaPulse.devotions',

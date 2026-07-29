@@ -142,7 +142,7 @@ function ToolsHome({ onOpenJourney, onOpenBible }) {
   );
 }
 
-function Profile({ profile, storageAvailable, onProfileUpdated, onRestartIntroduction, onDeleteLocalData }) {
+function Profile({ profile, storageAvailable, onProfileUpdated, onBackendSessionChanged, onRestartIntroduction, onDeleteLocalData }) {
   const [dialog, setDialog] = useState('');
   const editRef = useRef(null);
   const backendRef = useRef(null);
@@ -171,16 +171,16 @@ function Profile({ profile, storageAvailable, onProfileUpdated, onRestartIntrodu
       </section>
       <div className="settings-list alpha-settings-list">
         <button ref={editRef} type="button" onClick={() => setDialog('edit')}><span><b>Edit profile</b><small>Change the identity used on this device</small></span><span aria-hidden="true">›</span></button>
-        <button ref={backendRef} type="button" onClick={() => setDialog('backend')}><span><b>Cloud connection</b><small>Connect an account and restore church membership</small></span><span aria-hidden="true">›</span></button>
+        <button ref={backendRef} type="button" onClick={() => setDialog('backend')}><span><b>Account connection</b><small>Review your signed-in account or sign out this device</small></span><span aria-hidden="true">›</span></button>
         <button ref={themeRef} type="button" onClick={() => setDialog('theme')}><span><b>App theme</b><small>Change colors across the complete app</small></span><span aria-hidden="true">›</span></button>
         <button ref={fontRef} type="button" onClick={() => setDialog('font')}><span><b>Font style</b><small>Choose a comfortable font for this device</small></span><span aria-hidden="true">›</span></button>
         <button ref={alphaRef} type="button" onClick={() => setDialog('alpha')}><span><b>About the Private Alpha</b><small>Review storage, test scope, and limitations</small></span><span aria-hidden="true">›</span></button>
         <button ref={feedbackRef} type="button" onClick={() => setDialog('feedback')}><span><b>Send alpha feedback</b><small>Share a privacy-safe diagnostic message</small></span><span aria-hidden="true">›</span></button>
-        <button ref={restartRef} type="button" onClick={() => setDialog('restart')}><span><b>Restart introduction</b><small>Show the welcome experience again</small></span><span aria-hidden="true">›</span></button>
+        <button ref={restartRef} type="button" onClick={() => setDialog('restart')}><span><b>Restart introduction</b><small>Show the one-time welcome experience again</small></span><span aria-hidden="true">›</span></button>
       </div>
-      <section className="alpha-data-controls" aria-labelledby="data-controls-heading"><p className="dashboard-eyebrow">Data controls</p><h3 id="data-controls-heading">Information saved by Ekklesia Pulse</h3><p>Devotions, WGAP reflections, notebook photos, Journey history, Bible position, profile details, font and theme preferences, prototype messages, backend connection token, and church prototype state remain in this browser.</p><button ref={deleteRef} className="alpha-delete-trigger" type="button" onClick={() => setDialog('delete')}>Delete my local data</button></section>
+      <section className="alpha-data-controls" aria-labelledby="data-controls-heading"><p className="dashboard-eyebrow">Data controls</p><h3 id="data-controls-heading">Information saved by Ekklesia Pulse</h3><p>Devotions, WGAP reflections, notebook photos, Journey history, Bible position, profile details, font and theme preferences, prototype messages, account token, and church prototype state remain in this browser.</p><button ref={deleteRef} className="alpha-delete-trigger" type="button" onClick={() => setDialog('delete')}>Delete my local data</button></section>
       <EditProfileDialog open={dialog === 'edit'} profile={profile} onClose={() => setDialog('')} onSaved={onProfileUpdated} triggerRef={editRef} />
-      <BackendConnectionDialog open={dialog === 'backend'} localProfile={profile} onClose={() => setDialog('')} triggerRef={backendRef} />
+      <BackendConnectionDialog open={dialog === 'backend'} localProfile={profile} onClose={() => setDialog('')} triggerRef={backendRef} onSessionChanged={onBackendSessionChanged} />
       <ThemePreferencesDialog open={dialog === 'theme'} onClose={() => setDialog('')} triggerRef={themeRef} />
       <FontPreferencesDialog open={dialog === 'font'} onClose={() => setDialog('')} triggerRef={fontRef} />
       <AlphaInformation mode="dialog" open={dialog === 'alpha'} onClose={() => setDialog('')} triggerRef={alphaRef} />
@@ -191,7 +191,7 @@ function Profile({ profile, storageAvailable, onProfileUpdated, onRestartIntrodu
   );
 }
 
-export default function Dashboard({ profile, storageAvailable, activeTab, setActiveTab, completed, officialDevotion, onStartDaily, onReviewDaily, onSpendMore, onExit, onProfileUpdated, onRestartIntroduction, onDeleteLocalData, dailyVerse, dailyLoading, dailyError, dailyRefreshing, dailyRefreshError, onRefreshDaily, bibleTarget, bibleSelectionMode, onSelectBibleVerse, onCancelBibleSelection, onReturnFromBible, devotionHistory, selectedHistoryId, onSelectHistoryEntry, onCloseHistoryEntry, onHistoryEntryUpdated, onEnterOrganization, organizationLauncherFocusKey }) {
+export default function Dashboard({ profile, storageAvailable, activeTab, setActiveTab, completed, officialDevotion, onStartDaily, onReviewDaily, onSpendMore, onExit, onProfileUpdated, onBackendSessionChanged, onRestartIntroduction, onDeleteLocalData, dailyVerse, dailyLoading, dailyError, dailyRefreshing, dailyRefreshError, onRefreshDaily, bibleTarget, bibleSelectionMode, onSelectBibleVerse, onCancelBibleSelection, onReturnFromBible, devotionHistory, selectedHistoryId, onSelectHistoryEntry, onCloseHistoryEntry, onHistoryEntryUpdated, onEnterOrganization, organizationLauncherFocusKey }) {
   const [showWhyEklesia, setShowWhyEklesia] = useState(false);
   const [openingChurch, setOpeningChurch] = useState(false);
   const whyEklesiaButtonRef = useRef(null);
@@ -242,7 +242,7 @@ export default function Dashboard({ profile, storageAvailable, activeTab, setAct
     pulse: <ChurchPulseFeed organization={pulseOrganization} workspace={pulseWorkspace} profile={profile} />,
     tools: <ToolsHome onOpenJourney={() => setActiveTab('journey')} onOpenBible={() => setActiveTab('bible')} />,
     community: <><TogetherDemoNotice /><Together profile={profile} onEnterOrganization={onEnterOrganization} focusKey={organizationLauncherFocusKey} /></>,
-    profile: <Profile profile={profile} storageAvailable={storageAvailable} onProfileUpdated={onProfileUpdated} onRestartIntroduction={onRestartIntroduction} onDeleteLocalData={onDeleteLocalData} />,
+    profile: <Profile profile={profile} storageAvailable={storageAvailable} onProfileUpdated={onProfileUpdated} onBackendSessionChanged={onBackendSessionChanged} onRestartIntroduction={onRestartIntroduction} onDeleteLocalData={onDeleteLocalData} />,
   }[effectiveTab] || null;
 
   return (
@@ -250,7 +250,7 @@ export default function Dashboard({ profile, storageAvailable, activeTab, setAct
       <div className="dashboard-frame">
         {showHomeHeader ? (
           <header className="dashboard-header">
-            <div className="alpha-brand-cluster"><button className="brand-button" type="button" onClick={onExit} aria-label="Return to welcome screen"><span className="brand-mark">E</span><span>{APP_NAME}</span></button><AlphaBadge compact /></div>
+            <div className="alpha-brand-cluster"><button className="brand-button" type="button" onClick={onExit} aria-label="Go to Home"><span className="brand-mark">E</span><span>{APP_NAME}</span></button><AlphaBadge compact /></div>
             <div className="dashboard-header-actions">
               <MessagingLauncher currentUserName={profile?.displayName || 'You'} />
               <button className="notification-button why-eklesia-trigger" type="button" aria-label="Why Ekklesia Pulse?" onClick={() => setShowWhyEklesia(true)} ref={whyEklesiaButtonRef}><span className="information-glyph" aria-hidden="true">i</span></button>

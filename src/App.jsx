@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { APP_NAME, APP_TAGLINE } from './config/appConfig.js';
+import AccountAccess from './components/AccountAccess.jsx';
 import AdditionalDevotionChooser from './components/AdditionalDevotionChooser.jsx';
 import AlphaInformation from './components/AlphaInformation.jsx';
 import ChurchWorkspace from './components/ChurchWorkspace.jsx';
@@ -11,6 +12,11 @@ import NotebookDevotionFlow from './components/NotebookDevotionFlow.jsx';
 import { getAdditionalVerseForSession, getDailyVerseForDate } from './lib/dailyVerse.js';
 import { getManilaDateKey } from './lib/manilaTime.js';
 import {
+  disconnectBackendAccount,
+  hasBackendSession,
+  restoreBackendSession,
+} from './services/backendSessionService.js';
+import {
   getAllDevotions,
   getLastBibleLocation,
   getOfficialDailyDevotion,
@@ -18,6 +24,10 @@ import {
   saveCompletedDevotion,
 } from './services/devotionService.js';
 import { getJoinedEcosystem, leaveEcosystem } from './services/ecosystemService.js';
+import {
+  hasSeenIntroduction,
+  markIntroductionSeen,
+} from './services/introductionService.js';
 import {
   clearActiveWorkspace,
   enterOrganizationWorkspace,
@@ -67,7 +77,7 @@ function WorkspaceRestoring() {
       <section className="welcome-card" aria-live="polite">
         <p className="eyebrow">Ekklesia Pulse</p>
         <h1>Restoring your space…</h1>
-        <p className="description">Checking the workspace saved on this device.</p>
+        <p className="description">Checking your account and the workspace saved on this device.</p>
       </section>
     </main>
   );
@@ -144,8 +154,29 @@ function loadInitialProfile() {
   return result.ok ? result.data : null;
 }
 
+function syncLocalProfileFromSession(session) {
+  const stored = getLocalProfile();
+  const existing = stored.ok ? stored.data : null;
+  const displayName = String(
+    session?.profile?.displayName
+    || session?.user?.name
+    || existing?.displayName
+    || '',
+  ).trim().slice(0, 40);
+
+  if (!displayName) return existing;
+
+  const result = saveLocalProfile({
+    displayName,
+    churchName: String(session?.church?.name || existing?.churchName || '').trim().slice(0, 80),
+    ministryName: String(existing?.ministryName || '').trim().slice(0, 80),
+  });
+
+  return result.ok ? result.data : existing;
+}
+
 export default function App() {
-  const [screen, setScreen] = useState('welcome');
+  const [screen, setScreen] = useState(() => (hasSeenIntroduction() ? 'account-access' : 'welcome'));
   const [activeTab, setActiveTab] = useState('home');
   const [profile, setProfile] = useState(loadInitialProfile);
   const [storageAvailable, setStorageAvailable] = useState(isLocalStorageAvailable);
@@ -201,19 +232,77 @@ export default function App() {
     window.history.pushState({ ...currentState, ekklesiaWorkspaceId: organizationId }, '');
   }
 
+  const handleAccountAuthenticated = useCallback((session) => {
+    const nextProfile = syncLocalProfileFromSession(session);
+    if (nextProfile) setProfile(nextProfile);
+    setStorageAvailable(isLocalStorageAvailable());
+    setAppMessage('');
+
+    if (nextProfile && hasCompletedOnboarding() && hasAcceptedAlphaNotice()) {
+      setScreen('dashboard');
+      return;
+    }
+
+    setScreen('personal-setup');
+  }, []);
+
+  const signOutToAccountAccess = useCallback(() => {
+    disconnectBackendAccount();
+    clearActiveWorkspace();
+    setWorkspaceMode('personal');
+    setActiveOrganization(null);
+    setActiveTab('home');
+    setSelectedHistoryId(null);
+    setBibleSelectionMode(false);
+    setReturnFromBible(false);
+    setAdditionalChooserOpen(false);
+    setAppMessage('');
+    setScreen('account-access');
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
-    async function restoreWorkspace() {
-      if (!hasCompletedOnboarding() || !hasAcceptedAlphaNotice()) {
+    async function restoreEntry() {
+      if (!hasSeenIntroduction()) {
         clearActiveWorkspace();
         if (!cancelled) setWorkspaceRestoring(false);
         return;
       }
 
+      if (!hasBackendSession()) {
+        clearActiveWorkspace();
+        if (!cancelled) {
+          setScreen('account-access');
+          setWorkspaceRestoring(false);
+        }
+        return;
+      }
+
+      const restored = await restoreBackendSession();
+      if (cancelled) return;
+
+      if (!restored.ok || !restored.session) {
+        clearActiveWorkspace();
+        setScreen('account-access');
+        setWorkspaceRestoring(false);
+        return;
+      }
+
+      const nextProfile = syncLocalProfileFromSession(restored.session);
+      if (nextProfile) setProfile(nextProfile);
+
+      if (!nextProfile || !hasCompletedOnboarding() || !hasAcceptedAlphaNotice()) {
+        clearActiveWorkspace();
+        setScreen('personal-setup');
+        setWorkspaceRestoring(false);
+        return;
+      }
+
       const activeResult = restoreActiveOrganizationWorkspace();
       if (!activeResult.data) {
-        if (!cancelled) setWorkspaceRestoring(false);
+        setScreen('dashboard');
+        setWorkspaceRestoring(false);
         return;
       }
 
@@ -230,11 +319,12 @@ export default function App() {
         clearActiveWorkspace();
         setWorkspaceMode('personal');
         setActiveOrganization(null);
+        setScreen('dashboard');
       }
       setWorkspaceRestoring(false);
     }
 
-    restoreWorkspace();
+    restoreEntry();
     return () => { cancelled = true; };
   }, []);
 
@@ -298,18 +388,10 @@ export default function App() {
   }, []);
 
   function beginJourney() {
+    markIntroductionSeen();
     setAppMessage('');
-    const storedProfile = getLocalProfile();
-    const nextProfile = storedProfile.ok ? storedProfile.data : profile;
-    setProfile(nextProfile);
     setStorageAvailable(isLocalStorageAvailable());
-
-    if (nextProfile && hasCompletedOnboarding() && hasAcceptedAlphaNotice()) {
-      setScreen('dashboard');
-      return;
-    }
-
-    setScreen('personal-setup');
+    setScreen('account-access');
   }
 
   function completePersonalSetup(values) {
@@ -667,13 +749,17 @@ export default function App() {
     return <Welcome onBegin={beginJourney} statusMessage={appMessage} storageAvailable={storageAvailable} />;
   }
 
+  if (screen === 'account-access') {
+    return <AccountAccess localProfile={profile} onAuthenticated={handleAccountAuthenticated} />;
+  }
+
   if (screen === 'personal-setup') {
     return (
       <PersonalSetup
         profile={profile}
         storageAvailable={storageAvailable}
         onContinue={completePersonalSetup}
-        onBack={() => setScreen('welcome')}
+        onBack={() => setScreen('account-access')}
       />
     );
   }
@@ -787,17 +873,14 @@ export default function App() {
         onStartDaily={openDailyDevotionChoice}
         onReviewDaily={reviewTodayDevotion}
         onSpendMore={openAdditionalChooser}
-        onExit={() => {
-          setScreen('welcome');
-          setActiveTab('home');
-          setSelectedHistoryId(null);
-          setBibleSelectionMode(false);
-          setReturnFromBible(false);
-          setAdditionalChooserOpen(false);
-        }}
+        onExit={returnHome}
         onProfileUpdated={(nextProfile, result) => {
           setProfile(nextProfile);
           setStorageAvailable(result?.persisted !== false && isLocalStorageAvailable());
+        }}
+        onBackendSessionChanged={(session) => {
+          if (session) handleAccountAuthenticated(session);
+          else signOutToAccountAccess();
         }}
         onRestartIntroduction={restartIntroduction}
         onDeleteLocalData={deleteLocalData}

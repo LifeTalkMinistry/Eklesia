@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { disconnectBackendAccount } from '../services/backendSessionService.js';
 import { PROFILE_LIMITS, validateProfileFields } from '../services/profileService.js';
 
 export default function PersonalSetup({ profile, storageAvailable, onContinue, onBack }) {
@@ -40,12 +41,17 @@ export default function PersonalSetup({ profile, storageAvailable, onContinue, o
     if (!result.persisted && result.message) setMessage(result.message);
   }
 
+  function returnToLogin() {
+    disconnectBackendAccount();
+    onBack();
+  }
+
   return (
     <main className="app-shell welcome-shell alpha-flow-shell">
       <section className="welcome-card alpha-setup-card">
         <p className="eyebrow">PERSONAL SETUP</p>
         <h1>Welcome to Ekklesia Pulse</h1>
-        <p className="description">Tell us what you would like to be called on this device.</p>
+        <p className="description">Confirm how your signed-in account should appear on this device.</p>
 
         <form className="alpha-form" onSubmit={handleSubmit} noValidate>
           <div className="alpha-field">
@@ -100,13 +106,13 @@ export default function PersonalSetup({ profile, storageAvailable, onContinue, o
 
           <p className="alpha-supporting-note">
             {storageAvailable
-              ? 'This does not create an online account. Your information is currently saved only in this browser.'
-              : 'This does not create an online account. This browser is preventing permanent saving, so this setup may last only for this session.'}
+              ? 'Your account identity is online. These optional device labels and personal devotion data remain saved in this browser during the current foundation stage.'
+              : 'Your account identity is online, but this browser is preventing the optional device profile from being saved permanently.'}
           </p>
           {message ? <p className="alpha-inline-message" role="status">{message}</p> : null}
 
           <div className="alpha-form-actions">
-            <button className="secondary-button" type="button" onClick={onBack}>Back</button>
+            <button className="secondary-button" type="button" onClick={returnToLogin}>Use another account</button>
             <button className="primary-button" type="submit">Continue</button>
           </div>
         </form>
