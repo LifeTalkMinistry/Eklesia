@@ -7,6 +7,7 @@ import {
 import { resetFontPreferences } from './fontPreferencesService.js';
 import { resetThemePreferences } from './themePreferencesService.js';
 import { isNotebookImageStorageAvailable, deleteAllNotebookImages } from './notebookImageService.js';
+import { deleteAllMessagingAttachments } from './messagingAttachmentService.js';
 import { clearActiveWorkspace } from './organizationPrototypeService.js';
 import {
   getBrowserStorage,
@@ -109,16 +110,16 @@ export async function deleteAllEkklesiaPulseLocalData() {
   const localStorageCleared = failedKeys.length === 0;
   if (localStorageCleared) clearLocalProfile({ removeStorage: false });
 
-  const notebookCleanup = await deleteAllNotebookImages();
+  const [notebookCleanup, messagingCleanup] = await Promise.all([
+    deleteAllNotebookImages(),
+    deleteAllMessagingAttachments(),
+  ]);
   const notebookImagesCleared = notebookCleanup.ok;
-  const ok = localStorageCleared && notebookImagesCleared;
+  const messagingAttachmentsCleared = messagingCleanup.ok;
+  const ok = localStorageCleared && notebookImagesCleared && messagingAttachmentsCleared;
 
   let message = 'Local Ekklesia Pulse data was removed from this device.';
-  if (localStorageCleared && !notebookImagesCleared) {
-    message = 'Your profile and devotion records were removed, but some notebook-image data may still remain in this browser. Please try again.';
-  } else if (!localStorageCleared && notebookImagesCleared) {
-    message = 'Notebook photos were removed, but some profile or devotion records could not be removed. Please try again.';
-  } else if (!ok) {
+  if (!ok) {
     message = 'Some local data could not be removed because this browser is blocking storage access. Please try again after allowing site storage.';
   }
 
@@ -127,7 +128,9 @@ export async function deleteAllEkklesiaPulseLocalData() {
     localDataRemoved: localStorageCleared,
     localStorageCleared,
     notebookImagesCleared,
+    messagingAttachmentsCleared,
     notebookCleanupError: notebookCleanup.ok ? null : notebookCleanup.error,
+    messagingCleanupError: messagingCleanup.ok ? null : messagingCleanup.error,
     removedKeys,
     failedKeys,
     message,
