@@ -1,0 +1,133 @@
+import { useEffect, useRef, useState } from 'react';
+import {
+  disconnectBackendAccount,
+  inspectBackendConnection,
+  loginBackendAccount,
+  registerBackendAccount,
+  restoreBackendSession,
+} from '../services/backendSessionService.js';
+import AccessibleDialog from './AccessibleDialog.jsx';
+import './BackendConnectionDialog.css';
+
+export default function BackendConnectionDialog({ open, onClose, triggerRef, localProfile, onSessionChanged }) {
+  const [connection, setConnection] = useState({ configured: false, online: false });
+  const [session, setSession] = useState(null);
+  const [mode, setMode] = useState('login');
+  const [name, setName] = useState(localProfile?.displayName || '');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  const emailRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+
+    async function loadConnection() {
+      setBusy(true);
+      setMessage('');
+      const status = await inspectBackendConnection();
+      if (cancelled) return;
+      setConnection(status);
+
+      if (status.configured && status.online) {
+        const restored = await restoreBackendSession();
+        if (!cancelled && restored.ok) setSession(restored.session);
+      }
+      if (!cancelled) setBusy(false);
+    }
+
+    setName(localProfile?.displayName || '');
+    loadConnection();
+    return () => { cancelled = true; };
+  }, [open, localProfile?.displayName]);
+
+  async function submit(event) {
+    event.preventDefault();
+    setBusy(true);
+    setMessage('');
+    try {
+      const result = mode === 'register'
+        ? await registerBackendAccount({ name, email, password })
+        : await loginBackendAccount({ email, password });
+      setSession(result.session);
+      setPassword('');
+      setMessage('Backend connection established. Church membership can now sync with this account.');
+      onSessionChanged?.(result.session);
+    } catch (error) {
+      setMessage(error.message || 'The account could not be connected.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function disconnect() {
+    disconnectBackendAccount();
+    setSession(null);
+    setMessage('This device is disconnected. Ekklesia Pulse will use local prototype data.');
+    onSessionChanged?.(null);
+  }
+
+  const statusLabel = !connection.configured
+    ? 'Not configured'
+    : connection.online ? 'Backend online' : 'Backend unavailable';
+
+  return (
+    <AccessibleDialog
+      open={open}
+      onRequestClose={onClose}
+      triggerRef={triggerRef}
+      labelledBy="backend-connection-title"
+      describedBy="backend-connection-description"
+      initialFocusRef={emailRef}
+    >
+      <div className="alpha-dialog-topline">
+        <div>
+          <p className="dashboard-eyebrow">Cloud connection</p>
+          <h2 id="backend-connection-title">Connect your Ekklesia account</h2>
+        </div>
+        <button className="alpha-dialog-close" type="button" onClick={onClose} aria-label="Close cloud connection">×</button>
+      </div>
+
+      <p id="backend-connection-description" className="alpha-dialog-copy">
+        A connected account restores church membership from the backend. Personal devotions remain local during this foundation stage.
+      </p>
+
+      <section className={`backend-status-card ${connection.online ? 'is-online' : ''}`} aria-live="polite">
+        <span aria-hidden="true" />
+        <div><strong>{statusLabel}</strong><small>{connection.configured ? 'Secure API connection' : 'VITE_API_BASE_URL is missing from this deployment'}</small></div>
+      </section>
+
+      {!connection.configured ? (
+        <p className="alpha-inline-message" role="status">
+          Add the backend HTTPS address as <code>VITE_API_BASE_URL</code>, rebuild the app, and allow this site’s origin in the backend CORS settings.
+        </p>
+      ) : session ? (
+        <section className="backend-account-card">
+          <p className="dashboard-eyebrow">Connected account</p>
+          <h3>{session.profile?.displayName || session.user?.name}</h3>
+          <p>{session.user?.email}</p>
+          <dl>
+            <div><dt>Church</dt><dd>{session.church?.name || 'Not joined yet'}</dd></div>
+            <div><dt>Data source</dt><dd>Backend when online</dd></div>
+          </dl>
+          <button className="secondary-button" type="button" onClick={disconnect}>Disconnect this device</button>
+        </section>
+      ) : (
+        <form className="backend-auth-form" onSubmit={submit}>
+          <div className="backend-auth-switch" role="tablist" aria-label="Account action">
+            <button type="button" className={mode === 'login' ? 'is-active' : ''} onClick={() => setMode('login')}>Sign in</button>
+            <button type="button" className={mode === 'register' ? 'is-active' : ''} onClick={() => setMode('register')}>Create account</button>
+          </div>
+          {mode === 'register' ? <label>Name<input value={name} onChange={(event) => setName(event.target.value)} minLength="2" maxLength="100" required /></label> : null}
+          <label>Email<input ref={emailRef} type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required /></label>
+          <label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'register' ? 'new-password' : 'current-password'} minLength="8" required /></label>
+          <button className="primary-button" type="submit" disabled={busy || !connection.online}>{busy ? 'Connecting…' : mode === 'register' ? 'Create and connect' : 'Connect account'}</button>
+        </form>
+      )}
+
+      {message ? <p className="alpha-inline-message" role="status">{message}</p> : null}
+    </AccessibleDialog>
+  );
+}
