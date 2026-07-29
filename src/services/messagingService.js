@@ -66,6 +66,7 @@ function normalizeThread(thread, index) {
     id: String(thread?.id || `${type}:thread-${index}`),
     type,
     targetId: String(thread?.targetId || ''),
+    callTargetId: type === 'direct' ? String(thread?.callTargetId || '') : '',
     title: String(thread?.title || (type === 'room' ? 'Room chat' : 'Conversation')),
     subtitle: String(thread?.subtitle || ''),
     unreadCount: Math.max(0, Number(thread?.unreadCount) || 0),
@@ -127,6 +128,7 @@ function createThread(target) {
     id: `${type}:${targetId}`,
     type,
     targetId,
+    callTargetId: type === 'direct' ? String(target?.callTargetId || target?.backendUserId || '').trim() : '',
     title: String(target?.name || (type === 'room' ? 'Room chat' : 'Conversation')),
     subtitle: String(target?.subtitle || (type === 'room' ? 'Members of this room' : 'Private conversation')),
     unreadCount: 0,
@@ -159,18 +161,37 @@ export function ensureMessagingThread(target) {
   const state = readState();
   const threadId = `${target?.type === 'room' ? 'room' : 'direct'}:${String(target?.id || '').trim()}`;
   let thread = state.threads.find((item) => item.id === threadId);
+  let changed = false;
 
   if (!thread) {
     thread = createThread(target);
     if (!thread) return { ok: false, state: clone(state), thread: null };
     state.threads.push(thread);
-    writeState(state);
+    changed = true;
   } else {
-    thread.title = String(target?.name || thread.title);
-    thread.subtitle = String(target?.subtitle || thread.subtitle);
+    const nextTitle = String(target?.name || thread.title);
+    const nextSubtitle = String(target?.subtitle || thread.subtitle);
+    const nextCallTargetId = thread.type === 'direct'
+      ? String(target?.callTargetId || target?.backendUserId || thread.callTargetId || '').trim()
+      : '';
+
+    if (thread.title !== nextTitle) {
+      thread.title = nextTitle;
+      changed = true;
+    }
+    if (thread.subtitle !== nextSubtitle) {
+      thread.subtitle = nextSubtitle;
+      changed = true;
+    }
+    if (thread.callTargetId !== nextCallTargetId) {
+      thread.callTargetId = nextCallTargetId;
+      changed = true;
+    }
   }
 
-  return { ok: true, state: clone(state), thread: clone(thread) };
+  const savedState = changed ? writeState(state) : clone(state);
+  const savedThread = savedState.threads.find((item) => item.id === threadId);
+  return { ok: true, state: savedState, thread: clone(savedThread) };
 }
 
 export function sendPrototypeMessage(threadId, payload, senderName = 'You') {
