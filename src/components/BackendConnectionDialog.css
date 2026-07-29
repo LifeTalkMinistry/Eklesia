@@ -1,0 +1,126 @@
+.backend-status-card,
+.backend-account-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--ep-component-card-border);
+  border-radius: var(--ep-component-card-radius);
+  color: var(--ep-component-body-fg);
+  background: var(--ep-component-card-bg);
+}
+
+.backend-status-card {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.backend-status-card > span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ep-component-danger-fg);
+  box-shadow: 0 0 0 5px var(--ep-component-danger-muted-bg);
+}
+
+.backend-status-card.is-online > span {
+  background: var(--ep-component-success-bg);
+  box-shadow: 0 0 0 5px var(--ep-component-success-muted-bg);
+}
+
+.backend-status-card div,
+.backend-account-card dl,
+.backend-auth-form {
+  display: grid;
+  gap: 8px;
+}
+
+.backend-status-card strong,
+.backend-account-card h3 {
+  color: var(--ep-component-heading-fg);
+}
+
+.backend-status-card small,
+.backend-account-card p,
+.backend-account-card dt {
+  color: var(--ep-component-muted-fg);
+}
+
+.backend-account-card h3,
+.backend-account-card p {
+  margin: 0;
+}
+
+.backend-account-card dl {
+  margin: 4px 0;
+}
+
+.backend-account-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 9px;
+  border-top: 1px solid var(--ep-component-card-divider);
+}
+
+.backend-account-card dd {
+  margin: 0;
+  color: var(--ep-component-heading-fg);
+  text-align: right;
+}
+
+.backend-auth-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--ep-component-card-border);
+  border-radius: var(--ep-component-navigation-radius);
+  background: var(--ep-component-card-nested-bg);
+}
+
+.backend-auth-switch button {
+  min-height: 40px;
+  border: 0;
+  border-radius: var(--ep-component-control-radius);
+  color: var(--ep-component-muted-fg);
+  background: transparent;
+  font-weight: 850;
+}
+
+.backend-auth-switch button.is-active {
+  color: var(--ep-component-navigation-selected-fg);
+  background: var(--ep-component-navigation-selected-bg);
+}
+
+.backend-auth-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--ep-component-heading-fg);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.backend-auth-form input {
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--ep-component-input-border);
+  border-radius: var(--ep-component-input-radius);
+  color: var(--ep-component-input-fg);
+  background: var(--ep-component-input-bg);
+  font: inherit;
+}
+
+.backend-auth-form input:focus-visible,
+.backend-auth-switch button:focus-visible {
+  outline: 2px solid var(--ep-component-focus-outline);
+  outline-offset: 2px;
+}
+
+.backend-auth-form .primary-button {
+  margin-top: 4px;
+}
+
+.alpha-inline-message code {
+  color: var(--ep-component-heading-fg);
+  overflow-wrap: anywhere;
+}
