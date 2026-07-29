@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MANILA_TIME_ZONE } from '../lib/manilaTime.js';
+import MessagingCenter, { MessageBubbleIcon } from './MessagingCenter.jsx';
+import RoomChatPanel from './RoomChatPanel.jsx';
 import './DailyCheckInPortal.css';
 import './GroupWorkspace.css';
 import './GroupRhythmSimplified.css';
@@ -7,6 +9,7 @@ import './GroupRhythmSimplified.css';
 const GROUP_SECTIONS = [
   ['rhythm', 'Our Rhythm'],
   ['members', 'Members'],
+  ['chat', 'Chat'],
   ['about', 'About'],
 ];
 
@@ -272,7 +275,7 @@ function ThreeMonthHistory({ member }) {
   );
 }
 
-function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack, isDGroup }) {
+function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack, onMessage, isDGroup }) {
   const [historyRange, setHistoryRange] = useState('week');
   const backButtonRef = useRef(null);
   const completedToday = Boolean(member.checkIns[todayIndex]);
@@ -294,6 +297,11 @@ function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack, isDGroup
           <p>{getRhythmLabel(member, elapsedDays)}</p>
         </div>
       </div>
+      {member.id !== 'current-member' ? (
+        <button className="group-member-message-button" type="button" onClick={() => onMessage(member)}>
+          <MessageBubbleIcon /> Message {member.name}
+        </button>
+      ) : null}
       <nav className="group-member-range-tabs" aria-label={`${member.name}'s shared progress range`}>
         {MEMBER_HISTORY_RANGES.map(([id, label]) => (
           <button
@@ -339,7 +347,7 @@ function SharedMemberSummary({ member, elapsedDays, todayIndex, onBack, isDGroup
   );
 }
 
-function RhythmView({ members, isDGroup }) {
+function RhythmView({ members, isDGroup, onMessageMember }) {
   const [selectedMemberId, setSelectedMemberId] = useState('');
   const todayIndex = getTodayIndex();
   const elapsedDays = todayIndex + 1;
@@ -355,6 +363,7 @@ function RhythmView({ members, isDGroup }) {
           elapsedDays={elapsedDays}
           todayIndex={todayIndex}
           isDGroup={isDGroup}
+          onMessage={onMessageMember}
           onBack={() => setSelectedMemberId('')}
         />
       </section>
@@ -401,6 +410,7 @@ function RhythmView({ members, isDGroup }) {
 
 export default function GroupWorkspace({ organization, workspace, group, profile, onBack }) {
   const [section, setSection] = useState('rhythm');
+  const [messageTarget, setMessageTarget] = useState(null);
   const headingRef = useRef(null);
   const currentMemberName = profile?.displayName || 'Current member';
   const isDGroup = group.groupType === 'dgroup';
@@ -452,6 +462,15 @@ export default function GroupWorkspace({ organization, workspace, group, profile
     headingRef.current?.focus();
   }, [group.id]);
 
+  function startDirectMessage(member) {
+    setMessageTarget({
+      type: 'direct',
+      id: member.id,
+      name: member.name,
+      subtitle: `${organization.name} member · Private conversation`,
+    });
+  }
+
   return (
     <section className="group-workspace" aria-labelledby="group-workspace-title">
       <button className="group-workspace-back" type="button" onClick={onBack}>
@@ -476,7 +495,7 @@ export default function GroupWorkspace({ organization, workspace, group, profile
           <button key={id} type="button" className={section === id ? 'is-active' : ''} aria-current={section === id ? 'page' : undefined} onClick={() => setSection(id)}>{label}</button>
         ))}
       </nav>
-      {section === 'rhythm' ? <RhythmView members={displayMembers} isDGroup={isDGroup} /> : null}
+      {section === 'rhythm' ? <RhythmView members={displayMembers} isDGroup={isDGroup} onMessageMember={startDirectMessage} /> : null}
       {section === 'members' ? (
         <section className="group-workspace-panel" aria-labelledby="group-members-heading">
           <div className="group-workspace-section-heading">
@@ -500,6 +519,14 @@ export default function GroupWorkspace({ organization, workspace, group, profile
           </div>
         </section>
       ) : null}
+      {section === 'chat' ? (
+        <RoomChatPanel
+          roomId={group.id}
+          roomName={group.name}
+          roomType={isDGroup ? 'D-Group' : 'Ministry'}
+          currentUserName={currentMemberName}
+        />
+      ) : null}
       {section === 'about' ? (
         <section className="group-workspace-panel" aria-labelledby="group-about-heading">
           <div className="group-workspace-section-heading"><div><p className="dashboard-eyebrow">{isDGroup ? 'D-Group relationship' : 'Group details'}</p><h3 id="group-about-heading">Purpose and access</h3></div></div>
@@ -519,6 +546,12 @@ export default function GroupWorkspace({ organization, workspace, group, profile
         <strong>This {isDGroup ? 'D-Group' : 'group'} sees rhythm, not private devotion content.</strong>
         <p>Joining does not reveal WGAP answers, prayers, journals, notebook photos, personal notes, or exact Scripture selections.</p>
       </aside>
+      <MessagingCenter
+        open={Boolean(messageTarget)}
+        onClose={() => setMessageTarget(null)}
+        initialTarget={messageTarget}
+        currentUserName={currentMemberName}
+      />
     </section>
   );
 }
