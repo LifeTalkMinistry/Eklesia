@@ -11,6 +11,7 @@ export const STORAGE_KEYS = Object.freeze({
   brandMigrationVersion: 'ekklesiaPulse.brandMigrationVersion',
   fontPreferences: 'ekklesiaPulse.fontPreferences',
   themePreferences: 'ekklesiaPulse.themePreferences',
+  messagingPrototype: 'ekklesiaPulse.messagingPrototype',
   legacyWgapHistory: 'ekklesiaPulse-wgap-history-v1',
 });
 
