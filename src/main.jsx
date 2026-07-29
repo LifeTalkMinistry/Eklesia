@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import CallOverlayHost from './components/CallOverlay.jsx';
 import { runBrandMigration } from './services/brandMigration.js';
 import { initializeFontPreferences } from './services/fontPreferencesService.js';
 import { initializeThemePreferences } from './services/themePreferencesService.js';
@@ -22,6 +23,7 @@ import './notebook-devotion.css';
 import './font-preferences.css';
 import './components/GroupRhythm.css';
 import './messaging-thread-navigation.css';
+import './components/MessagingCalls.css';
 import './theme-system.css';
 import './theme-primitives.css';
 import './theme-semantic.css';
@@ -37,5 +39,6 @@ initializeFontPreferences();
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
+    <CallOverlayHost />
   </React.StrictMode>,
 );
