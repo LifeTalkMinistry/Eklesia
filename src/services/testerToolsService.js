@@ -4,6 +4,7 @@ import {
   resetAlphaNotice,
   resetOnboarding,
 } from './profileService.js';
+import { resetIntroductionSeen } from './introductionService.js';
 import { resetFontPreferences } from './fontPreferencesService.js';
 import { resetThemePreferences } from './themePreferencesService.js';
 import { isNotebookImageStorageAvailable, deleteAllNotebookImages } from './notebookImageService.js';
@@ -73,12 +74,16 @@ export function createSafeDiagnosticSummary({
 
 export function restartIntroductionState() {
   const workspaceResult = clearActiveWorkspace();
+  const introductionResult = resetIntroductionSeen();
   const onboardingResult = resetOnboarding();
   const alphaResult = resetAlphaNotice();
   return {
-    ok: workspaceResult.ok && onboardingResult.ok && alphaResult.ok,
-    persisted: workspaceResult.persisted !== false && onboardingResult.persisted !== false && alphaResult.persisted !== false,
-    message: onboardingResult.ok && alphaResult.ok
+    ok: workspaceResult.ok && introductionResult.ok && onboardingResult.ok && alphaResult.ok,
+    persisted: workspaceResult.persisted !== false
+      && introductionResult.persisted !== false
+      && onboardingResult.persisted !== false
+      && alphaResult.persisted !== false,
+    message: introductionResult.ok && onboardingResult.ok && alphaResult.ok
       ? onboardingResult.message || alphaResult.message || ''
       : 'The introduction could not be restarted completely on this device.',
   };
