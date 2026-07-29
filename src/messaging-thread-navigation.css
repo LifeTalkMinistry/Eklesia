@@ -1,9 +1,3 @@
-:root:has(.messaging-thread-view) .bottom-nav {
+:root:has(.messaging-dialog.is-thread-open) .bottom-nav {
   display: none !important;
-}
-
-.messaging-dialog:has(.messaging-thread-view) .messaging-dialog-header-actions,
-.messaging-thread-view .messaging-composer > label,
-.messaging-thread-view .messaging-composer > small {
-  display: none;
 }
