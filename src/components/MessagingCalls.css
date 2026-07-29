@@ -1,0 +1,53 @@
+.messaging-chat-header {
+  grid-template-columns: auto auto minmax(0, 1fr) repeat(4, auto);
+}
+
+.messaging-header-icon.is-call-action {
+  color: var(--ep-component-accent-fg);
+}
+
+.messaging-header-icon.is-call-action:hover,
+.messaging-header-icon.is-call-action:focus-visible {
+  color: var(--ep-component-heading-fg);
+  background: var(--ep-component-accent-muted-bg);
+}
+
+@media (max-width: 430px) {
+  .messaging-chat-header {
+    gap: 4px;
+    padding-inline: 6px;
+  }
+
+  .messaging-header-icon {
+    width: 32px;
+    height: 34px;
+  }
+
+  .messaging-header-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .messaging-chat-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .messaging-chat-identity strong {
+    font-size: 0.76rem;
+  }
+
+  .messaging-chat-identity small {
+    font-size: 0.54rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .messaging-chat-header {
+    grid-template-columns: auto auto minmax(0, 1fr) repeat(3, auto);
+  }
+
+  .messaging-header-icon[aria-label="Close messages"] {
+    display: none;
+  }
+}
