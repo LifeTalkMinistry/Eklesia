@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { mockEcosystems } from '../data/mockEcosystems.js';
-import { getJoinedEcosystem } from '../services/ecosystemService.js';
+import { getEcosystemMembers, getJoinedEcosystem } from '../services/ecosystemService.js';
 import {
   getPrototypeUnreadCount,
   MESSAGING_UPDATED_EVENT,
@@ -43,21 +43,35 @@ function getMemberRelationship(member, workspace) {
   return { label: 'Churchmate', rank: 3 };
 }
 
-function buildChurchmateDirectory(organization, workspace, currentUserName) {
-  const members = Array.isArray(workspace?.members) ? workspace.members : [];
-  const normalizedCurrentName = String(currentUserName || '').trim().toLowerCase();
+function normalizedName(value) {
+  return String(value || '').trim().toLowerCase();
+}
 
-  return members
+function isBackendMember(member) {
+  return /^\d+$/.test(String(member?.id || '')) && !member?.prototype;
+}
+
+function buildChurchmateDirectory(organization, workspace, currentUserName, availableMembers = []) {
+  const members = Array.isArray(workspace?.members) ? workspace.members : [];
+  const normalizedCurrentName = normalizedName(currentUserName);
+  const backendMembers = availableMembers.filter(isBackendMember);
+  const backendByName = new Map(backendMembers.map((member) => [normalizedName(member.name), member]));
+  const usedBackendIds = new Set();
+
+  const prototypeContacts = members
     .filter((member) => (
       member?.id
       && member.id !== 'current-member'
-      && String(member.name || '').trim().toLowerCase() !== normalizedCurrentName
+      && normalizedName(member.name) !== normalizedCurrentName
     ))
     .map((member) => {
       const relationship = getMemberRelationship(member, workspace);
       const roleKeywords = (member.roles || []).flatMap((role) => [role.role, role.scopeName]);
+      const backendMember = backendByName.get(normalizedName(member.name));
+      if (backendMember) usedBackendIds.add(String(backendMember.id));
       return {
         id: member.id,
+        callTargetId: backendMember ? String(backendMember.id) : '',
         name: member.name || 'Church member',
         subtitle: relationship.label,
         rank: relationship.rank,
@@ -69,7 +83,28 @@ function buildChurchmateDirectory(organization, workspace, currentUserName) {
           ...roleKeywords,
         ].filter(Boolean).join(' ').toLowerCase(),
       };
-    })
+    });
+
+  const backendOnlyContacts = backendMembers
+    .filter((member) => (
+      !usedBackendIds.has(String(member.id))
+      && normalizedName(member.name) !== normalizedCurrentName
+    ))
+    .map((member) => ({
+      id: `backend-member-${member.id}`,
+      callTargetId: String(member.id),
+      name: member.name || 'Church member',
+      subtitle: member.organizationRole && member.organizationRole !== 'member'
+        ? member.organizationRole
+        : 'Connected churchmate',
+      rank: 2,
+      searchText: [member.name, member.organizationRole, organization?.name, 'connected account']
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase(),
+    }));
+
+  return [...prototypeContacts, ...backendOnlyContacts]
     .sort((first, second) => first.rank - second.rank || first.name.localeCompare(second.name));
 }
 
@@ -100,9 +135,16 @@ export default function MessagingLauncher({ currentUserName = 'You' }) {
         const joined = await getJoinedEcosystem();
         const organization = joined.ok && joined.data ? joined.data : mockEcosystems[0];
         const workspace = organization ? getOrganizationPrototypeState(organization) : null;
+        const memberResult = organization ? await getEcosystemMembers(organization.id) : { ok: true, data: [] };
+        const availableMembers = memberResult.ok && Array.isArray(memberResult.data) ? memberResult.data : [];
         if (!active) return;
         setChurchName(organization?.name || 'your church');
-        setChurchmates(buildChurchmateDirectory(organization, workspace, currentUserName));
+        setChurchmates(buildChurchmateDirectory(
+          organization,
+          workspace,
+          currentUserName,
+          availableMembers,
+        ));
       } catch (error) {
         console.warn('Ekklesia Pulse could not prepare the churchmate directory.', error);
         if (active) {
