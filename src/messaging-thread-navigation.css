@@ -1,3 +1,9 @@
 :root:has(.messaging-thread-view) .bottom-nav {
   display: none !important;
 }
+
+.messaging-dialog:has(.messaging-thread-view) .messaging-dialog-header-actions > button:first-child,
+.messaging-thread-view .messaging-composer > label,
+.messaging-thread-view .messaging-composer > small {
+  display: none;
+}
