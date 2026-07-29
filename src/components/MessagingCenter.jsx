@@ -12,7 +12,6 @@ import {
   ensureMessagingThread,
   getMessagingState,
   markPrototypeThreadRead,
-  MESSAGE_REACTION_OPTIONS,
   MESSAGING_UPDATED_EVENT,
   sendPrototypeMessage,
   togglePrototypeReaction,
@@ -59,12 +58,38 @@ function PaperclipIcon() {
   );
 }
 
+function PhotoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3.5" y="5" width="17" height="14" rx="2.4" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="9" cy="10" r="1.6" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <path d="m5.5 17 4.2-4.1 3 2.8 2.2-2.1 3.6 3.4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function DetailsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M12 10.8v5M12 7.5h.01" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SendIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m4 4 16 8-16 8 3-8-3-8Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M7.2 12H20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function formatMessageTime(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
   return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
   }).format(date);
@@ -140,47 +165,57 @@ function SharedConversationItems({ thread, onBack }) {
 
   return (
     <section className="messaging-shared-panel" aria-labelledby="shared-conversation-heading">
-      <div className="messaging-shared-heading">
-        <button type="button" onClick={onBack}>← Chat</button>
-        <div>
-          <p className="dashboard-eyebrow">Conversation details</p>
-          <h3 id="shared-conversation-heading">Media, files and links</h3>
+      <header className="messaging-chat-header">
+        <button className="messaging-header-icon" type="button" onClick={onBack} aria-label="Return to conversation">←</button>
+        <span className="messaging-chat-avatar" aria-hidden="true">{thread.type === 'room' ? '♧' : thread.title.charAt(0)}</span>
+        <div className="messaging-chat-identity">
+          <strong id="shared-conversation-heading">Conversation details</strong>
+          <small>{thread.title}</small>
         </div>
+      </header>
+
+      <div className="messaging-shared-content">
+        <section>
+          <h4>Photos and images <span>{media.length}</span></h4>
+          {media.length ? (
+            <div className="messaging-shared-media-grid">
+              {media.map((attachment) => <AttachmentView key={attachment.id} attachment={attachment} compact />)}
+            </div>
+          ) : <p>No shared images yet.</p>}
+        </section>
+
+        <section>
+          <h4>Files <span>{files.length}</span></h4>
+          {files.length ? (
+            <div className="messaging-shared-file-list">
+              {files.map((attachment) => <AttachmentView key={attachment.id} attachment={attachment} />)}
+            </div>
+          ) : <p>No shared files yet.</p>}
+        </section>
+
+        <section>
+          <h4>Links <span>{links.length}</span></h4>
+          {links.length ? (
+            <div className="messaging-shared-link-list">
+              {links.map((link, index) => (
+                <a href={link.url} target="_blank" rel="noopener noreferrer" key={`${link.messageId}-${index}`}>{link.url}</a>
+              ))}
+            </div>
+          ) : <p>No shared links yet.</p>}
+        </section>
       </div>
-
-      <section>
-        <h4>Photos and images <span>{media.length}</span></h4>
-        {media.length ? (
-          <div className="messaging-shared-media-grid">
-            {media.map((attachment) => <AttachmentView key={attachment.id} attachment={attachment} compact />)}
-          </div>
-        ) : <p>No shared images yet.</p>}
-      </section>
-
-      <section>
-        <h4>Files <span>{files.length}</span></h4>
-        {files.length ? (
-          <div className="messaging-shared-file-list">
-            {files.map((attachment) => <AttachmentView key={attachment.id} attachment={attachment} />)}
-          </div>
-        ) : <p>No shared files yet.</p>}
-      </section>
-
-      <section>
-        <h4>Links <span>{links.length}</span></h4>
-        {links.length ? (
-          <div className="messaging-shared-link-list">
-            {links.map((link, index) => (
-              <a href={link.url} target="_blank" rel="noopener noreferrer" key={`${link.messageId}-${index}`}>{link.url}</a>
-            ))}
-          </div>
-        ) : <p>No shared links yet.</p>}
-      </section>
     </section>
   );
 }
 
-export function ThreadConversation({ thread, currentUserName = 'You', onThreadUpdated, compact = false }) {
+export function ThreadConversation({
+  thread,
+  currentUserName = 'You',
+  onThreadUpdated,
+  compact = false,
+  onBack,
+  onClose,
+}) {
   const [draft, setDraft] = useState('');
   const [error, setError] = useState('');
   const [pendingAttachments, setPendingAttachments] = useState([]);
@@ -190,8 +225,10 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
   const [savingAttachment, setSavingAttachment] = useState(false);
   const messageEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const photoInputRef = useRef(null);
 
   const replyTarget = thread.messages.find((message) => message.id === replyToId) || null;
+  const canSend = Boolean(draft.trim() || pendingAttachments.length);
 
   useEffect(() => {
     if (!sharedOpen) messageEndRef.current?.scrollIntoView({ block: 'end' });
@@ -251,6 +288,13 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
     onThreadUpdated?.(result.thread, result.state);
   }
 
+  function handleDraftKeyDown(event) {
+    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent?.isComposing) {
+      event.preventDefault();
+      if (canSend) event.currentTarget.form?.requestSubmit();
+    }
+  }
+
   function applyReaction(messageId, emoji) {
     const result = togglePrototypeReaction(thread.id, messageId, emoji);
     if (!result.ok) {
@@ -286,50 +330,77 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
 
   return (
     <div className={`messaging-conversation ${compact ? 'is-compact' : ''}`}>
-      <div className="messaging-conversation-tools">
-        <button type="button" onClick={() => setSharedOpen(true)}>Media & files</button>
-      </div>
+      {!compact ? (
+        <header className="messaging-chat-header">
+          <button className="messaging-header-icon" type="button" onClick={onBack} aria-label="All messages">←</button>
+          <span className="messaging-chat-avatar" aria-hidden="true">{thread.type === 'room' ? '♧' : thread.title.charAt(0)}</span>
+          <div className="messaging-chat-identity">
+            <strong>{thread.title}</strong>
+            <small>{thread.subtitle}</small>
+          </div>
+          <button className="messaging-header-icon" type="button" onClick={() => setSharedOpen(true)} aria-label="Media, files and links" title="Media, files and links">
+            <DetailsIcon />
+          </button>
+          <button className="messaging-header-icon" type="button" onClick={onClose} aria-label="Close messages">×</button>
+        </header>
+      ) : null}
+
       <div className="messaging-message-list" role="log" aria-live="polite" aria-label={`Messages in ${thread.title}`}>
-        {thread.messages.length ? thread.messages.map((message) => (
-          <article className={`messaging-message is-${message.senderType} ${message.deletedAt ? 'is-deleted' : ''}`} key={message.id}>
-            <div className="messaging-message-meta">
-              <strong>{message.senderType === 'me' ? 'You' : message.senderName || thread.title}</strong>
+        {thread.messages.length ? thread.messages.map((message) => {
+          const senderLabel = message.senderType === 'me' ? 'You' : message.senderName || thread.title;
+          if (message.senderType === 'system') {
+            return (
+              <article className="messaging-system-message" key={message.id}>
+                <span>{message.text}</span>
+              </article>
+            );
+          }
+
+          return (
+            <article className={`messaging-message is-${message.senderType} ${message.deletedAt ? 'is-deleted' : ''}`} key={message.id}>
+              {message.senderType !== 'me' ? <span className="messaging-sender-name">{senderLabel}</span> : null}
+              <div className="messaging-message-row">
+                {message.senderType !== 'me' ? <span className="messaging-inline-avatar" aria-hidden="true">{senderLabel.charAt(0)}</span> : null}
+                <div className="messaging-bubble">
+                  {message.replyTo ? (
+                    <blockquote>
+                      <strong>{message.replyTo.senderName || 'Message'}</strong>
+                      <span>{message.replyTo.text || 'Attachment'}</span>
+                    </blockquote>
+                  ) : null}
+                  {message.deletedAt ? <p className="messaging-removed-message">Message removed</p> : null}
+                  {!message.deletedAt && message.text ? <p>{message.text}</p> : null}
+                  {!message.deletedAt && message.attachments.length ? (
+                    <div className="messaging-message-attachments">
+                      {message.attachments.map((attachment) => <AttachmentView key={attachment.id} attachment={attachment} />)}
+                    </div>
+                  ) : null}
+                </div>
+
+                {!message.deletedAt ? (
+                  <div className="messaging-message-actions" aria-label={`Actions for ${senderLabel}'s message`}>
+                    <button type="button" onClick={() => setReplyToId(message.id)} aria-label="Reply">↩</button>
+                    <button type="button" onClick={() => applyReaction(message.id, '❤️')} aria-label="React with heart">♡</button>
+                    {message.text ? <button type="button" onClick={() => copyMessage(message.text)} aria-label="Copy message">⋯</button> : null}
+                    {message.senderType === 'me' ? <button type="button" onClick={() => removeMessage(message)} aria-label="Remove message">×</button> : null}
+                  </div>
+                ) : null}
+              </div>
+
+              {!message.deletedAt && message.reactions.length ? (
+                <div className="messaging-reaction-summary">
+                  {message.reactions.map((reaction) => (
+                    <button className={reaction.reactedByMe ? 'is-mine' : ''} type="button" key={reaction.emoji} onClick={() => applyReaction(message.id, reaction.emoji)}>
+                      {reaction.emoji} {reaction.count}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
               <time dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
-            </div>
-            {message.replyTo ? (
-              <blockquote>
-                <strong>{message.replyTo.senderName || 'Message'}</strong>
-                <span>{message.replyTo.text || 'Attachment'}</span>
-              </blockquote>
-            ) : null}
-            {message.deletedAt ? <p className="messaging-removed-message">Message removed</p> : null}
-            {!message.deletedAt && message.text ? <p>{message.text}</p> : null}
-            {!message.deletedAt && message.attachments.length ? (
-              <div className="messaging-message-attachments">
-                {message.attachments.map((attachment) => <AttachmentView key={attachment.id} attachment={attachment} />)}
-              </div>
-            ) : null}
-            {!message.deletedAt && message.reactions.length ? (
-              <div className="messaging-reaction-summary">
-                {message.reactions.map((reaction) => (
-                  <button className={reaction.reactedByMe ? 'is-mine' : ''} type="button" key={reaction.emoji} onClick={() => applyReaction(message.id, reaction.emoji)}>
-                    {reaction.emoji} {reaction.count}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-            {!message.deletedAt && message.senderType !== 'system' ? (
-              <div className="messaging-message-actions">
-                <button type="button" onClick={() => setReplyToId(message.id)}>Reply</button>
-                {MESSAGE_REACTION_OPTIONS.slice(0, 3).map((emoji) => (
-                  <button type="button" onClick={() => applyReaction(message.id, emoji)} key={emoji} aria-label={`React ${emoji}`}>{emoji}</button>
-                ))}
-                {message.text ? <button type="button" onClick={() => copyMessage(message.text)}>Copy</button> : null}
-                {message.senderType === 'me' ? <button type="button" onClick={() => removeMessage(message)}>Remove</button> : null}
-              </div>
-            ) : null}
-          </article>
-        )) : (
+            </article>
+          );
+        }) : (
           <div className="messaging-empty-conversation">
             <MessageBubbleIcon />
             <strong>Start the conversation.</strong>
@@ -338,6 +409,7 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
         )}
         <span ref={messageEndRef} />
       </div>
+
       <form className="messaging-composer" onSubmit={submitMessage}>
         {replyTarget ? (
           <div className="messaging-reply-preview">
@@ -345,6 +417,7 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
             <button type="button" onClick={() => setReplyToId('')} aria-label="Cancel reply">×</button>
           </div>
         ) : null}
+
         {pendingAttachments.length ? (
           <div className="messaging-pending-attachments">
             {pendingAttachments.map((attachment) => (
@@ -356,6 +429,7 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
             ))}
           </div>
         ) : null}
+
         {emojiOpen ? (
           <div className="messaging-emoji-picker" aria-label="Choose an emoji">
             {EMOJI_OPTIONS.map((emoji) => (
@@ -363,6 +437,7 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
             ))}
           </div>
         ) : null}
+
         <input
           ref={fileInputRef}
           className="messaging-file-input"
@@ -373,21 +448,41 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
           tabIndex="-1"
           aria-hidden="true"
         />
+        <input
+          ref={photoInputRef}
+          className="messaging-file-input"
+          type="file"
+          multiple
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={addFiles}
+          tabIndex="-1"
+          aria-hidden="true"
+        />
+
         <div className="messaging-composer-row">
-          <button className="messaging-tool-button" type="button" onClick={() => fileInputRef.current?.click()} disabled={savingAttachment || pendingAttachments.length >= MAX_MESSAGE_ATTACHMENTS} aria-label="Attach photos or files">
+          <button className="messaging-composer-icon" type="button" onClick={() => fileInputRef.current?.click()} disabled={savingAttachment || pendingAttachments.length >= MAX_MESSAGE_ATTACHMENTS} aria-label="Attach a file">
             <PaperclipIcon />
           </button>
-          <textarea
-            id={`message-draft-${thread.id}`}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder={`Message ${thread.title}`}
-            rows="2"
-            maxLength="4000"
-          />
-          <button className="messaging-tool-button" type="button" onClick={() => setEmojiOpen((current) => !current)} aria-label="Choose emoji">☺</button>
-          <button className="messaging-send-button" type="submit" disabled={!draft.trim() && !pendingAttachments.length}>Send</button>
+          <button className="messaging-composer-icon" type="button" onClick={() => photoInputRef.current?.click()} disabled={savingAttachment || pendingAttachments.length >= MAX_MESSAGE_ATTACHMENTS} aria-label="Attach a photo">
+            <PhotoIcon />
+          </button>
+          <div className="messaging-input-shell">
+            <textarea
+              id={`message-draft-${thread.id}`}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={handleDraftKeyDown}
+              placeholder={`Message ${thread.title}`}
+              rows="1"
+              maxLength="4000"
+            />
+            <button type="button" onClick={() => setEmojiOpen((current) => !current)} aria-label="Choose emoji">☺</button>
+          </div>
+          <button className="messaging-send-button" type="submit" disabled={!canSend} aria-label="Send message">
+            <SendIcon />
+          </button>
         </div>
+
         {savingAttachment ? <p className="messaging-composer-status" role="status">Preparing attachment…</p> : null}
         {error ? <p className="messaging-error" role="alert">{error}</p> : null}
       </form>
@@ -531,107 +626,112 @@ export default function MessagingCenter({
     <div className="messaging-backdrop" onMouseDown={(event) => {
       if (event.target === event.currentTarget) closeDialog();
     }}>
-      <section className="messaging-dialog" role="dialog" aria-modal="true" aria-labelledby="messaging-dialog-title">
-        <header className="messaging-dialog-header">
-          <div>
-            <p className="dashboard-eyebrow">Private Alpha messaging</p>
-            <h2 id="messaging-dialog-title">{selectedThread ? selectedThread.title : 'Messages'}</h2>
-            <p>{selectedThread ? selectedThread.subtitle : 'Search churchmates, open direct conversations, and enter room chats.'}</p>
-          </div>
-          <div className="messaging-dialog-header-actions">
-            <button type="button" onClick={openChurchmateSearch} aria-label="Start a new message" title="New message">
-              <NewMessageIcon />
-            </button>
-            <button ref={closeButtonRef} type="button" onClick={closeDialog} aria-label="Close messages">×</button>
-          </div>
-        </header>
-
+      <section
+        className={`messaging-dialog ${selectedThread ? 'is-thread-open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={selectedThread ? undefined : 'messaging-dialog-title'}
+        aria-label={selectedThread ? `Conversation with ${selectedThread.title}` : undefined}
+      >
         {selectedThread ? (
-          <div className="messaging-thread-view">
-            <button className="messaging-back-button" type="button" onClick={() => setSelectedThreadId('')}>
-              <span aria-hidden="true">←</span> All messages
-            </button>
-            <ThreadConversation
-              thread={selectedThread}
-              currentUserName={currentUserName}
-              onThreadUpdated={(thread, updatedState) => {
-                setState(updatedState || getMessagingState());
-                setSelectedThreadId(thread.id);
-              }}
-            />
-          </div>
+          <ThreadConversation
+            thread={selectedThread}
+            currentUserName={currentUserName}
+            onBack={() => setSelectedThreadId('')}
+            onClose={closeDialog}
+            onThreadUpdated={(thread, updatedState) => {
+              setState(updatedState || getMessagingState());
+              setSelectedThreadId(thread.id);
+            }}
+          />
         ) : (
-          <div className="messaging-inbox">
-            <section className="messaging-directory-search" aria-labelledby="churchmate-search-heading">
+          <>
+            <header className="messaging-dialog-header">
               <div>
-                <p className="dashboard-eyebrow">New conversation</p>
-                <h3 id="churchmate-search-heading">Search churchmates</h3>
+                <p className="dashboard-eyebrow">Private Alpha messaging</p>
+                <h2 id="messaging-dialog-title">Messages</h2>
+                <p>Search churchmates and continue your conversations.</p>
               </div>
-              <label className="messaging-search-field" htmlFor="messaging-churchmate-search">
-                <SearchIcon />
-                <input
-                  ref={searchInputRef}
-                  id="messaging-churchmate-search"
-                  type="search"
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search by name, ministry, or D-Group"
-                  autoComplete="off"
-                />
-              </label>
-              <small>Only members connected to {churchName || 'your joined church'} appear in this directory.</small>
-            </section>
-
-            {!query && threads.length ? (
-              <section className="messaging-inbox-section" aria-labelledby="recent-conversations-heading">
-                <div className="messaging-section-heading">
-                  <h3 id="recent-conversations-heading">Recent conversations</h3>
-                  <span>{threads.length}</span>
-                </div>
-                <div className="messaging-thread-list">
-                  {threads.map(renderThreadButton)}
-                </div>
-              </section>
-            ) : null}
-
-            <section className="messaging-inbox-section" aria-labelledby="churchmate-results-heading">
-              <div className="messaging-section-heading">
-                <h3 id="churchmate-results-heading">{query ? 'Search results' : 'Suggested churchmates'}</h3>
-                {!directoryLoading ? <span>{filteredContacts.length}</span> : null}
+              <div className="messaging-dialog-header-actions">
+                <button type="button" onClick={openChurchmateSearch} aria-label="Start a new message" title="New message">
+                  <NewMessageIcon />
+                </button>
+                <button ref={closeButtonRef} type="button" onClick={closeDialog} aria-label="Close messages">×</button>
               </div>
+            </header>
 
-              {directoryLoading ? (
-                <p className="messaging-directory-status" role="status">Preparing your church directory…</p>
-              ) : filteredContacts.length ? (
-                <div className="messaging-contact-list">
-                  {filteredContacts.map((contact) => (
-                    <button type="button" key={contact.id} onClick={() => startConversation(contact)}>
-                      <span className="messaging-thread-avatar" aria-hidden="true">{contact.name.charAt(0)}</span>
-                      <span>
-                        <strong>{contact.name}</strong>
-                        <small>{contact.subtitle || 'Churchmate'}</small>
-                      </span>
-                      <b>Message</b>
-                    </button>
-                  ))}
+            <div className="messaging-inbox">
+              <section className="messaging-directory-search" aria-labelledby="churchmate-search-heading">
+                <div>
+                  <p className="dashboard-eyebrow">New conversation</p>
+                  <h3 id="churchmate-search-heading">Search churchmates</h3>
                 </div>
-              ) : query ? (
-                <div className="messaging-directory-empty">
+                <label className="messaging-search-field" htmlFor="messaging-churchmate-search">
                   <SearchIcon />
-                  <strong>No churchmate found</strong>
-                  <p>Try a name, ministry, D-Group, or leadership role from your church.</p>
+                  <input
+                    ref={searchInputRef}
+                    id="messaging-churchmate-search"
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Search by name, ministry, or D-Group"
+                    autoComplete="off"
+                  />
+                </label>
+                <small>Only members connected to {churchName || 'your joined church'} appear in this directory.</small>
+              </section>
+
+              {!query && threads.length ? (
+                <section className="messaging-inbox-section" aria-labelledby="recent-conversations-heading">
+                  <div className="messaging-section-heading">
+                    <h3 id="recent-conversations-heading">Recent conversations</h3>
+                    <span>{threads.length}</span>
+                  </div>
+                  <div className="messaging-thread-list">
+                    {threads.map(renderThreadButton)}
+                  </div>
+                </section>
+              ) : null}
+
+              <section className="messaging-inbox-section" aria-labelledby="churchmate-results-heading">
+                <div className="messaging-section-heading">
+                  <h3 id="churchmate-results-heading">{query ? 'Search results' : 'Suggested churchmates'}</h3>
+                  {!directoryLoading ? <span>{filteredContacts.length}</span> : null}
                 </div>
-              ) : (
-                <div className="messaging-directory-empty">
-                  <MessageBubbleIcon />
-                  <strong>{threads.length ? 'Your suggested list is clear' : 'No churchmates available yet'}</strong>
-                  <p>{threads.length
-                    ? 'Use the search field to reopen an existing direct conversation.'
-                    : 'Join a church workspace to search its approved member directory.'}</p>
-                </div>
-              )}
-            </section>
-          </div>
+
+                {directoryLoading ? (
+                  <p className="messaging-directory-status" role="status">Preparing your church directory…</p>
+                ) : filteredContacts.length ? (
+                  <div className="messaging-contact-list">
+                    {filteredContacts.map((contact) => (
+                      <button type="button" key={contact.id} onClick={() => startConversation(contact)}>
+                        <span className="messaging-thread-avatar" aria-hidden="true">{contact.name.charAt(0)}</span>
+                        <span>
+                          <strong>{contact.name}</strong>
+                          <small>{contact.subtitle || 'Churchmate'}</small>
+                        </span>
+                        <b>Message</b>
+                      </button>
+                    ))}
+                  </div>
+                ) : query ? (
+                  <div className="messaging-directory-empty">
+                    <SearchIcon />
+                    <strong>No churchmate found</strong>
+                    <p>Try a name, ministry, D-Group, or leadership role from your church.</p>
+                  </div>
+                ) : (
+                  <div className="messaging-directory-empty">
+                    <MessageBubbleIcon />
+                    <strong>{threads.length ? 'Your suggested list is clear' : 'No churchmates available yet'}</strong>
+                    <p>{threads.length
+                      ? 'Use the search field to reopen an existing direct conversation.'
+                      : 'Join a church workspace to search its approved member directory.'}</p>
+                  </div>
+                )}
+              </section>
+            </div>
+          </>
         )}
       </section>
     </div>
