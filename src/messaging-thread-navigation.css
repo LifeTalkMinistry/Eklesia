@@ -1,0 +1,3 @@
+:root:has(.messaging-thread-view) .bottom-nav {
+  display: none !important;
+}
