@@ -65,6 +65,12 @@ function startRestoredSessionSync() {
     });
 }
 
+async function needsLegacyConfirmation() {
+  const { inspectLegacyDataClaim } = await import('./sync/legacyDataClaimService.js');
+  const snapshot = await inspectLegacyDataClaim();
+  return Boolean(snapshot.needed);
+}
+
 function clearSessionState({ removeAccountMarker = true } = {}) {
   currentSession = null;
   clearActiveAccountId();
@@ -106,6 +112,9 @@ export async function restoreBackendSession({ startSync = true } = {}) {
   try {
     const payload = await apiRequest('/api/ekklesia/me');
     const session = activateSession(normalizeSession(payload));
+    if (startSync && await needsLegacyConfirmation()) {
+      return { ok: false, session, reason: 'legacy-claim-required' };
+    }
     if (startSync) startRestoredSessionSync();
     return { ok: true, session };
   } catch (error) {
