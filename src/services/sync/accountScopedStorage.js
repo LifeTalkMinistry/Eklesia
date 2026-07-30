@@ -1,14 +1,13 @@
-import { getBrowserStorage } from '../storageRegistry.js';
+import { getRawBrowserStorage } from '../storageRegistry.js';
 import { getActiveAccountId } from './accountContext.js';
 
 export const ACCOUNT_STORAGE_PREFIX = 'ekklesiaPulse.account';
 
 function normalizeBaseKey(baseKey) {
   const key = String(baseKey || '').trim();
-  if (!key.startsWith('ekklesiaPulse.')) {
-    throw new Error(`Account-scoped storage requires an Ekklesia key: ${key || '(empty)'}`);
-  }
-  return key.slice('ekklesiaPulse.'.length);
+  if (key.startsWith('ekklesiaPulse.')) return key.slice('ekklesiaPulse.'.length);
+  if (key.startsWith('ekklesiaPulse-')) return `legacy.${key.slice('ekklesiaPulse-'.length)}`;
+  throw new Error(`Account-scoped storage requires an Ekklesia key: ${key || '(empty)'}`);
 }
 
 export function getAccountStorageKey(baseKey, accountId = getActiveAccountId()) {
@@ -18,7 +17,7 @@ export function getAccountStorageKey(baseKey, accountId = getActiveAccountId()) 
 }
 
 export function readAccountStorage(baseKey, fallback = null, accountId = getActiveAccountId()) {
-  const storage = getBrowserStorage();
+  const storage = getRawBrowserStorage();
   const key = getAccountStorageKey(baseKey, accountId);
   if (!storage || !key) return { available: Boolean(storage), scoped: false, key, value: fallback };
 
@@ -32,7 +31,7 @@ export function readAccountStorage(baseKey, fallback = null, accountId = getActi
 }
 
 export function writeAccountStorage(baseKey, value, accountId = getActiveAccountId()) {
-  const storage = getBrowserStorage();
+  const storage = getRawBrowserStorage();
   const key = getAccountStorageKey(baseKey, accountId);
   if (!storage || !key) return { persisted: false, scoped: false, key };
 
@@ -46,7 +45,7 @@ export function writeAccountStorage(baseKey, value, accountId = getActiveAccount
 }
 
 export function removeAccountStorage(baseKey, accountId = getActiveAccountId()) {
-  const storage = getBrowserStorage();
+  const storage = getRawBrowserStorage();
   const key = getAccountStorageKey(baseKey, accountId);
   if (!storage || !key) return { removed: false, scoped: false, key };
 
@@ -60,7 +59,7 @@ export function removeAccountStorage(baseKey, accountId = getActiveAccountId()) 
 }
 
 export function copyLegacyValueIntoAccount(baseKey, accountId = getActiveAccountId()) {
-  const storage = getBrowserStorage();
+  const storage = getRawBrowserStorage();
   const scopedKey = getAccountStorageKey(baseKey, accountId);
   if (!storage || !scopedKey) return { copied: false, reason: 'unavailable' };
 
@@ -73,7 +72,7 @@ export function copyLegacyValueIntoAccount(baseKey, accountId = getActiveAccount
 }
 
 export function listAccountStorageKeys(accountId = getActiveAccountId()) {
-  const storage = getBrowserStorage();
+  const storage = getRawBrowserStorage();
   const normalizedAccountId = String(accountId || '').trim();
   if (!storage || !/^[1-9]\d*$/.test(normalizedAccountId)) return [];
   const prefix = `${ACCOUNT_STORAGE_PREFIX}.${normalizedAccountId}.`;
@@ -86,7 +85,7 @@ export function listAccountStorageKeys(accountId = getActiveAccountId()) {
 }
 
 export function clearAccountStorage(accountId = getActiveAccountId()) {
-  const storage = getBrowserStorage();
+  const storage = getRawBrowserStorage();
   if (!storage) return { removed: 0 };
   const keys = listAccountStorageKeys(accountId);
   keys.forEach((key) => storage.removeItem(key));
