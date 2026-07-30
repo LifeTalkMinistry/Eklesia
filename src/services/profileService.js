@@ -1,4 +1,10 @@
-import { getBrowserStorage, STORAGE_KEYS } from './storageRegistry.js';
+import { STORAGE_KEYS } from './storageRegistry.js';
+import { getActiveAccountId } from './sync/accountContext.js';
+import {
+  readAccountStorage,
+  removeAccountStorage,
+  writeAccountStorage,
+} from './sync/accountScopedStorage.js';
 
 export const PROFILE_LIMITS = Object.freeze({
   displayName: { min: 2, max: 40 },
@@ -6,11 +12,20 @@ export const PROFILE_LIMITS = Object.freeze({
   ministryName: { min: 0, max: 80 },
 });
 
-const memoryState = {
-  profile: null,
-  onboardingComplete: false,
-  alphaNoticeAcceptedAt: '',
-};
+const accountMemory = new Map();
+
+function getMemoryState() {
+  const accountId = getActiveAccountId();
+  if (!accountId) return { profile: null, onboardingComplete: false, alphaNoticeAcceptedAt: '' };
+  if (!accountMemory.has(accountId)) {
+    accountMemory.set(accountId, {
+      profile: null,
+      onboardingComplete: false,
+      alphaNoticeAcceptedAt: '',
+    });
+  }
+  return accountMemory.get(accountId);
+}
 
 function nowIso() {
   return new Date().toISOString();
@@ -70,41 +85,25 @@ function normalizeStoredProfile(value) {
 }
 
 function readStorageValue(key) {
-  const storage = getBrowserStorage();
-  if (!storage) return { available: false, value: null };
-  try {
-    return { available: true, value: storage.getItem(key) };
-  } catch (error) {
-    console.warn(`Ekklesia Pulse could not read ${key}.`, error);
-    return { available: false, value: null };
-  }
+  const result = readAccountStorage(key, null);
+  return { available: result.available && result.scoped, value: result.value };
 }
 
 function writeStorageValue(key, value) {
-  const storage = getBrowserStorage();
-  if (!storage) return { persisted: false };
-  try {
-    storage.setItem(key, value);
-    return { persisted: storage.getItem(key) === value };
-  } catch (error) {
-    console.warn(`Ekklesia Pulse could not save ${key}.`, error);
-    return { persisted: false, error };
-  }
+  return writeAccountStorage(key, value);
 }
 
 function removeStorageValue(key) {
-  const storage = getBrowserStorage();
-  if (!storage) return { removed: false, unavailable: true };
-  try {
-    storage.removeItem(key);
-    return { removed: storage.getItem(key) === null };
-  } catch (error) {
-    console.warn(`Ekklesia Pulse could not remove ${key}.`, error);
-    return { removed: false, error };
-  }
+  const result = removeAccountStorage(key);
+  return {
+    removed: result.removed,
+    unavailable: !result.scoped,
+    error: result.error,
+  };
 }
 
 export function getLocalProfile() {
+  const memoryState = getMemoryState();
   const stored = readStorageValue(STORAGE_KEYS.localProfile);
   if (stored.value === null) {
     return { ok: true, data: memoryState.profile, persisted: stored.available };
@@ -118,24 +117,25 @@ export function getLocalProfile() {
         ok: true,
         data: memoryState.profile,
         persisted: false,
-        warning: 'The saved device profile was not valid and was ignored.',
+        warning: 'The saved account profile was not valid and was ignored.',
       };
     }
     memoryState.profile = profile;
     return { ok: true, data: profile, persisted: true };
   } catch (error) {
-    console.warn('The Ekklesia Pulse device profile could not be parsed.', error);
+    console.warn('The Ekklesia Pulse account profile could not be parsed.', error);
     removeStorageValue(STORAGE_KEYS.localProfile);
     return {
       ok: true,
       data: memoryState.profile,
       persisted: false,
-      warning: 'The saved device profile could not be read and was ignored.',
+      warning: 'The saved account profile could not be read and was ignored.',
     };
   }
 }
 
 export function saveLocalProfile(profile) {
+  const memoryState = getMemoryState();
   const validation = validateProfileFields(profile);
   if (!validation.ok) return validation;
 
@@ -157,48 +157,66 @@ export function saveLocalProfile(profile) {
     persisted: writeResult.persisted,
     message: writeResult.persisted
       ? ''
-      : 'Your profile could not be saved on this device. It will be available only during this session.',
+      : 'Your profile could not be saved to this account on this device. It will be available only during this session.',
   };
+}
+
+export function replaceLocalProfileFromSync(profile) {
+  const memoryState = getMemoryState();
+  const normalized = normalizeStoredProfile({
+    ...profile,
+    churchName: profile?.churchName || memoryState.profile?.churchName || '',
+    ministryName: profile?.ministryName || memoryState.profile?.ministryName || '',
+  });
+  if (!normalized) return { ok: false, persisted: false };
+  memoryState.profile = normalized;
+  const result = writeStorageValue(STORAGE_KEYS.localProfile, JSON.stringify(normalized));
+  return { ok: true, data: normalized, persisted: result.persisted };
 }
 
 export function updateLocalProfile(changes) {
   const current = getLocalProfile().data;
   if (!current) {
-    return { ok: false, errors: {}, message: 'A local device profile is not available to update.' };
+    return { ok: false, errors: {}, message: 'An account profile is not available to update.' };
   }
   return saveLocalProfile({ ...current, ...changes });
 }
 
 export function hasCompletedOnboarding() {
+  const memoryState = getMemoryState();
   const stored = readStorageValue(STORAGE_KEYS.onboardingComplete);
   if (stored.value !== null) memoryState.onboardingComplete = stored.value === 'true';
   return memoryState.onboardingComplete;
 }
 
 export function setOnboardingComplete() {
+  const memoryState = getMemoryState();
   memoryState.onboardingComplete = true;
   const result = writeStorageValue(STORAGE_KEYS.onboardingComplete, 'true');
   return { ok: true, persisted: result.persisted };
 }
 
 export function resetOnboarding() {
+  const memoryState = getMemoryState();
   memoryState.onboardingComplete = false;
   const result = removeStorageValue(STORAGE_KEYS.onboardingComplete);
   return {
     ok: !result.error,
     removed: result.removed,
     persisted: !result.unavailable && result.removed,
-    message: result.unavailable ? 'The introduction was restarted for this session, but this browser is still blocking storage access.' : '',
+    message: result.unavailable ? 'Onboarding was reset for this session, but no signed-in account storage is available.' : '',
   };
 }
 
 export function hasAcceptedAlphaNotice() {
+  const memoryState = getMemoryState();
   const stored = readStorageValue(STORAGE_KEYS.alphaNoticeAccepted);
   if (stored.value) memoryState.alphaNoticeAcceptedAt = stored.value;
   return Boolean(memoryState.alphaNoticeAcceptedAt);
 }
 
 export function acceptAlphaNotice() {
+  const memoryState = getMemoryState();
   const acceptedAt = nowIso();
   memoryState.alphaNoticeAcceptedAt = acceptedAt;
   const storageResult = writeStorageValue(STORAGE_KEYS.alphaNoticeAccepted, acceptedAt);
@@ -217,6 +235,7 @@ export function acceptAlphaNotice() {
 }
 
 export function resetAlphaNotice() {
+  const memoryState = getMemoryState();
   memoryState.alphaNoticeAcceptedAt = '';
   const storageResult = removeStorageValue(STORAGE_KEYS.alphaNoticeAccepted);
 
@@ -234,11 +253,13 @@ export function resetAlphaNotice() {
     ok: !storageResult.error,
     removed: storageResult.removed,
     persisted: !storageResult.unavailable && storageResult.removed,
-    message: storageResult.unavailable ? 'The alpha notice was reset for this session, but this browser is still blocking storage access.' : '',
+    message: storageResult.unavailable ? 'The alpha notice was reset for this session, but no signed-in account storage is available.' : '',
   };
 }
 
 export function clearLocalProfile({ removeStorage = true } = {}) {
+  const accountId = getActiveAccountId();
+  const memoryState = getMemoryState();
   memoryState.profile = null;
   memoryState.onboardingComplete = false;
   memoryState.alphaNoticeAcceptedAt = '';
@@ -250,5 +271,6 @@ export function clearLocalProfile({ removeStorage = true } = {}) {
     removeStorageValue(STORAGE_KEYS.onboardingComplete),
     removeStorageValue(STORAGE_KEYS.alphaNoticeAccepted),
   ];
+  if (accountId) accountMemory.delete(accountId);
   return { ok: results.every((result) => !result.error && !result.unavailable) };
 }
