@@ -16,6 +16,7 @@ export const STORAGE_KEYS = Object.freeze({
   themePreferences: 'ekklesiaPulse.themePreferences',
   messagingPrototype: 'ekklesiaPulse.messagingPrototype',
   backendAccessToken: 'ekklesiaPulse.backendAccessToken',
+  backendAccountId: 'ekklesiaPulse.backendAccountId',
   syncDeviceId: 'ekklesiaPulse.syncDeviceId',
   syncState: 'ekklesiaPulse.syncState',
   syncOutboxFallback: 'ekklesiaPulse.syncOutboxFallback',
@@ -26,6 +27,7 @@ export const STORAGE_KEYS = Object.freeze({
 export const DEVICE_LOCAL_STORAGE_KEYS = Object.freeze([
   STORAGE_KEYS.introductionSeen,
   STORAGE_KEYS.backendAccessToken,
+  STORAGE_KEYS.backendAccountId,
   STORAGE_KEYS.syncDeviceId,
   STORAGE_KEYS.legacyClaimRegistry,
   STORAGE_KEYS.brandMigrationVersion,
