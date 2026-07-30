@@ -5,6 +5,7 @@ import CallOverlayHost from './components/CallOverlay.jsx';
 import { runBrandMigration } from './services/brandMigration.js';
 import { initializeFontPreferences } from './services/fontPreferencesService.js';
 import { initializeThemePreferences } from './services/themePreferencesService.js';
+import { installFileSyncBootstrap } from './services/fileSyncBootstrap.js';
 import './index.css';
 import './alpha.css';
 import './together-demo-disclosure.css';
@@ -36,6 +37,7 @@ import './theme-preferences.css';
 runBrandMigration();
 initializeThemePreferences();
 initializeFontPreferences();
+installFileSyncBootstrap();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

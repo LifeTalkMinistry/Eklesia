@@ -1,6 +1,8 @@
 export const EKKLESIA_DATABASE_NAME = 'ekklesia-pulse';
 export const EKKLESIA_DATABASE_VERSION = 2;
 export const NOTEBOOK_IMAGES_STORE = 'notebookImages';
+// Singular alias retained for file-sync services and future store-specific helpers.
+export const NOTEBOOK_IMAGE_STORE = NOTEBOOK_IMAGES_STORE;
 export const SYNC_OUTBOX_STORE = 'syncOutbox';
 
 let databasePromise = null;

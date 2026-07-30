@@ -1,6 +1,6 @@
 import { getBrowserStorage, STORAGE_KEYS } from './storageRegistry.js';
 
-const MESSAGING_VERSION = 3;
+const MESSAGING_VERSION = 4;
 const MAX_OUTBOX_RECORDS = 1000;
 
 export const MESSAGING_UPDATED_EVENT = 'ekklesia-pulse:messaging-updated';
@@ -22,11 +22,21 @@ function createEmptyState() {
 
 export function normalizeMessagingAttachment(attachment, index = 0) {
   return {
-    id: String(attachment?.id || `attachment-${index}`),
+    id: String(attachment?.id || attachment?.clientAttachmentId || `attachment-${index}`),
+    serverAttachmentId: attachment?.serverAttachmentId || attachment?.serverId || attachment?.remoteId
+      ? String(attachment.serverAttachmentId || attachment.serverId || attachment.remoteId)
+      : '',
     name: String(attachment?.name || 'Attachment'),
     type: String(attachment?.type || 'application/octet-stream'),
     size: Math.max(0, Number(attachment?.size) || 0),
     kind: ['image', 'pdf', 'file'].includes(attachment?.kind) ? attachment.kind : 'file',
+    sha256: String(attachment?.sha256 || ''),
+    downloadPath: String(attachment?.downloadPath || ''),
+    transferStatus: ['local', 'queued', 'uploading', 'ready', 'downloading', 'failed', 'deleted'].includes(attachment?.transferStatus)
+      ? attachment.transferStatus
+      : attachment?.serverAttachmentId || attachment?.serverId ? 'ready' : 'local',
+    transferProgress: Math.max(0, Math.min(100, Number(attachment?.transferProgress) || 0)),
+    lastError: String(attachment?.lastError || ''),
     createdAt: String(attachment?.createdAt || new Date().toISOString()),
   };
 }
