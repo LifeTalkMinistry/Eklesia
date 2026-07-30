@@ -10,6 +10,7 @@ import {
 } from '../services/messagingAttachmentService.js';
 import {
   deletePrototypeMessage,
+  editPrototypeMessage,
   ensureMessagingThread,
   getMessagingState,
   markPrototypeThreadRead,
@@ -241,6 +242,17 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
     else onThreadUpdated?.(result.thread, result.state);
   }
 
+  function editMessage(message) {
+    const nextText = window.prompt('Edit message', message.text);
+    if (nextText === null) return;
+    const result = editPrototypeMessage(thread.id, message.id, nextText);
+    if (!result.ok) setError(result.error || 'The message could not be edited.');
+    else {
+      setError('');
+      onThreadUpdated?.(result.thread, result.state);
+    }
+  }
+
   function retryMessage(message) {
     const result = retryPrototypeMessage(thread.id, message.id);
     if (!result.ok) setError(result.error || 'The message could not be retried.');
@@ -299,10 +311,10 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
                   {!message.deletedAt && message.text ? <p>{message.text}</p> : null}
                   {!message.deletedAt && message.attachments.length ? <div className="messaging-message-attachments">{message.attachments.map((attachment) => <AttachmentView key={attachment.id} attachment={attachment} />)}</div> : null}
                 </div>
-                {!message.deletedAt ? <div className="messaging-message-actions" aria-label={`Actions for ${senderLabel}'s message`}><button type="button" onClick={() => setReplyToId(message.id)} aria-label="Reply">↩</button><button type="button" onClick={() => applyReaction(message.id, '❤️')} aria-label="React with heart">♡</button>{message.text ? <button type="button" onClick={() => copyMessage(message.text)} aria-label="Copy message">⋯</button> : null}{message.senderType === 'me' ? <button type="button" onClick={() => removeMessage(message)} aria-label="Remove message">×</button> : null}</div> : null}
+                {!message.deletedAt ? <div className="messaging-message-actions" aria-label={`Actions for ${senderLabel}'s message`}><button type="button" onClick={() => setReplyToId(message.id)} aria-label="Reply">↩</button><button type="button" onClick={() => applyReaction(message.id, '❤️')} aria-label="React with heart">♡</button>{message.text ? <button type="button" onClick={() => copyMessage(message.text)} aria-label="Copy message">⋯</button> : null}{message.senderType === 'me' && message.text ? <button type="button" onClick={() => editMessage(message)} aria-label="Edit message">✎</button> : null}{message.senderType === 'me' ? <button type="button" onClick={() => removeMessage(message)} aria-label="Remove message">×</button> : null}</div> : null}
               </div>
               {!message.deletedAt && message.reactions.length ? <div className="messaging-reaction-summary">{message.reactions.map((reaction) => <button className={reaction.reactedByMe ? 'is-mine' : ''} type="button" key={reaction.emoji} onClick={() => applyReaction(message.id, reaction.emoji)}>{reaction.emoji} {reaction.count}</button>)}</div> : null}
-              <div className="messaging-message-status"><time dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>{syncLabel ? <span>{syncLabel}</span> : null}{message.syncStatus === 'failed' ? <button type="button" onClick={() => retryMessage(message)}>Retry</button> : null}</div>
+              <div className="messaging-message-status"><time dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>{message.editedAt ? <span>Edited</span> : null}{syncLabel ? <span>{syncLabel}</span> : null}{message.syncStatus === 'failed' ? <button type="button" onClick={() => retryMessage(message)}>Retry</button> : null}</div>
               {message.lastError && message.syncStatus === 'failed' ? <small className="messaging-message-error">{message.lastError}</small> : null}
             </article>
           );
