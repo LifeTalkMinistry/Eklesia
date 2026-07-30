@@ -7,11 +7,14 @@ import {
   parseDateKey,
   shiftDateKey,
 } from '../lib/manilaTime.js';
+import { getBrowserStorage } from './storageRegistry.js';
+import { queueDevotionForSync } from './sync/devotionSyncBridge.js';
 
 export const DEVOTIONS_STORAGE_KEY = 'ekklesiaPulse.devotions';
 export const LAST_BIBLE_LOCATION_KEY = 'ekklesiaPulse.lastBibleLocation';
 export const DEVOTION_DATA_VERSION_KEY = 'ekklesiaPulse.devotionDataVersion';
-export const DEVOTION_DATA_VERSION = 3;
+export const DEVOTION_DATA_VERSION = 4;
+export const DEVOTIONS_UPDATED_EVENT = 'ekklesia-pulse:devotions-updated';
 
 const LEGACY_HISTORY_KEY = 'ekklesiaPulse-wgap-history-v1';
 const WEEKDAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -25,6 +28,13 @@ function safeParse(raw, fallback) {
     console.error('Ekklesia Pulse local data could not be parsed', error);
     return fallback;
   }
+}
+
+function dispatchDevotionsUpdated(entries) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(DEVOTIONS_UPDATED_EVENT, {
+    detail: { entries },
+  }));
 }
 
 function createUniqueId(dateKey) {
@@ -119,21 +129,23 @@ function sortNewestFirst(entries) {
 }
 
 function readStoredDevotions() {
-  if (typeof window === 'undefined') return [];
-  const parsed = safeParse(window.localStorage.getItem(DEVOTIONS_STORAGE_KEY), []);
+  const storage = getBrowserStorage();
+  if (!storage) return [];
+  const parsed = safeParse(storage.getItem(DEVOTIONS_STORAGE_KEY), []);
   if (!Array.isArray(parsed)) return [];
   const dailyDates = new Set();
   return sortNewestFirst(parsed.map((entry) => normalizeStoredEntry(entry, dailyDates)).filter(Boolean));
 }
 
 function migrateLegacyData() {
-  if (typeof window === 'undefined') return;
-  const currentVersion = Number(window.localStorage.getItem(DEVOTION_DATA_VERSION_KEY) || 0);
+  const storage = getBrowserStorage();
+  if (!storage) return;
+  const currentVersion = Number(storage.getItem(DEVOTION_DATA_VERSION_KEY) || 0);
   if (currentVersion >= DEVOTION_DATA_VERSION) return;
 
   try {
     const existing = readStoredDevotions();
-    const legacy = safeParse(window.localStorage.getItem(LEGACY_HISTORY_KEY), []);
+    const legacy = safeParse(storage.getItem(LEGACY_HISTORY_KEY), []);
     const candidates = [...existing, ...(Array.isArray(legacy) ? legacy : [])];
     const dailyDates = new Set();
     const seenIds = new Set();
@@ -148,16 +160,20 @@ function migrateLegacyData() {
       migrated.push(normalized);
     });
 
-    window.localStorage.setItem(DEVOTIONS_STORAGE_KEY, JSON.stringify(sortNewestFirst(migrated)));
-    window.localStorage.setItem(DEVOTION_DATA_VERSION_KEY, String(DEVOTION_DATA_VERSION));
+    storage.setItem(DEVOTIONS_STORAGE_KEY, JSON.stringify(sortNewestFirst(migrated)));
+    storage.setItem(DEVOTION_DATA_VERSION_KEY, String(DEVOTION_DATA_VERSION));
   } catch (error) {
     console.error('Legacy devotion migration could not be completed', error);
   }
 }
 
 function writeDevotions(entries) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(DEVOTIONS_STORAGE_KEY, JSON.stringify(sortNewestFirst(entries)));
+  const storage = getBrowserStorage();
+  if (!storage) return { persisted: false };
+  const sorted = sortNewestFirst(entries);
+  storage.setItem(DEVOTIONS_STORAGE_KEY, JSON.stringify(sorted));
+  dispatchDevotionsUpdated(sorted);
+  return { persisted: true };
 }
 
 export function getAllDevotions() {
@@ -218,7 +234,7 @@ export function saveCompletedDevotion(devotion, wgap, options = {}) {
     verseStart,
     verseEnd,
     reference: devotion.reference || 'Scripture reflection',
-    translation: 'BSB',
+    translation: devotion.translation || 'BSB',
     title: devotion.title || 'Personal Scripture reflection',
     theme: devotion.theme || 'Selected from the Bible',
     prompt: devotion.prompt || 'What is God showing you through this passage?',
@@ -228,9 +244,9 @@ export function saveCompletedDevotion(devotion, wgap, options = {}) {
   };
 
   writeDevotions([entry, ...currentEntries]);
+  void queueDevotionForSync(entry);
   return { entry, type: finalType, isDuplicate: false };
 }
-
 
 export function saveNotebookDevotion(notebookDetails, options = {}) {
   if (!notebookDetails || typeof notebookDetails !== 'object') {
@@ -280,6 +296,7 @@ export function saveNotebookDevotion(notebookDetails, options = {}) {
   };
 
   writeDevotions([entry, ...currentEntries]);
+  void queueDevotionForSync(entry);
   return { entry, type: finalType, isDuplicate: false };
 }
 
@@ -300,7 +317,17 @@ export function updateNotebookImageReference(entryId, imageId) {
   const nextEntries = [...currentEntries];
   nextEntries[targetIndex] = updated;
   writeDevotions(nextEntries);
+  void queueDevotionForSync(updated);
   return updated;
+}
+
+export function deleteDevotionEntry(entryId) {
+  const currentEntries = getAllDevotions();
+  const target = currentEntries.find((entry) => entry.id === entryId);
+  if (!target) return { ok: true, deleted: false };
+  writeDevotions(currentEntries.filter((entry) => entry.id !== entryId));
+  void queueDevotionForSync(target, 'delete');
+  return { ok: true, deleted: true, entry: target };
 }
 
 export function getJourneyEntries(entries = getAllDevotions()) {
@@ -386,11 +413,12 @@ export function getRecentlyCompletedReferences(days = 30, referenceDate = new Da
 }
 
 export function getLastBibleLocation() {
-  if (typeof window === 'undefined') return null;
+  const storage = getBrowserStorage();
+  if (!storage) return null;
 
   let storedLocation = null;
   try {
-    storedLocation = window.localStorage.getItem(LAST_BIBLE_LOCATION_KEY);
+    storedLocation = storage.getItem(LAST_BIBLE_LOCATION_KEY);
   } catch (error) {
     console.warn('Ekklesia Pulse could not read the Bible position from this device.', error);
     return null;
@@ -407,7 +435,8 @@ export function getLastBibleLocation() {
 }
 
 export function saveLastBibleLocation(location) {
-  if (typeof window === 'undefined' || !location?.bookSlug || !location?.chapter) {
+  const storage = getBrowserStorage();
+  if (!storage || !location?.bookSlug || !location?.chapter) {
     return { ok: false, persisted: false };
   }
 
@@ -419,7 +448,7 @@ export function saveLastBibleLocation(location) {
   };
 
   try {
-    window.localStorage.setItem(LAST_BIBLE_LOCATION_KEY, JSON.stringify(normalized));
+    storage.setItem(LAST_BIBLE_LOCATION_KEY, JSON.stringify(normalized));
     return { ok: true, persisted: true };
   } catch (error) {
     console.warn('Ekklesia Pulse could not save the Bible position on this device.', error);

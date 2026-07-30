@@ -54,15 +54,27 @@ function activateSession(session) {
   return session;
 }
 
-function startRestoredSessionSync() {
-  void import('./sync/syncCoordinator.js')
-    .then(({ bootstrapAccountSync, installAutomaticSyncTriggers }) => {
-      installAutomaticSyncTriggers();
-      return bootstrapAccountSync();
-    })
-    .catch((error) => {
-      console.warn('Ekklesia Pulse could not start account synchronization.', error);
-    });
+async function startRestoredSessionSync() {
+  try {
+    const [{ bootstrapAccountSync, installAutomaticSyncTriggers }, { getSyncState }] = await Promise.all([
+      import('./sync/syncCoordinator.js'),
+      import('./sync/syncStateService.js'),
+    ]);
+    const cursorBeforeSync = getSyncState().cursor;
+    installAutomaticSyncTriggers();
+    const result = await bootstrapAccountSync();
+    return { ...result, cursorBeforeSync };
+  } catch (error) {
+    console.warn('Ekklesia Pulse could not start account synchronization.', error);
+    return { ok: false, error };
+  }
+}
+
+function refreshAfterStartupPull(sync) {
+  if (typeof window === 'undefined' || !sync?.ok) return false;
+  if (String(sync.cursor || '0') === String(sync.cursorBeforeSync || '0')) return false;
+  window.location.reload();
+  return true;
 }
 
 async function needsLegacyConfirmation() {
@@ -115,8 +127,9 @@ export async function restoreBackendSession({ startSync = true } = {}) {
     if (startSync && await needsLegacyConfirmation()) {
       return { ok: false, session, reason: 'legacy-claim-required' };
     }
-    if (startSync) startRestoredSessionSync();
-    return { ok: true, session };
+    const sync = startSync ? await startRestoredSessionSync() : null;
+    const refreshing = refreshAfterStartupPull(sync);
+    return { ok: true, session, sync, refreshing };
   } catch (error) {
     if (error.status === 401 || error.status === 403) clearAccessToken();
     clearSessionState();

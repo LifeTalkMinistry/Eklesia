@@ -48,7 +48,7 @@ export default function AccountAccess({ localProfile, onAuthenticated }) {
     }
 
     installAutomaticSyncTriggers();
-    void bootstrapAccountSync();
+    await bootstrapAccountSync();
     if (freshLogin && reloadWithAccountScope()) return;
     onAuthenticated(session);
   }
@@ -109,7 +109,7 @@ export default function AccountAccess({ localProfile, onAuthenticated }) {
     else reviewLegacyDataLater(legacySnapshot);
 
     installAutomaticSyncTriggers();
-    if (action === 'import') await bootstrapAccountSync();
+    await bootstrapAccountSync();
     if (!reloadWithAccountScope()) onAuthenticated(authenticatedSession);
   }
 
