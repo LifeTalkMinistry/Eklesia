@@ -15,6 +15,8 @@ export const STORAGE_KEYS = Object.freeze({
   fontPreferences: 'ekklesiaPulse.fontPreferences',
   themePreferences: 'ekklesiaPulse.themePreferences',
   messagingPrototype: 'ekklesiaPulse.messagingPrototype',
+  messagingOutbox: 'ekklesiaPulse.messagingOutbox',
+  messagingSyncState: 'ekklesiaPulse.messagingSyncState',
   backendAccessToken: 'ekklesiaPulse.backendAccessToken',
   backendAccountId: 'ekklesiaPulse.backendAccountId',
   syncDeviceId: 'ekklesiaPulse.syncDeviceId',
@@ -47,6 +49,8 @@ export const ACCOUNT_OWNED_STORAGE_KEYS = Object.freeze([
   STORAGE_KEYS.fontPreferences,
   STORAGE_KEYS.themePreferences,
   STORAGE_KEYS.messagingPrototype,
+  STORAGE_KEYS.messagingOutbox,
+  STORAGE_KEYS.messagingSyncState,
   STORAGE_KEYS.syncState,
   STORAGE_KEYS.syncOutboxFallback,
   STORAGE_KEYS.syncActiveBatch,
@@ -135,7 +139,6 @@ export function getBrowserStorage() {
 export function isLocalStorageAvailable() {
   const storage = getRawBrowserStorage();
   if (!storage) return false;
-
   const testKey = 'ekklesiaPulse.__storageTest';
   try {
     storage.setItem(testKey, '1');
