@@ -56,13 +56,25 @@ function activateSession(session) {
 
 async function startRestoredSessionSync() {
   try {
-    const { bootstrapAccountSync, installAutomaticSyncTriggers } = await import('./sync/syncCoordinator.js');
+    const [{ bootstrapAccountSync, installAutomaticSyncTriggers }, { getSyncState }] = await Promise.all([
+      import('./sync/syncCoordinator.js'),
+      import('./sync/syncStateService.js'),
+    ]);
+    const cursorBeforeSync = getSyncState().cursor;
     installAutomaticSyncTriggers();
-    return await bootstrapAccountSync();
+    const result = await bootstrapAccountSync();
+    return { ...result, cursorBeforeSync };
   } catch (error) {
     console.warn('Ekklesia Pulse could not start account synchronization.', error);
     return { ok: false, error };
   }
+}
+
+function refreshAfterStartupPull(sync) {
+  if (typeof window === 'undefined' || !sync?.ok) return false;
+  if (String(sync.cursor || '0') === String(sync.cursorBeforeSync || '0')) return false;
+  window.location.reload();
+  return true;
 }
 
 async function needsLegacyConfirmation() {
@@ -116,7 +128,8 @@ export async function restoreBackendSession({ startSync = true } = {}) {
       return { ok: false, session, reason: 'legacy-claim-required' };
     }
     const sync = startSync ? await startRestoredSessionSync() : null;
-    return { ok: true, session, sync };
+    const refreshing = refreshAfterStartupPull(sync);
+    return { ok: true, session, sync, refreshing };
   } catch (error) {
     if (error.status === 401 || error.status === 403) clearAccessToken();
     clearSessionState();
