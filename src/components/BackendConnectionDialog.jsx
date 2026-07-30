@@ -6,12 +6,26 @@ import {
   registerBackendAccount,
   restoreBackendSession,
 } from '../services/backendSessionService.js';
+import { synchronizeNow } from '../services/sync/syncCoordinator.js';
+import {
+  getSyncState,
+  SYNC_STATE_CHANGED_EVENT,
+} from '../services/sync/syncStateService.js';
 import AccessibleDialog from './AccessibleDialog.jsx';
 import './BackendConnectionDialog.css';
+
+function syncLabel(state) {
+  if (state.status === 'syncing') return 'Syncing';
+  if (state.status === 'offline') return 'Offline — changes saved on this device';
+  if (state.status === 'attention') return 'Needs attention';
+  if (state.status === 'synced') return 'Synced';
+  return 'Ready to sync';
+}
 
 export default function BackendConnectionDialog({ open, onClose, triggerRef, localProfile, onSessionChanged }) {
   const [connection, setConnection] = useState({ configured: false, online: false });
   const [session, setSession] = useState(null);
+  const [syncState, setSyncState] = useState(getSyncState);
   const [mode, setMode] = useState('login');
   const [name, setName] = useState(localProfile?.displayName || '');
   const [email, setEmail] = useState('');
@@ -19,6 +33,14 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const emailRef = useRef(null);
+
+  useEffect(() => {
+    function handleSyncState(event) {
+      setSyncState(event.detail?.state || getSyncState());
+    }
+    window.addEventListener(SYNC_STATE_CHANGED_EVENT, handleSyncState);
+    return () => window.removeEventListener(SYNC_STATE_CHANGED_EVENT, handleSyncState);
+  }, []);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -35,7 +57,10 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
         const restored = await restoreBackendSession();
         if (!cancelled && restored.ok) setSession(restored.session);
       }
-      if (!cancelled) setBusy(false);
+      if (!cancelled) {
+        setSyncState(getSyncState());
+        setBusy(false);
+      }
     }
 
     setName(localProfile?.displayName || '');
@@ -60,6 +85,12 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
     } finally {
       setBusy(false);
     }
+  }
+
+  async function syncNow() {
+    setMessage('');
+    const result = await synchronizeNow({ reason: 'manual' });
+    if (!result.ok && result.error) setMessage(result.error.message || 'Sync needs attention.');
   }
 
   function signOut() {
@@ -92,7 +123,7 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
       </div>
 
       <p id="backend-connection-description" className="alpha-dialog-copy">
-        Your account restores church membership, enables member messaging and calls, and protects access to this app. Personal devotions remain local during this foundation stage.
+        Your account restores church membership and synchronized account data while keeping local-first access available offline.
       </p>
 
       <section className={`backend-status-card ${connection.online ? 'is-online' : ''}`} aria-live="polite">
@@ -111,8 +142,14 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
           <p>{session.user?.email}</p>
           <dl>
             <div><dt>Church</dt><dd>{session.church?.name || 'Not joined yet'}</dd></div>
-            <div><dt>Data source</dt><dd>Backend when online</dd></div>
+            <div><dt>Sync</dt><dd>{syncLabel(syncState)}</dd></div>
+            <div><dt>Pending</dt><dd>{syncState.pendingCount || 0}</dd></div>
+            <div><dt>Last synced</dt><dd>{syncState.lastSyncedAt ? new Date(syncState.lastSyncedAt).toLocaleString() : 'Not yet'}</dd></div>
           </dl>
+          {syncState.lastError ? <p className="alpha-inline-message" role="status">{syncState.lastError}</p> : null}
+          <button className="primary-button" type="button" onClick={syncNow} disabled={syncState.status === 'syncing'}>
+            {syncState.status === 'syncing' ? 'Syncing…' : 'Sync now'}
+          </button>
           <button className="secondary-button" type="button" onClick={signOut}>Sign out this device</button>
         </section>
       ) : (
