@@ -54,6 +54,17 @@ function activateSession(session) {
   return session;
 }
 
+function startRestoredSessionSync() {
+  void import('./sync/syncCoordinator.js')
+    .then(({ bootstrapAccountSync, installAutomaticSyncTriggers }) => {
+      installAutomaticSyncTriggers();
+      return bootstrapAccountSync();
+    })
+    .catch((error) => {
+      console.warn('Ekklesia Pulse could not start account synchronization.', error);
+    });
+}
+
 function clearSessionState({ removeAccountMarker = true } = {}) {
   currentSession = null;
   clearActiveAccountId();
@@ -86,7 +97,7 @@ export async function inspectBackendConnection() {
   }
 }
 
-export async function restoreBackendSession() {
+export async function restoreBackendSession({ startSync = true } = {}) {
   if (!hasBackendSession()) {
     clearSessionState();
     return { ok: false, session: null, reason: 'not-connected' };
@@ -95,6 +106,7 @@ export async function restoreBackendSession() {
   try {
     const payload = await apiRequest('/api/ekklesia/me');
     const session = activateSession(normalizeSession(payload));
+    if (startSync) startRestoredSessionSync();
     return { ok: true, session };
   } catch (error) {
     if (error.status === 401 || error.status === 403) clearAccessToken();
