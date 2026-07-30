@@ -54,15 +54,15 @@ function activateSession(session) {
   return session;
 }
 
-function startRestoredSessionSync() {
-  void import('./sync/syncCoordinator.js')
-    .then(({ bootstrapAccountSync, installAutomaticSyncTriggers }) => {
-      installAutomaticSyncTriggers();
-      return bootstrapAccountSync();
-    })
-    .catch((error) => {
-      console.warn('Ekklesia Pulse could not start account synchronization.', error);
-    });
+async function startRestoredSessionSync() {
+  try {
+    const { bootstrapAccountSync, installAutomaticSyncTriggers } = await import('./sync/syncCoordinator.js');
+    installAutomaticSyncTriggers();
+    return await bootstrapAccountSync();
+  } catch (error) {
+    console.warn('Ekklesia Pulse could not start account synchronization.', error);
+    return { ok: false, error };
+  }
 }
 
 async function needsLegacyConfirmation() {
@@ -115,8 +115,8 @@ export async function restoreBackendSession({ startSync = true } = {}) {
     if (startSync && await needsLegacyConfirmation()) {
       return { ok: false, session, reason: 'legacy-claim-required' };
     }
-    if (startSync) startRestoredSessionSync();
-    return { ok: true, session };
+    const sync = startSync ? await startRestoredSessionSync() : null;
+    return { ok: true, session, sync };
   } catch (error) {
     if (error.status === 401 || error.status === 403) clearAccessToken();
     clearSessionState();
