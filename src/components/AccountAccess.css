@@ -5,10 +5,8 @@
   place-items: center;
   overflow: hidden;
   padding: 22px 16px;
-  background:
-    radial-gradient(circle at 14% 18%, rgb(80 168 122 / 20%), transparent 34%),
-    radial-gradient(circle at 88% 82%, rgb(180 139 77 / 13%), transparent 31%),
-    linear-gradient(145deg, #07100c 0%, #102019 52%, #08110d 100%);
+  color: var(--ui-text);
+  background: var(--ui-canvas-art);
 }
 
 .account-access-shell::before {
@@ -17,11 +15,11 @@
   right: -130px;
   width: 350px;
   height: 350px;
-  border: 1px solid rgb(229 216 172 / 12%);
+  border: 1px solid color-mix(in srgb, var(--ui-accent-2) 20%, transparent);
   border-radius: 50%;
   box-shadow:
-    0 0 0 54px rgb(229 216 172 / 2.5%),
-    0 0 0 108px rgb(229 216 172 / 1.5%);
+    0 0 0 54px color-mix(in srgb, var(--ui-accent-2) 5%, transparent),
+    0 0 0 108px color-mix(in srgb, var(--ui-accent-2) 3%, transparent);
   content: '';
 }
 
@@ -32,13 +30,13 @@
   width: min(100%, 440px);
   gap: 18px;
   padding: clamp(24px, 7vw, 38px);
-  border: 1px solid rgb(255 255 255 / 11%);
-  border-radius: 28px;
-  color: #f7f7f2;
-  background: rgb(12 27 20 / 82%);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-card-radius);
+  color: var(--ui-text);
+  background: var(--ui-dialog);
   box-shadow:
-    0 30px 80px rgb(0 0 0 / 38%),
-    inset 0 1px 0 rgb(255 255 255 / 7%);
+    0 30px 80px var(--ui-shadow),
+    var(--ui-card-shadow);
   backdrop-filter: blur(22px);
 }
 
@@ -46,7 +44,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #fffdf5;
+  color: var(--ui-heading);
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.08rem;
 }
@@ -56,10 +54,10 @@
   width: 34px;
   height: 34px;
   place-items: center;
-  border: 1px solid rgb(232 217 170 / 32%);
-  border-radius: 11px;
-  color: #e8d9aa;
-  background: rgb(232 217 170 / 7%);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-control-radius);
+  color: var(--ui-accent-2);
+  background: var(--ui-accent-2-soft);
 }
 
 .account-access-heading {
@@ -69,11 +67,12 @@
 
 .account-access-heading .eyebrow {
   margin: 0;
+  color: var(--ui-accent);
 }
 
 .account-access-heading h1 {
   margin: 0;
-  color: #fffdf5;
+  color: var(--ui-heading);
   font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(2.15rem, 10vw, 3.15rem);
   font-weight: 500;
@@ -83,7 +82,7 @@
 
 .account-access-heading > p:last-child {
   margin: 0;
-  color: rgb(244 245 239 / 68%);
+  color: var(--ui-muted);
   font-size: 0.9rem;
   line-height: 1.65;
 }
@@ -94,44 +93,50 @@
   align-items: center;
   gap: 10px;
   padding: 12px 13px;
-  border: 1px solid rgb(239 180 167 / 20%);
-  border-radius: 15px;
-  background: rgb(239 180 167 / 7%);
+  border: 1px solid color-mix(in srgb, var(--ui-danger) 28%, transparent);
+  border-radius: var(--ui-control-radius);
+  color: var(--ui-text);
+  background: var(--ui-danger-soft);
 }
 
 .account-access-status > span {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #efb4a7;
-  box-shadow: 0 0 0 5px rgb(239 180 167 / 9%);
+  background: var(--ui-danger);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--ui-danger) 12%, transparent);
 }
 
 .account-access-status.is-online {
-  border-color: rgb(184 216 196 / 20%);
-  background: rgb(184 216 196 / 7%);
+  border-color: color-mix(in srgb, var(--ui-success) 34%, transparent);
+  background: var(--ui-success-soft);
 }
 
 .account-access-status.is-online > span {
-  background: #b8d8c4;
-  box-shadow: 0 0 0 5px rgb(184 216 196 / 9%);
+  background: var(--ui-success);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--ui-success) 14%, transparent);
 }
 
 .account-access-status div {
   display: grid;
   min-width: 0;
-  gap: 2px;
+  gap: 3px;
 }
 
 .account-access-status strong {
-  color: #fffdf5;
+  color: var(--ui-heading);
   font-size: 0.78rem;
+}
+
+.account-access-status.is-online strong {
+  color: var(--ui-accent);
 }
 
 .account-access-status small {
   overflow: hidden;
-  color: rgb(244 245 239 / 52%);
-  font-size: 0.62rem;
+  color: var(--ui-muted);
+  font-size: 0.65rem;
+  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -141,26 +146,33 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
   padding: 4px;
-  border: 1px solid rgb(255 255 255 / 8%);
-  border-radius: 15px;
-  background: rgb(255 255 255 / 3%);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-card-muted);
 }
 
 .account-access-switch button {
   min-height: 42px;
   padding: 8px 12px;
-  border-radius: 11px;
-  color: rgb(244 245 239 / 54%);
+  border: 1px solid transparent;
+  border-radius: calc(var(--ui-control-radius) - 3px);
+  color: var(--ui-muted);
   background: transparent;
   cursor: pointer;
   font-size: 0.76rem;
   font-weight: 800;
 }
 
+.account-access-switch button:hover {
+  color: var(--ui-heading);
+  background: var(--ui-accent-soft);
+}
+
 .account-access-switch button.is-active {
-  color: #102019;
-  background: #d9ead3;
-  box-shadow: 0 5px 16px rgb(0 0 0 / 18%);
+  border-color: var(--ui-border);
+  color: var(--ui-primary-text);
+  background: var(--ui-primary);
+  box-shadow: 0 5px 16px color-mix(in srgb, var(--ui-shadow) 55%, transparent);
 }
 
 .account-access-form {
@@ -171,7 +183,7 @@
 .account-access-form label {
   display: grid;
   gap: 7px;
-  color: #d8e8dc;
+  color: var(--ui-text);
   font-size: 0.72rem;
   font-weight: 800;
 }
@@ -180,41 +192,69 @@
   width: 100%;
   min-height: 48px;
   padding: 11px 13px;
-  border: 1px solid rgb(255 255 255 / 11%);
-  border-radius: 14px;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-control-radius);
   outline: none;
-  color: #fffdf5;
-  background: rgb(255 255 255 / 4%);
+  color: var(--ui-text);
+  background: var(--ui-input);
+}
+
+.account-access-form input:hover {
+  border-color: color-mix(in srgb, var(--ui-accent) 42%, var(--ui-border));
 }
 
 .account-access-form input:focus {
-  border-color: rgb(184 216 196 / 55%);
-  box-shadow: 0 0 0 3px rgb(184 216 196 / 10%);
+  border-color: var(--ui-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-focus) 18%, transparent);
 }
 
 .account-access-submit.primary-button {
   width: 100%;
   margin-top: 5px;
-  border-radius: 15px;
+  border-radius: var(--ui-control-radius);
+}
+
+.account-access-submit.primary-button:disabled {
+  opacity: 0.58;
 }
 
 .account-access-message {
   margin: -3px 0 0;
   padding: 11px 12px;
-  border: 1px solid rgb(239 180 167 / 18%);
-  border-radius: 13px;
-  color: #efb4a7;
-  background: rgb(239 180 167 / 6%);
+  border: 1px solid color-mix(in srgb, var(--ui-danger) 30%, transparent);
+  border-radius: var(--ui-control-radius);
+  color: var(--ui-danger);
+  background: var(--ui-danger-soft);
   font-size: 0.72rem;
   line-height: 1.5;
 }
 
 .account-access-privacy {
   margin: 0;
-  color: rgb(244 245 239 / 42%);
-  font-size: 0.64rem;
+  color: var(--ui-subtle);
+  font-size: 0.66rem;
   line-height: 1.55;
   text-align: center;
+}
+
+:root[data-ekklesia-theme='light'] .account-access-card {
+  border-color: rgba(39, 68, 50, 0.18);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 65px rgba(42, 55, 45, 0.16);
+}
+
+:root[data-ekklesia-theme='light'] .account-access-status.is-online {
+  border-color: rgba(47, 114, 80, 0.32);
+  background: #eef7f0;
+}
+
+:root[data-ekklesia-theme='light'] .account-access-form input {
+  border-color: rgba(47, 114, 80, 0.3);
+  background: #ffffff;
+}
+
+:root[data-ekklesia-theme='light'] .account-access-privacy {
+  color: rgba(41, 58, 48, 0.65);
 }
 
 @media (max-width: 420px) {
@@ -228,5 +268,9 @@
     align-content: center;
     border: 0;
     border-radius: 0;
+  }
+
+  :root[data-ekklesia-theme='light'] .account-access-card {
+    box-shadow: none;
   }
 }
