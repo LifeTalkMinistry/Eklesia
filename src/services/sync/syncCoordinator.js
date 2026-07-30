@@ -52,6 +52,10 @@ function clearRetry() {
   retryTimer = null;
 }
 
+function recordKey(record) {
+  return `${record.entityType}:${record.clientRecordId}`;
+}
+
 async function pullAllChanges(startCursor) {
   let cursor = String(startCursor || '0');
   let hasMore = true;
@@ -98,9 +102,9 @@ async function pushPendingBatches(device, startingCursor) {
     });
 
     applyCanonicalRecords(response.accepted || []);
-    const acceptedKeys = new Set((response.accepted || []).map((record) => `${record.entityType}:${record.clientRecordId}`));
+    const acceptedKeys = new Set((response.accepted || []).map(recordKey));
     const confirmedIds = pending
-      .filter((record) => acceptedKeys.has(`${record.entityType}:${record.clientRecordId}`))
+      .filter((record) => acceptedKeys.has(recordKey(record)))
       .map((record) => record.id);
     await confirmMutations(confirmedIds);
     cursor = String(response.cursor || cursor);
@@ -111,9 +115,9 @@ async function pushPendingBatches(device, startingCursor) {
           applyCanonicalRecords([conflict.canonical]);
         }
       });
-      const conflictKeys = new Set(response.conflicts.map((item) => `${item.entityType}:${item.clientRecordId}`));
+      const conflictKeys = new Set(response.conflicts.map(recordKey));
       const conflictIds = pending
-        .filter((record) => conflictKeys.has(`${record.entityType}:${record.clientRecordId}`))
+        .filter((record) => conflictKeys.has(recordKey(record)))
         .map((record) => record.id);
       await markMutationFailures(conflictIds, new Error('A newer server version needs review.'));
       return { ok: false, conflicts: response.conflicts, cursor };
@@ -136,7 +140,11 @@ async function executeSync({ bootstrap = false } = {}) {
   try {
     if (bootstrap) {
       const initial = await bootstrapRemoteSync(device);
-      applyCanonicalRecords(initial.records || []);
+      const pendingKeys = new Set(pendingBefore.map(recordKey));
+      const safeBootstrapRecords = (initial.records || []).filter((record) => !(
+        record.entityType === 'devotion-entry' && pendingKeys.has(recordKey(record))
+      ));
+      applyCanonicalRecords(safeBootstrapRecords);
       cursor = String(initial.cursor || cursor);
       await enqueueUnsyncedSnapshot();
     }
