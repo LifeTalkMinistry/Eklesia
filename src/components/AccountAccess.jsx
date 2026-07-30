@@ -7,7 +7,24 @@ import {
   registerBackendAccount,
   restoreBackendSession,
 } from '../services/backendSessionService.js';
+import {
+  importLegacyDataIntoAccount,
+  inspectLegacyDataClaim,
+  keepLegacyDataOnDevice,
+  reviewLegacyDataLater,
+} from '../services/sync/legacyDataClaimService.js';
+import {
+  bootstrapAccountSync,
+  installAutomaticSyncTriggers,
+} from '../services/sync/syncCoordinator.js';
+import LegacyDataClaim from './LegacyDataClaim.jsx';
 import './AccountAccess.css';
+
+function reloadWithAccountScope() {
+  if (typeof window === 'undefined') return false;
+  window.location.reload();
+  return true;
+}
 
 export default function AccountAccess({ localProfile, onAuthenticated }) {
   const [connection, setConnection] = useState({ configured: false, online: false });
@@ -17,7 +34,24 @@ export default function AccountAccess({ localProfile, onAuthenticated }) {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(true);
   const [message, setMessage] = useState('');
+  const [legacySnapshot, setLegacySnapshot] = useState(null);
+  const [authenticatedSession, setAuthenticatedSession] = useState(null);
   const emailRef = useRef(null);
+
+  async function continueAuthenticated(session, { freshLogin = false } = {}) {
+    const snapshot = await inspectLegacyDataClaim();
+    if (snapshot.needed) {
+      setAuthenticatedSession(session);
+      setLegacySnapshot(snapshot);
+      setBusy(false);
+      return;
+    }
+
+    installAutomaticSyncTriggers();
+    void bootstrapAccountSync();
+    if (freshLogin && reloadWithAccountScope()) return;
+    onAuthenticated(session);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +67,7 @@ export default function AccountAccess({ localProfile, onAuthenticated }) {
         const restored = await restoreBackendSession();
         if (cancelled) return;
         if (restored.ok && restored.session) {
-          onAuthenticated(restored.session);
+          await continueAuthenticated(restored.session);
           return;
         }
         setMessage('Your saved session has expired. Please log in again.');
@@ -47,7 +81,9 @@ export default function AccountAccess({ localProfile, onAuthenticated }) {
 
     prepareAccountAccess();
     return () => { cancelled = true; };
-  }, [onAuthenticated]);
+    // Account preparation intentionally runs once for this mounted access screen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function submit(event) {
     event.preventDefault();
@@ -59,11 +95,34 @@ export default function AccountAccess({ localProfile, onAuthenticated }) {
         ? await registerBackendAccount({ name, email, password })
         : await loginBackendAccount({ email, password });
       setPassword('');
-      onAuthenticated(result.session);
+      await continueAuthenticated(result.session, { freshLogin: true });
     } catch (error) {
       setMessage(error.message || 'The account could not be accessed.');
       setBusy(false);
     }
+  }
+
+  async function finishLegacyDecision(action) {
+    if (!legacySnapshot || !authenticatedSession) return;
+    if (action === 'import') await importLegacyDataIntoAccount(legacySnapshot);
+    else if (action === 'device-only') await keepLegacyDataOnDevice(legacySnapshot);
+    else reviewLegacyDataLater(legacySnapshot);
+
+    installAutomaticSyncTriggers();
+    if (action === 'import') await bootstrapAccountSync();
+    if (!reloadWithAccountScope()) onAuthenticated(authenticatedSession);
+  }
+
+  if (legacySnapshot && authenticatedSession) {
+    return (
+      <LegacyDataClaim
+        snapshot={legacySnapshot}
+        accountName={authenticatedSession.profile?.displayName || authenticatedSession.user?.name}
+        onImport={() => finishLegacyDecision('import')}
+        onKeepDeviceOnly={() => finishLegacyDecision('device-only')}
+        onReviewLater={() => finishLegacyDecision('review-later')}
+      />
+    );
   }
 
   const statusLabel = !connection.configured
@@ -129,7 +188,7 @@ export default function AccountAccess({ localProfile, onAuthenticated }) {
         ) : null}
         {message ? <p className="account-access-message" role="alert">{message}</p> : null}
 
-        <p className="account-access-privacy">Your password is sent only to the configured Ekklesia backend over HTTPS. Personal devotion entries remain on this device during the current foundation stage.</p>
+        <p className="account-access-privacy">Your password is sent only to the configured Ekklesia backend over HTTPS. Account-owned local data is isolated per signed-in user and remains available offline.</p>
       </section>
     </main>
   );
