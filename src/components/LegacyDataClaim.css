@@ -1,0 +1,91 @@
+.legacy-claim-shell {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  padding: 24px 16px;
+  color: var(--text-primary, #f7f7f2);
+  background: var(--app-background, #07100c);
+}
+
+.legacy-claim-card {
+  display: grid;
+  width: min(100%, 560px);
+  gap: 18px;
+  padding: clamp(24px, 6vw, 38px);
+  border: 1px solid var(--border-subtle, rgb(255 255 255 / 11%));
+  border-radius: 26px;
+  background: var(--surface-elevated, rgb(12 27 20 / 92%));
+  box-shadow: 0 28px 70px rgb(0 0 0 / 28%);
+}
+
+.legacy-claim-card h1,
+.legacy-claim-card p,
+.legacy-claim-card small {
+  margin: 0;
+}
+
+.legacy-claim-card h1 {
+  font-size: clamp(1.8rem, 7vw, 2.55rem);
+  line-height: 1.08;
+}
+
+.legacy-claim-card > p:not(.eyebrow) {
+  color: var(--text-secondary, rgb(247 247 242 / 72%));
+  line-height: 1.65;
+}
+
+.legacy-claim-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.legacy-claim-count {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--border-subtle, rgb(255 255 255 / 10%));
+  border-radius: 16px;
+  background: var(--surface-muted, rgb(255 255 255 / 4%));
+}
+
+.legacy-claim-count strong {
+  font-size: 1.5rem;
+}
+
+.legacy-claim-count span {
+  color: var(--text-secondary, rgb(247 247 242 / 62%));
+  font-size: 0.78rem;
+}
+
+.legacy-claim-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.legacy-claim-later {
+  padding: 10px;
+  border: 0;
+  color: var(--text-secondary, rgb(247 247 242 / 64%));
+  background: transparent;
+  cursor: pointer;
+}
+
+.legacy-claim-error {
+  padding: 12px;
+  border: 1px solid rgb(239 180 167 / 28%);
+  border-radius: 13px;
+  color: #f3c2b8;
+  background: rgb(239 180 167 / 8%);
+}
+
+.legacy-claim-card > small {
+  color: var(--text-muted, rgb(247 247 242 / 48%));
+  line-height: 1.55;
+}
+
+@media (max-width: 420px) {
+  .legacy-claim-grid {
+    grid-template-columns: 1fr;
+  }
+}
