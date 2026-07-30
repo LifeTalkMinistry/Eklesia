@@ -1,6 +1,7 @@
 export const EKKLESIA_DATABASE_NAME = 'ekklesia-pulse';
-export const EKKLESIA_DATABASE_VERSION = 1;
+export const EKKLESIA_DATABASE_VERSION = 2;
 export const NOTEBOOK_IMAGES_STORE = 'notebookImages';
+export const SYNC_OUTBOX_STORE = 'syncOutbox';
 
 let databasePromise = null;
 
@@ -29,7 +30,7 @@ export function openEkklesiaDatabase() {
   if (!isIndexedDbAvailable()) {
     return Promise.reject(createIndexedDbError(
       'indexeddb-unavailable',
-      'Notebook-photo storage is unavailable in this browser.',
+      'Ekklesia Pulse browser storage is unavailable in this browser.',
     ));
   }
 
@@ -44,6 +45,10 @@ export function openEkklesiaDatabase() {
       if (!database.objectStoreNames.contains(NOTEBOOK_IMAGES_STORE)) {
         database.createObjectStore(NOTEBOOK_IMAGES_STORE, { keyPath: 'id' });
       }
+      if (!database.objectStoreNames.contains(SYNC_OUTBOX_STORE)) {
+        const outbox = database.createObjectStore(SYNC_OUTBOX_STORE, { keyPath: 'id' });
+        outbox.createIndex('account-created', ['accountId', 'createdAt'], { unique: false });
+      }
     };
 
     request.onblocked = () => {
@@ -52,7 +57,7 @@ export function openEkklesiaDatabase() {
       databasePromise = null;
       reject(createIndexedDbError(
         'indexeddb-blocked',
-        'Notebook-photo storage is busy in another Ekklesia Pulse tab. Close the other tab and try again.',
+        'Ekklesia Pulse storage is busy in another tab. Close the other tab and try again.',
       ));
     };
 
@@ -62,7 +67,7 @@ export function openEkklesiaDatabase() {
       databasePromise = null;
       reject(createIndexedDbError(
         'indexeddb-open-failed',
-        'Notebook-photo storage could not be opened on this device.',
+        'Ekklesia Pulse storage could not be opened on this device.',
         request.error,
       ));
     };
@@ -85,7 +90,7 @@ export function openEkklesiaDatabase() {
   return databasePromise;
 }
 
-export async function runTransaction(mode, action) {
+export async function runStoreTransaction(storeName, mode, action) {
   const database = await openEkklesiaDatabase();
 
   return new Promise((resolve, reject) => {
@@ -94,11 +99,11 @@ export async function runTransaction(mode, action) {
     let transaction;
 
     try {
-      transaction = database.transaction(NOTEBOOK_IMAGES_STORE, mode);
+      transaction = database.transaction(storeName, mode);
     } catch (error) {
       reject(createIndexedDbError(
         'indexeddb-transaction-failed',
-        'Notebook-photo storage could not start a browser transaction.',
+        'Ekklesia Pulse storage could not start a browser transaction.',
         error,
       ));
       return;
@@ -112,19 +117,19 @@ export async function runTransaction(mode, action) {
     transaction.onerror = () => {
       reject(transaction.error || actionError || createIndexedDbError(
         'indexeddb-transaction-failed',
-        'Notebook-photo storage could not complete the browser transaction.',
+        'Ekklesia Pulse storage could not complete the browser transaction.',
       ));
     };
 
     transaction.onabort = () => {
       reject(transaction.error || actionError || createIndexedDbError(
         'indexeddb-transaction-aborted',
-        'Notebook-photo storage stopped before the request was complete.',
+        'Ekklesia Pulse storage stopped before the request was complete.',
       ));
     };
 
     try {
-      const store = transaction.objectStore(NOTEBOOK_IMAGES_STORE);
+      const store = transaction.objectStore(storeName);
       Promise.resolve(action(store, transaction))
         .then((result) => { actionResult = result; })
         .catch((error) => {
@@ -144,6 +149,10 @@ export async function runTransaction(mode, action) {
       }
     }
   });
+}
+
+export async function runTransaction(mode, action) {
+  return runStoreTransaction(NOTEBOOK_IMAGES_STORE, mode, action);
 }
 
 export async function closeDatabase() {
