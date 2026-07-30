@@ -163,16 +163,18 @@ export function sendPrototypeMessage(threadId, payload, senderName = 'You') {
   thread.messages.push(message);
   thread.updatedAt = now;
   thread.unreadCount = 0;
-  if (!thread.backendConversationId) queueThreadSync(thread);
-  if (normalizedText) {
-    queueMessagingSync({ operation: 'send', threadId: thread.id, messageId: message.id });
-  }
 
   const saved = writeMessagingState(state);
+  const savedThread = saved.threads.find((item) => item.id === threadId);
+  if (!savedThread.backendConversationId) queueThreadSync(savedThread);
+  if (normalizedText) {
+    queueMessagingSync({ operation: 'send', threadId: savedThread.id, messageId: message.id });
+  }
+
   return {
     ok: true,
     state: saved,
-    thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)),
+    thread: cloneMessagingValue(savedThread),
   };
 }
 
@@ -200,11 +202,15 @@ export function togglePrototypeReaction(threadId, messageId, emoji) {
     message.reactions.push({ emoji, count: 1, reactedByMe: true });
   }
 
+  const saved = writeMessagingState(state);
   if (message.backendMessageId || message.syncStatus === 'pending' || message.syncStatus === 'syncing') {
     queueMessagingSync({ operation, threadId, messageId, emoji });
   }
-  const saved = writeMessagingState(state);
-  return { ok: true, state: saved, thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)) };
+  return {
+    ok: true,
+    state: saved,
+    thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)),
+  };
 }
 
 export function deletePrototypeMessage(threadId, messageId) {
@@ -219,11 +225,15 @@ export function deletePrototypeMessage(threadId, messageId) {
   message.deletedAt = new Date().toISOString();
   message.syncStatus = message.backendMessageId ? 'pending' : 'synced';
   message.lastError = '';
+  const saved = writeMessagingState(state);
   if (message.backendMessageId) {
     queueMessagingSync({ operation: 'delete', threadId, messageId });
   }
-  const saved = writeMessagingState(state);
-  return { ok: true, state: saved, thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)) };
+  return {
+    ok: true,
+    state: saved,
+    thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)),
+  };
 }
 
 export function markPrototypeThreadRead(threadId) {
@@ -231,10 +241,18 @@ export function markPrototypeThreadRead(threadId) {
   const thread = state.threads.find((item) => item.id === threadId);
   if (!thread) return cloneMessagingValue(state);
   thread.unreadCount = 0;
-  if (thread.backendConversationId) {
-    queueMessagingSync({ operation: 'read', threadId });
+  const latestRemoteMessage = [...thread.messages]
+    .reverse()
+    .find((message) => message.backendMessageId);
+  const saved = writeMessagingState(state);
+  if (thread.backendConversationId && latestRemoteMessage) {
+    queueMessagingSync({
+      operation: 'read',
+      threadId,
+      messageId: latestRemoteMessage.id,
+    });
   }
-  return writeMessagingState(state);
+  return saved;
 }
 
 export function retryPrototypeMessage(threadId, messageId) {
@@ -248,9 +266,13 @@ export function retryPrototypeMessage(threadId, messageId) {
   }
   message.syncStatus = 'pending';
   message.lastError = '';
-  queueMessagingSync({ operation: 'send', threadId, messageId });
   const saved = writeMessagingState(state);
-  return { ok: true, state: saved, thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)) };
+  queueMessagingSync({ operation: 'send', threadId, messageId });
+  return {
+    ok: true,
+    state: saved,
+    thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)),
+  };
 }
 
 export function getPrototypeUnreadCount() {
