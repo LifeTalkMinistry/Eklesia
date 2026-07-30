@@ -14,7 +14,9 @@ import {
   getMessagingState,
   markPrototypeThreadRead,
   MESSAGING_UPDATED_EVENT,
+  retryPrototypeMessage,
   sendPrototypeMessage,
+  synchronizeMessaging,
   togglePrototypeReaction,
 } from '../services/messagingService.js';
 import './Messaging.css';
@@ -69,6 +71,17 @@ function formatMessageTime(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
   return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date);
+}
+
+function messageSyncLabel(message) {
+  if (message.senderType !== 'me') return '';
+  if (message.readBy?.length) return 'Read';
+  if (message.deliveryStatus === 'delivered') return 'Delivered';
+  if (message.syncStatus === 'syncing') return 'Sending…';
+  if (message.syncStatus === 'pending') return 'Queued';
+  if (message.syncStatus === 'failed') return 'Could not send';
+  if (message.syncStatus === 'local-only') return 'Saved on this device';
+  return message.backendMessageId ? 'Sent' : '';
 }
 
 function sortedThreads(state) {
@@ -228,8 +241,17 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
     else onThreadUpdated?.(result.thread, result.state);
   }
 
+  function retryMessage(message) {
+    const result = retryPrototypeMessage(thread.id, message.id);
+    if (!result.ok) setError(result.error || 'The message could not be retried.');
+    else {
+      setError('');
+      onThreadUpdated?.(result.thread, result.state);
+    }
+  }
+
   async function removeMessage(message) {
-    if (!window.confirm('Remove this message from this device?')) return;
+    if (!window.confirm('Remove this message?')) return;
     await Promise.all(message.attachments.map((attachment) => deleteMessagingAttachment(attachment.id)));
     const result = deletePrototypeMessage(thread.id, message.id);
     if (!result.ok) setError(result.error || 'The message could not be removed.');
@@ -265,8 +287,9 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
         {thread.messages.length ? thread.messages.map((message) => {
           const senderLabel = message.senderType === 'me' ? 'You' : message.senderName || thread.title;
           if (message.senderType === 'system') return <article className="messaging-system-message" key={message.id}><span>{message.text}</span></article>;
+          const syncLabel = messageSyncLabel(message);
           return (
-            <article className={`messaging-message is-${message.senderType} ${message.deletedAt ? 'is-deleted' : ''}`} key={message.id}>
+            <article className={`messaging-message is-${message.senderType} ${message.deletedAt ? 'is-deleted' : ''} is-sync-${message.syncStatus || 'synced'}`} key={message.id}>
               {message.senderType !== 'me' ? <span className="messaging-sender-name">{senderLabel}</span> : null}
               <div className="messaging-message-row">
                 {message.senderType !== 'me' ? <span className="messaging-inline-avatar" aria-hidden="true">{senderLabel.charAt(0)}</span> : null}
@@ -279,7 +302,8 @@ export function ThreadConversation({ thread, currentUserName = 'You', onThreadUp
                 {!message.deletedAt ? <div className="messaging-message-actions" aria-label={`Actions for ${senderLabel}'s message`}><button type="button" onClick={() => setReplyToId(message.id)} aria-label="Reply">↩</button><button type="button" onClick={() => applyReaction(message.id, '❤️')} aria-label="React with heart">♡</button>{message.text ? <button type="button" onClick={() => copyMessage(message.text)} aria-label="Copy message">⋯</button> : null}{message.senderType === 'me' ? <button type="button" onClick={() => removeMessage(message)} aria-label="Remove message">×</button> : null}</div> : null}
               </div>
               {!message.deletedAt && message.reactions.length ? <div className="messaging-reaction-summary">{message.reactions.map((reaction) => <button className={reaction.reactedByMe ? 'is-mine' : ''} type="button" key={reaction.emoji} onClick={() => applyReaction(message.id, reaction.emoji)}>{reaction.emoji} {reaction.count}</button>)}</div> : null}
-              <time dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>
+              <div className="messaging-message-status"><time dateTime={message.createdAt}>{formatMessageTime(message.createdAt)}</time>{syncLabel ? <span>{syncLabel}</span> : null}{message.syncStatus === 'failed' ? <button type="button" onClick={() => retryMessage(message)}>Retry</button> : null}</div>
+              {message.lastError && message.syncStatus === 'failed' ? <small className="messaging-message-error">{message.lastError}</small> : null}
             </article>
           );
         }) : <div className="messaging-empty-conversation"><MessageBubbleIcon /><strong>Start the conversation.</strong><p>Send a message, emoji, image, PDF, or document.</p></div>}
@@ -331,7 +355,10 @@ export default function MessagingCenter({ open, onClose, triggerRef, initialTarg
     function handleKeyDown(event) { if (event.key === 'Escape') onClose(); }
     window.addEventListener(MESSAGING_UPDATED_EVENT, handleUpdate);
     window.addEventListener('keydown', handleKeyDown);
+    void synchronizeMessaging();
+    const poll = window.setInterval(() => { void synchronizeMessaging(); }, 5000);
     return () => {
+      window.clearInterval(poll);
       window.removeEventListener(MESSAGING_UPDATED_EVENT, handleUpdate);
       window.removeEventListener('keydown', handleKeyDown);
     };
@@ -383,6 +410,7 @@ export default function MessagingCenter({ open, onClose, triggerRef, initialTarg
     markPrototypeThreadRead(threadId);
     setState(getMessagingState());
     setSelectedThreadId(threadId);
+    void synchronizeMessaging();
   }
 
   function startConversation(contact) {
