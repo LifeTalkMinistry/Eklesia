@@ -4,6 +4,7 @@ import {
   createRemoteDirectConversation,
   createRemoteRoomConversation,
   deleteRemoteMessage,
+  editRemoteMessage,
   listRemoteConversations,
   listRemoteMessages,
   markRemoteConversationRead,
@@ -202,7 +203,15 @@ async function ensureRemoteThread(state, thread) {
 }
 
 function operationPriority(operation) {
-  return ({ 'ensure-thread': 0, send: 1, delete: 2, 'reaction-add': 2, 'reaction-remove': 2, read: 3 })[operation] ?? 9;
+  return ({
+    'ensure-thread': 0,
+    send: 1,
+    edit: 2,
+    delete: 2,
+    'reaction-add': 2,
+    'reaction-remove': 2,
+    read: 3,
+  })[operation] ?? 9;
 }
 
 async function processOperation(state, operation) {
@@ -239,7 +248,35 @@ async function processOperation(state, operation) {
     return { remove: true };
   }
 
-  if (!message?.backendMessageId) return { remove: operation.operation === 'delete' };
+  if (operation.operation === 'read') {
+    const lastMessage = message?.backendMessageId
+      ? message
+      : [...thread.messages].reverse().find((item) => item.backendMessageId);
+    await markRemoteConversationRead(
+      thread.backendConversationId,
+      lastMessage?.backendMessageId || null
+    );
+    return { remove: true };
+  }
+
+  if (!message?.backendMessageId) {
+    return { remove: operation.operation === 'delete' };
+  }
+
+  if (operation.operation === 'edit') {
+    if (message.deletedAt || !message.text.trim()) return { remove: true };
+    message.syncStatus = 'syncing';
+    message.lastError = '';
+    writeMessagingState(state);
+    const result = await editRemoteMessage(
+      thread.backendConversationId,
+      message.backendMessageId,
+      { body: message.text, baseVersion: message.version }
+    );
+    applyRemoteMessage(thread, result.message);
+    writeMessagingState(state);
+    return { remove: true };
+  }
 
   if (operation.operation === 'delete') {
     const result = await deleteRemoteMessage(
@@ -259,12 +296,6 @@ async function processOperation(state, operation) {
 
   if (operation.operation === 'reaction-remove') {
     await removeRemoteReaction(thread.backendConversationId, message.backendMessageId, operation.emoji);
-    return { remove: true };
-  }
-
-  if (operation.operation === 'read') {
-    const lastMessage = [...thread.messages].reverse().find((item) => item.backendMessageId);
-    await markRemoteConversationRead(thread.backendConversationId, lastMessage?.backendMessageId || null);
     return { remove: true };
   }
 
