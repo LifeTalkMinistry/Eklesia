@@ -64,7 +64,7 @@ export default function AccountAccess({ localProfile, onAuthenticated }) {
       setConnection(status);
 
       if (status.configured && status.online && hasBackendSession()) {
-        const restored = await restoreBackendSession();
+        const restored = await restoreBackendSession({ startSync: false });
         if (cancelled) return;
         if (restored.ok && restored.session) {
           await continueAuthenticated(restored.session);
