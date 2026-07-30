@@ -1,3 +1,5 @@
+import { getActiveAccountId } from './sync/accountContext.js';
+
 export const STORAGE_KEYS = Object.freeze({
   localProfile: 'ekklesiaPulse.localProfile',
   introductionSeen: 'ekklesiaPulse.introductionSeen',
@@ -44,6 +46,7 @@ export const ACCOUNT_OWNED_STORAGE_KEYS = Object.freeze([
   STORAGE_KEYS.messagingPrototype,
   STORAGE_KEYS.syncState,
   STORAGE_KEYS.syncOutboxFallback,
+  STORAGE_KEYS.legacyWgapHistory,
 ]);
 
 export const INDEXED_DB_STORAGE_AREAS = Object.freeze([
@@ -69,7 +72,23 @@ export const CONFIRMED_LEGACY_STORAGE_KEYS = Object.freeze([
 
 export const OWNED_STORAGE_PREFIXES = Object.freeze(['ekklesiaPulse.']);
 
-export function getBrowserStorage() {
+const ACCOUNT_KEY_SET = new Set(ACCOUNT_OWNED_STORAGE_KEYS);
+const ACCOUNT_STORAGE_PREFIX = 'ekklesiaPulse.account';
+
+function accountKeySuffix(key) {
+  if (key.startsWith('ekklesiaPulse.')) return key.slice('ekklesiaPulse.'.length);
+  if (key.startsWith('ekklesiaPulse-')) return `legacy.${key.slice('ekklesiaPulse-'.length)}`;
+  return key;
+}
+
+function resolveStorageKey(key) {
+  if (!ACCOUNT_KEY_SET.has(key)) return key;
+  const accountId = getActiveAccountId();
+  if (!accountId) return '';
+  return `${ACCOUNT_STORAGE_PREFIX}.${accountId}.${accountKeySuffix(key)}`;
+}
+
+export function getRawBrowserStorage() {
   if (typeof window === 'undefined') return null;
   try {
     return window.localStorage;
@@ -79,8 +98,38 @@ export function getBrowserStorage() {
   }
 }
 
+export function getBrowserStorage() {
+  const raw = getRawBrowserStorage();
+  if (!raw) return null;
+
+  return {
+    get length() {
+      return raw.length;
+    },
+    key(index) {
+      return raw.key(index);
+    },
+    getItem(key) {
+      const resolvedKey = resolveStorageKey(String(key));
+      return resolvedKey ? raw.getItem(resolvedKey) : null;
+    },
+    setItem(key, value) {
+      const resolvedKey = resolveStorageKey(String(key));
+      if (!resolvedKey) throw new Error('Sign in before saving account-owned Ekklesia data.');
+      raw.setItem(resolvedKey, String(value));
+    },
+    removeItem(key) {
+      const resolvedKey = resolveStorageKey(String(key));
+      if (resolvedKey) raw.removeItem(resolvedKey);
+    },
+    clear() {
+      throw new Error('Use the Ekklesia data tools instead of clearing all browser storage.');
+    },
+  };
+}
+
 export function isLocalStorageAvailable() {
-  const storage = getBrowserStorage();
+  const storage = getRawBrowserStorage();
   if (!storage) return false;
 
   const testKey = 'ekklesiaPulse.__storageTest';
