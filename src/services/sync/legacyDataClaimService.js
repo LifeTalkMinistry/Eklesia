@@ -13,6 +13,7 @@ import { createProfileMutation } from './localSyncRepository.js';
 import { enqueueSyncMutation } from './syncOutbox.js';
 
 const LEGACY_IMPORT_PENDING_KEY = 'ekklesiaPulse.legacyImportPending';
+const REVIEW_LATER_SESSION_PREFIX = 'ekklesiaPulse.reviewLegacyLater';
 
 function safeParse(raw, fallback) {
   if (!raw) return fallback;
@@ -64,6 +65,10 @@ function legacySnapshot(storage) {
   return values;
 }
 
+function reviewLaterSessionKey(accountId, fingerprint) {
+  return `${REVIEW_LATER_SESSION_PREFIX}.${accountId}.${fingerprint}`;
+}
+
 export async function inspectLegacyDataClaim() {
   const accountId = getActiveAccountId();
   const storage = getRawBrowserStorage();
@@ -96,14 +101,11 @@ export async function inspectLegacyDataClaim() {
     entry.fingerprint === fingerprint
     && ['imported', 'device-only'].includes(entry.decision)
   ));
-  const alreadyHandledForAccount = registry.some((entry) => (
-    entry.fingerprint === fingerprint
-    && String(entry.accountId) === String(accountId)
-    && ['imported', 'device-only'].includes(entry.decision)
-  ));
+  const deferredThisSession = typeof window !== 'undefined'
+    && window.sessionStorage?.getItem(reviewLaterSessionKey(accountId, fingerprint)) === 'true';
 
   return {
-    needed: !alreadyClaimed && !alreadyHandledForAccount,
+    needed: !alreadyClaimed && !deferredThisSession,
     counts,
     values,
     fingerprint,
@@ -162,6 +164,10 @@ export async function keepLegacyDataOnDevice(snapshot) {
 }
 
 export function reviewLegacyDataLater(snapshot) {
+  const accountId = requireActiveAccountId();
+  if (typeof window !== 'undefined' && snapshot?.fingerprint) {
+    window.sessionStorage?.setItem(reviewLaterSessionKey(accountId, snapshot.fingerprint), 'true');
+  }
   return { ok: true, decision: 'review-later', fingerprint: snapshot?.fingerprint || '' };
 }
 
