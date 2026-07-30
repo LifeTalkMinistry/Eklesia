@@ -14,6 +14,7 @@ import {
   listPendingMutations,
   markMutationFailures,
 } from './syncOutbox.js';
+import { clearSyncBatch, getOrCreateSyncBatch } from './syncBatchState.js';
 import {
   getDeviceDescriptor,
   getSyncState,
@@ -27,10 +28,6 @@ let activeSyncPromise = null;
 let automaticTriggersInstalled = false;
 let retryTimer = null;
 let retryAttempt = 0;
-
-function createBatchId() {
-  return `batch-${globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`}`;
-}
 
 function isOfflineError(error) {
   return Boolean(error?.isNetworkError || error?.code === 'API_UNREACHABLE' || error?.code === 'API_TIMEOUT');
@@ -88,10 +85,11 @@ async function pushPendingBatches(device, startingCursor) {
   while (processedBatches < 100) {
     const pending = await listPendingMutations(50);
     if (!pending.length) return { ok: true, cursor };
+    const batch = getOrCreateSyncBatch(pending);
 
     const response = await pushRemoteChanges({
       device,
-      batchId: createBatchId(),
+      batchId: batch.batchId,
       changes: pending.map(({ entityType, clientRecordId, operation, baseVersion, payload }) => ({
         entityType,
         clientRecordId,
@@ -100,6 +98,7 @@ async function pushPendingBatches(device, startingCursor) {
         payload,
       })),
     });
+    clearSyncBatch(batch.batchId);
 
     applyCanonicalRecords(response.accepted || []);
     const acceptedKeys = new Set((response.accepted || []).map(recordKey));
