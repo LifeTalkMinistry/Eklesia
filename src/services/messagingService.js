@@ -64,10 +64,7 @@ function findThreadAndMessage(state, threadId, messageId) {
 }
 
 function queueThreadSync(thread) {
-  queueMessagingSync({
-    operation: 'ensure-thread',
-    threadId: thread.id,
-  });
+  queueMessagingSync({ operation: 'ensure-thread', threadId: thread.id });
 }
 
 export function getMessagingState() {
@@ -171,11 +168,7 @@ export function sendPrototypeMessage(threadId, payload, senderName = 'You') {
     queueMessagingSync({ operation: 'send', threadId: savedThread.id, messageId: message.id });
   }
 
-  return {
-    ok: true,
-    state: saved,
-    thread: cloneMessagingValue(savedThread),
-  };
+  return { ok: true, state: saved, thread: cloneMessagingValue(savedThread) };
 }
 
 export function togglePrototypeReaction(threadId, messageId, emoji) {
@@ -205,6 +198,36 @@ export function togglePrototypeReaction(threadId, messageId, emoji) {
   const saved = writeMessagingState(state);
   if (message.backendMessageId || message.syncStatus === 'pending' || message.syncStatus === 'syncing') {
     queueMessagingSync({ operation, threadId, messageId, emoji });
+  }
+  return {
+    ok: true,
+    state: saved,
+    thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)),
+  };
+}
+
+export function editPrototypeMessage(threadId, messageId, nextText) {
+  const normalizedText = String(nextText || '').trim();
+  if (!normalizedText) return { ok: false, error: 'A message cannot be empty.' };
+  if (normalizedText.length > 4000) return { ok: false, error: 'Keep messages under 4,000 characters.' };
+
+  const state = readMessagingState();
+  const { thread, message } = findThreadAndMessage(state, threadId, messageId);
+  if (!thread || !message) return { ok: false, error: 'This message is unavailable.' };
+  if (message.senderType !== 'me') return { ok: false, error: 'Only your own messages can be edited.' };
+  if (message.deletedAt) return { ok: false, error: 'A removed message cannot be edited.' };
+  if (message.text === normalizedText) {
+    return { ok: true, state: cloneMessagingValue(state), thread: cloneMessagingValue(thread) };
+  }
+
+  message.text = normalizedText;
+  message.editedAt = new Date().toISOString();
+  message.syncStatus = 'pending';
+  message.lastError = '';
+  thread.updatedAt = message.editedAt;
+  const saved = writeMessagingState(state);
+  if (message.backendMessageId) {
+    queueMessagingSync({ operation: 'edit', threadId, messageId });
   }
   return {
     ok: true,
@@ -267,7 +290,11 @@ export function retryPrototypeMessage(threadId, messageId) {
   message.syncStatus = 'pending';
   message.lastError = '';
   const saved = writeMessagingState(state);
-  queueMessagingSync({ operation: 'send', threadId, messageId });
+  queueMessagingSync({
+    operation: message.backendMessageId ? 'edit' : 'send',
+    threadId,
+    messageId,
+  });
   return {
     ok: true,
     state: saved,
