@@ -1,5 +1,8 @@
 import { hasBackendSession } from '../backendSessionService.js';
-import { applyCanonicalRecords } from './localSyncRepository.js';
+import {
+  applyCanonicalRecords,
+  getSyncableLocalSnapshot,
+} from './localSyncRepository.js';
 import {
   bootstrapRemoteSync,
   pullRemoteChanges,
@@ -7,6 +10,7 @@ import {
 } from './remoteSyncRepository.js';
 import {
   confirmMutations,
+  enqueueSyncMutation,
   listPendingMutations,
   markMutationFailures,
 } from './syncOutbox.js';
@@ -67,12 +71,66 @@ async function pullAllChanges(startCursor) {
   return { cursor, applied };
 }
 
+async function enqueueUnsyncedSnapshot() {
+  const mutations = getSyncableLocalSnapshot({ unsyncedOnly: true });
+  for (const mutation of mutations) await enqueueSyncMutation(mutation);
+  return mutations.length;
+}
+
+async function pushPendingBatches(device, startingCursor) {
+  let cursor = String(startingCursor || '0');
+  let processedBatches = 0;
+
+  while (processedBatches < 100) {
+    const pending = await listPendingMutations(50);
+    if (!pending.length) return { ok: true, cursor };
+
+    const response = await pushRemoteChanges({
+      device,
+      batchId: createBatchId(),
+      changes: pending.map(({ entityType, clientRecordId, operation, baseVersion, payload }) => ({
+        entityType,
+        clientRecordId,
+        operation,
+        baseVersion,
+        payload,
+      })),
+    });
+
+    applyCanonicalRecords(response.accepted || []);
+    const acceptedKeys = new Set((response.accepted || []).map((record) => `${record.entityType}:${record.clientRecordId}`));
+    const confirmedIds = pending
+      .filter((record) => acceptedKeys.has(`${record.entityType}:${record.clientRecordId}`))
+      .map((record) => record.id);
+    await confirmMutations(confirmedIds);
+    cursor = String(response.cursor || cursor);
+
+    if (response.conflicts?.length) {
+      response.conflicts.forEach((conflict) => {
+        if (conflict.entityType !== 'devotion-entry' && conflict.canonical) {
+          applyCanonicalRecords([conflict.canonical]);
+        }
+      });
+      const conflictKeys = new Set(response.conflicts.map((item) => `${item.entityType}:${item.clientRecordId}`));
+      const conflictIds = pending
+        .filter((record) => conflictKeys.has(`${record.entityType}:${record.clientRecordId}`))
+        .map((record) => record.id);
+      await markMutationFailures(conflictIds, new Error('A newer server version needs review.'));
+      return { ok: false, conflicts: response.conflicts, cursor };
+    }
+
+    processedBatches += 1;
+  }
+
+  throw new Error('The sync queue exceeded the safe batch processing limit.');
+}
+
 async function executeSync({ bootstrap = false } = {}) {
   if (!hasBackendSession()) return { ok: false, reason: 'not-connected' };
 
   const device = getDeviceDescriptor();
   let cursor = getSyncState().cursor || '0';
-  const pendingBefore = await listPendingMutations(50);
+  const pendingBefore = await listPendingMutations(200);
   setSyncing(pendingBefore.length);
 
   try {
@@ -80,43 +138,15 @@ async function executeSync({ bootstrap = false } = {}) {
       const initial = await bootstrapRemoteSync(device);
       applyCanonicalRecords(initial.records || []);
       cursor = String(initial.cursor || cursor);
+      await enqueueUnsyncedSnapshot();
     }
 
-    const pending = await listPendingMutations(50);
-    if (pending.length) {
-      const response = await pushRemoteChanges({
-        device,
-        batchId: createBatchId(),
-        changes: pending.map(({ entityType, clientRecordId, operation, baseVersion, payload }) => ({
-          entityType,
-          clientRecordId,
-          operation,
-          baseVersion,
-          payload,
-        })),
-      });
-
-      applyCanonicalRecords(response.accepted || []);
-      const acceptedKeys = new Set((response.accepted || []).map((record) => `${record.entityType}:${record.clientRecordId}`));
-      const confirmedIds = pending
-        .filter((record) => acceptedKeys.has(`${record.entityType}:${record.clientRecordId}`))
-        .map((record) => record.id);
-      await confirmMutations(confirmedIds);
-
-      if (response.conflicts?.length) {
-        response.conflicts.forEach((conflict) => {
-          if (conflict.canonical) applyCanonicalRecords([conflict.canonical]);
-        });
-        const conflictKeys = new Set(response.conflicts.map((item) => `${item.entityType}:${item.clientRecordId}`));
-        const conflictIds = pending
-          .filter((record) => conflictKeys.has(`${record.entityType}:${record.clientRecordId}`))
-          .map((record) => record.id);
-        await markMutationFailures(conflictIds, new Error('A newer server version needs review.'));
-        setNeedsAttention('A synchronized record changed on another device and needs review.', pending.length - confirmedIds.length);
-        return { ok: false, conflicts: response.conflicts, cursor: response.cursor || cursor };
-      }
-
-      cursor = String(response.cursor || cursor);
+    const pushed = await pushPendingBatches(device, cursor);
+    cursor = pushed.cursor;
+    if (!pushed.ok) {
+      const remaining = await listPendingMutations(200);
+      setNeedsAttention('A synchronized devotion changed on another device and needs review.', remaining.length);
+      return pushed;
     }
 
     const pulled = await pullAllChanges(cursor);
