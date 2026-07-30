@@ -8,6 +8,11 @@ import {
 } from '../services/backendSessionService.js';
 import { synchronizeNow } from '../services/sync/syncCoordinator.js';
 import {
+  getSyncConflicts,
+  resolveSyncConflict,
+  summarizeConflictVersion,
+} from '../services/sync/syncConflictService.js';
+import {
   getSyncState,
   SYNC_STATE_CHANGED_EVENT,
 } from '../services/sync/syncStateService.js';
@@ -22,10 +27,33 @@ function syncLabel(state) {
   return 'Ready to sync';
 }
 
+function ConflictVersion({ label, version }) {
+  const summary = summarizeConflictVersion(version);
+  const fields = [
+    ['Reflection', summary.reflection],
+    ['Word', summary.word],
+    ['Gratitude', summary.gratitude],
+    ['Application', summary.application],
+    ['Prayer', summary.prayer],
+  ].filter(([, value]) => value);
+
+  return (
+    <article className="sync-conflict-version">
+      <strong>{label}</strong>
+      <small>{summary.reference}</small>
+      {fields.length ? fields.map(([field, value]) => (
+        <p key={field}><b>{field}:</b> {value}</p>
+      )) : <p>No private writing in this version.</p>}
+    </article>
+  );
+}
+
 export default function BackendConnectionDialog({ open, onClose, triggerRef, localProfile, onSessionChanged }) {
   const [connection, setConnection] = useState({ configured: false, online: false });
   const [session, setSession] = useState(null);
   const [syncState, setSyncState] = useState(getSyncState);
+  const [conflicts, setConflicts] = useState([]);
+  const [resolvingId, setResolvingId] = useState('');
   const [mode, setMode] = useState('login');
   const [name, setName] = useState(localProfile?.displayName || '');
   const [email, setEmail] = useState('');
@@ -33,6 +61,17 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const emailRef = useRef(null);
+
+  async function refreshConflicts() {
+    try {
+      const nextConflicts = await getSyncConflicts();
+      setConflicts(nextConflicts);
+      return nextConflicts;
+    } catch (error) {
+      setMessage(error.message || 'Sync conflicts could not be loaded.');
+      return [];
+    }
+  }
 
   useEffect(() => {
     function handleSyncState(event) {
@@ -55,7 +94,11 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
 
       if (status.configured && status.online) {
         const restored = await restoreBackendSession();
-        if (!cancelled && restored.ok) setSession(restored.session);
+        if (!cancelled && restored.ok) {
+          setSession(restored.session);
+          const nextConflicts = await getSyncConflicts().catch(() => []);
+          if (!cancelled) setConflicts(nextConflicts);
+        }
       }
       if (!cancelled) {
         setSyncState(getSyncState());
@@ -80,6 +123,7 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
       setPassword('');
       setMessage('Your Ekklesia account is connected on this device.');
       onSessionChanged?.(result.session);
+      await refreshConflicts();
     } catch (error) {
       setMessage(error.message || 'The account could not be connected.');
     } finally {
@@ -90,12 +134,28 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
   async function syncNow() {
     setMessage('');
     const result = await synchronizeNow({ reason: 'manual' });
+    await refreshConflicts();
     if (!result.ok && result.error) setMessage(result.error.message || 'Sync needs attention.');
+  }
+
+  async function resolveConflict(conflict, resolution) {
+    setResolvingId(conflict.id);
+    setMessage('');
+    try {
+      await resolveSyncConflict(conflict, resolution);
+      await refreshConflicts();
+      setMessage('The private devotion conflict was resolved.');
+      window.location.reload();
+    } catch (error) {
+      setMessage(error.message || 'The private devotion conflict could not be resolved.');
+      setResolvingId('');
+    }
   }
 
   function signOut() {
     disconnectBackendAccount();
     setSession(null);
+    setConflicts([]);
     setMessage('You have been signed out on this device.');
     onSessionChanged?.(null);
     onClose?.();
@@ -144,9 +204,45 @@ export default function BackendConnectionDialog({ open, onClose, triggerRef, loc
             <div><dt>Church</dt><dd>{session.church?.name || 'Not joined yet'}</dd></div>
             <div><dt>Sync</dt><dd>{syncLabel(syncState)}</dd></div>
             <div><dt>Pending</dt><dd>{syncState.pendingCount || 0}</dd></div>
+            <div><dt>Needs review</dt><dd>{conflicts.length}</dd></div>
             <div><dt>Last synced</dt><dd>{syncState.lastSyncedAt ? new Date(syncState.lastSyncedAt).toLocaleString() : 'Not yet'}</dd></div>
           </dl>
           {syncState.lastError ? <p className="alpha-inline-message" role="status">{syncState.lastError}</p> : null}
+
+          {conflicts.length ? (
+            <section className="sync-conflict-list" aria-label="Private devotion conflicts">
+              <div>
+                <p className="dashboard-eyebrow">Needs review</p>
+                <h4>Choose which private version to keep</h4>
+                <p>Only you can see these WGAP and reflection details.</p>
+              </div>
+              {conflicts.map((conflict) => (
+                <article className="sync-conflict-card" key={conflict.id}>
+                  <ConflictVersion label="This device" version={conflict.submitted} />
+                  <ConflictVersion label="Server version" version={conflict.canonical} />
+                  <div className="sync-conflict-actions">
+                    <button
+                      className="primary-button"
+                      type="button"
+                      disabled={Boolean(resolvingId)}
+                      onClick={() => resolveConflict(conflict, 'keep_local')}
+                    >
+                      {resolvingId === conflict.id ? 'Resolving…' : 'Keep this device version'}
+                    </button>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      disabled={Boolean(resolvingId)}
+                      onClick={() => resolveConflict(conflict, 'keep_server')}
+                    >
+                      Use server version
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </section>
+          ) : null}
+
           <button className="primary-button" type="button" onClick={syncNow} disabled={syncState.status === 'syncing'}>
             {syncState.status === 'syncing' ? 'Syncing…' : 'Sync now'}
           </button>

@@ -35,18 +35,26 @@
 }
 
 .backend-status-card strong,
-.backend-account-card h3 {
+.backend-account-card h3,
+.sync-conflict-list h4,
+.sync-conflict-version strong {
   color: var(--ep-component-heading-fg);
 }
 
 .backend-status-card small,
 .backend-account-card p,
-.backend-account-card dt {
+.backend-account-card dt,
+.sync-conflict-list > div > p,
+.sync-conflict-version small,
+.sync-conflict-version p {
   color: var(--ep-component-muted-fg);
 }
 
 .backend-account-card h3,
-.backend-account-card p {
+.backend-account-card p,
+.sync-conflict-list h4,
+.sync-conflict-list p,
+.sync-conflict-version p {
   margin: 0;
 }
 
@@ -66,6 +74,46 @@
   margin: 0;
   color: var(--ep-component-heading-fg);
   text-align: right;
+}
+
+.sync-conflict-list,
+.sync-conflict-card,
+.sync-conflict-version,
+.sync-conflict-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.sync-conflict-list {
+  padding-top: 4px;
+}
+
+.sync-conflict-list > div {
+  display: grid;
+  gap: 5px;
+}
+
+.sync-conflict-card {
+  padding: 12px;
+  border: 1px solid var(--ep-component-danger-border, var(--ep-component-card-border));
+  border-radius: var(--ep-component-card-radius);
+  background: var(--ep-component-card-nested-bg);
+}
+
+.sync-conflict-version {
+  padding: 11px;
+  border: 1px solid var(--ep-component-card-divider);
+  border-radius: var(--ep-component-control-radius);
+  background: var(--ep-component-card-bg);
+}
+
+.sync-conflict-version p {
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+.sync-conflict-version b {
+  color: var(--ep-component-heading-fg);
 }
 
 .backend-auth-switch {
@@ -111,7 +159,8 @@
 }
 
 .backend-auth-form input:focus-visible,
-.backend-auth-switch button:focus-visible {
+.backend-auth-switch button:focus-visible,
+.sync-conflict-actions button:focus-visible {
   outline: 2px solid var(--ep-component-focus-outline);
   outline-offset: 2px;
 }

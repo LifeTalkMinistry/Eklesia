@@ -18,3 +18,14 @@ export function pullRemoteChanges(cursor = '0', limit = 100) {
   const params = new URLSearchParams({ cursor: String(cursor), limit: String(limit) });
   return apiRequest(`/api/ekklesia/sync/pull?${params.toString()}`);
 }
+
+export function listRemoteSyncConflicts() {
+  return apiRequest('/api/ekklesia/sync/conflicts');
+}
+
+export function resolveRemoteSyncConflict(conflictId, resolution) {
+  return apiRequest(`/api/ekklesia/sync/conflicts/${encodeURIComponent(conflictId)}/resolve`, {
+    method: 'POST',
+    body: { resolution },
+  });
+}
