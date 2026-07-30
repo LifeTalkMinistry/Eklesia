@@ -107,7 +107,6 @@ export async function uploadRemoteFileChunk(uploadId, chunkIndex, chunk) {
       body: chunk,
       headers: {
         'Content-Type': 'application/octet-stream',
-        'Content-Length': String(chunk.size),
         'X-Chunk-Sha256': checksum,
       },
       timeoutMs: 45_000,
@@ -161,7 +160,7 @@ export async function downloadRemoteAttachment(attachment) {
 export async function uploadBlobResumably({ blob, metadata, onProgress }) {
   if (!(blob instanceof Blob)) throw createTransferError('The local file is unavailable.', 'LOCAL_FILE_MISSING');
   const checksum = metadata.sha256 || await sha256Blob(blob);
-  let initiated = await initiateRemoteFileUpload({
+  const initiated = await initiateRemoteFileUpload({
     ...metadata,
     byteSize: blob.size,
     mimeType: metadata.mimeType || blob.type,
