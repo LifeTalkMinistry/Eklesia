@@ -20,6 +20,7 @@ export const STORAGE_KEYS = Object.freeze({
   syncDeviceId: 'ekklesiaPulse.syncDeviceId',
   syncState: 'ekklesiaPulse.syncState',
   syncOutboxFallback: 'ekklesiaPulse.syncOutboxFallback',
+  syncActiveBatch: 'ekklesiaPulse.syncActiveBatch',
   legacyClaimRegistry: 'ekklesiaPulse.legacyClaimRegistry',
   legacyWgapHistory: 'ekklesiaPulse-wgap-history-v1',
 });
@@ -48,6 +49,7 @@ export const ACCOUNT_OWNED_STORAGE_KEYS = Object.freeze([
   STORAGE_KEYS.messagingPrototype,
   STORAGE_KEYS.syncState,
   STORAGE_KEYS.syncOutboxFallback,
+  STORAGE_KEYS.syncActiveBatch,
   STORAGE_KEYS.legacyWgapHistory,
 ]);
 
