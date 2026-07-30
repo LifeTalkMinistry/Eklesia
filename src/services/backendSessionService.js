@@ -6,8 +6,15 @@ import {
   isApiConfigured,
   saveAccessToken,
 } from './apiClient.js';
+import {
+  clearActiveAccountId,
+  getActiveAccountId,
+  setActiveAccountId,
+} from './sync/accountContext.js';
 
 export const BACKEND_SESSION_UPDATED_EVENT = 'ekklesia-pulse:backend-session-updated';
+
+let currentSession = null;
 
 function dispatchSessionUpdated(session) {
   if (typeof window === 'undefined') return;
@@ -15,7 +22,7 @@ function dispatchSessionUpdated(session) {
 }
 
 function normalizeSession(payload) {
-  if (!payload?.user) return null;
+  if (!payload?.user?.id) return null;
   return {
     user: payload.user,
     profile: payload.profile || null,
@@ -24,8 +31,30 @@ function normalizeSession(payload) {
   };
 }
 
+function activateSession(session) {
+  if (!session?.user?.id) throw new Error('The backend session does not contain a valid account ID.');
+  setActiveAccountId(session.user.id);
+  currentSession = session;
+  dispatchSessionUpdated(session);
+  return session;
+}
+
+function clearSessionState() {
+  currentSession = null;
+  clearActiveAccountId();
+  dispatchSessionUpdated(null);
+}
+
 export function hasBackendSession() {
   return isApiConfigured() && Boolean(getAccessToken());
+}
+
+export function getCurrentBackendSession() {
+  return currentSession;
+}
+
+export function getBackendAccountId() {
+  return String(currentSession?.user?.id || getActiveAccountId() || '');
 }
 
 export async function inspectBackendConnection() {
@@ -35,23 +64,25 @@ export async function inspectBackendConnection() {
 
   try {
     const health = await checkApiHealth();
-    return { configured: true, online: true, health, session: null, error: null };
+    return { configured: true, online: true, health, session: currentSession, error: null };
   } catch (error) {
-    return { configured: true, online: false, session: null, error };
+    return { configured: true, online: false, session: currentSession, error };
   }
 }
 
 export async function restoreBackendSession() {
-  if (!hasBackendSession()) return { ok: false, session: null, reason: 'not-connected' };
+  if (!hasBackendSession()) {
+    clearSessionState();
+    return { ok: false, session: null, reason: 'not-connected' };
+  }
 
   try {
     const payload = await apiRequest('/api/ekklesia/me');
-    const session = normalizeSession(payload);
-    dispatchSessionUpdated(session);
+    const session = activateSession(normalizeSession(payload));
     return { ok: true, session };
   } catch (error) {
-    if (error.status === 401) clearAccessToken();
-    dispatchSessionUpdated(null);
+    if (error.status === 401 || error.status === 403) clearAccessToken();
+    clearSessionState();
     return { ok: false, session: null, error };
   }
 }
@@ -66,11 +97,11 @@ export async function loginBackendAccount({ email, password }) {
 
   try {
     const me = await apiRequest('/api/ekklesia/me');
-    const session = normalizeSession(me);
-    dispatchSessionUpdated(session);
+    const session = activateSession(normalizeSession(me));
     return { ok: true, session };
   } catch (error) {
     clearAccessToken();
+    clearSessionState();
     throw error;
   }
 }
@@ -90,13 +121,12 @@ export async function updateBackendProfile(displayName) {
     body: { displayName },
   });
   const restored = await apiRequest('/api/ekklesia/me');
-  const session = normalizeSession(restored);
-  dispatchSessionUpdated(session);
+  const session = activateSession(normalizeSession(restored));
   return { ok: true, profile: payload.profile, session };
 }
 
 export function disconnectBackendAccount() {
   clearAccessToken();
-  dispatchSessionUpdated(null);
+  clearSessionState();
   return { ok: true };
 }
