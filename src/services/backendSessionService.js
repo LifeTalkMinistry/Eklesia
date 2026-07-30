@@ -6,6 +6,7 @@ import {
   isApiConfigured,
   saveAccessToken,
 } from './apiClient.js';
+import { STORAGE_KEYS, getRawBrowserStorage } from './storageRegistry.js';
 import {
   clearActiveAccountId,
   getActiveAccountId,
@@ -15,6 +16,19 @@ import {
 export const BACKEND_SESSION_UPDATED_EVENT = 'ekklesia-pulse:backend-session-updated';
 
 let currentSession = null;
+
+function restoreStoredAccountScope() {
+  const storage = getRawBrowserStorage();
+  const accountId = storage?.getItem(STORAGE_KEYS.backendAccountId) || '';
+  if (!getAccessToken() || !/^[1-9]\d*$/.test(accountId)) return;
+  try {
+    setActiveAccountId(accountId);
+  } catch {
+    storage?.removeItem(STORAGE_KEYS.backendAccountId);
+  }
+}
+
+restoreStoredAccountScope();
 
 function dispatchSessionUpdated(session) {
   if (typeof window === 'undefined') return;
@@ -33,15 +47,17 @@ function normalizeSession(payload) {
 
 function activateSession(session) {
   if (!session?.user?.id) throw new Error('The backend session does not contain a valid account ID.');
-  setActiveAccountId(session.user.id);
+  const accountId = setActiveAccountId(session.user.id);
+  getRawBrowserStorage()?.setItem(STORAGE_KEYS.backendAccountId, accountId);
   currentSession = session;
   dispatchSessionUpdated(session);
   return session;
 }
 
-function clearSessionState() {
+function clearSessionState({ removeAccountMarker = true } = {}) {
   currentSession = null;
   clearActiveAccountId();
+  if (removeAccountMarker) getRawBrowserStorage()?.removeItem(STORAGE_KEYS.backendAccountId);
   dispatchSessionUpdated(null);
 }
 
