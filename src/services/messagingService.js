@@ -1,150 +1,60 @@
-import { getBrowserStorage, STORAGE_KEYS } from './storageRegistry.js';
+import {
+  cloneMessagingValue,
+  createMessagingClientId,
+  MESSAGE_REACTION_OPTIONS,
+  MESSAGING_UPDATED_EVENT,
+  normalizeMessagingAttachment,
+  normalizeMessagingMessage,
+  normalizeMessagingThread,
+  readMessagingState,
+  writeMessagingState,
+} from './messagingLocalRepository.js';
+import {
+  installMessagingSyncTriggers,
+  queueMessagingSync,
+  synchronizeMessaging,
+} from './messagingSyncService.js';
 
-const MESSAGING_VERSION = 2;
-export const MESSAGING_UPDATED_EVENT = 'ekklesia-pulse:messaging-updated';
-export const MESSAGE_REACTION_OPTIONS = ['👍', '❤️', '🙏', '😂', '😮', '😢'];
-
-function clone(value) {
-  return value == null ? value : JSON.parse(JSON.stringify(value));
-}
-
-function createEmptyState() {
-  return {
-    version: MESSAGING_VERSION,
-    threads: [],
-  };
-}
-
-function normalizeAttachment(attachment, index) {
-  return {
-    id: String(attachment?.id || `attachment-${index}`),
-    name: String(attachment?.name || 'Attachment'),
-    type: String(attachment?.type || 'application/octet-stream'),
-    size: Math.max(0, Number(attachment?.size) || 0),
-    kind: ['image', 'pdf', 'file'].includes(attachment?.kind) ? attachment.kind : 'file',
-    createdAt: String(attachment?.createdAt || new Date().toISOString()),
-  };
-}
-
-function normalizeReaction(reaction) {
-  const emoji = String(reaction?.emoji || '');
-  return {
-    emoji,
-    count: Math.max(0, Number(reaction?.count) || 0),
-    reactedByMe: Boolean(reaction?.reactedByMe),
-  };
-}
-
-function normalizeReply(reply) {
-  if (!reply?.id) return null;
-  return {
-    id: String(reply.id),
-    senderName: String(reply.senderName || ''),
-    text: String(reply.text || ''),
-  };
-}
-
-function normalizeMessage(message, index) {
-  return {
-    id: String(message?.id || `message-${index}`),
-    senderType: ['me', 'other', 'system'].includes(message?.senderType) ? message.senderType : 'system',
-    senderName: String(message?.senderName || ''),
-    text: String(message?.text || ''),
-    attachments: (Array.isArray(message?.attachments) ? message.attachments : []).map(normalizeAttachment),
-    reactions: (Array.isArray(message?.reactions) ? message.reactions : [])
-      .map(normalizeReaction)
-      .filter((reaction) => reaction.emoji && reaction.count > 0),
-    replyTo: normalizeReply(message?.replyTo),
-    deletedAt: message?.deletedAt ? String(message.deletedAt) : null,
-    createdAt: String(message?.createdAt || new Date().toISOString()),
-  };
-}
-
-function normalizeThread(thread, index) {
-  const type = thread?.type === 'room' ? 'room' : 'direct';
-  return {
-    id: String(thread?.id || `${type}:thread-${index}`),
-    type,
-    targetId: String(thread?.targetId || ''),
-    callTargetId: type === 'direct' ? String(thread?.callTargetId || '') : '',
-    title: String(thread?.title || (type === 'room' ? 'Room chat' : 'Conversation')),
-    subtitle: String(thread?.subtitle || ''),
-    unreadCount: Math.max(0, Number(thread?.unreadCount) || 0),
-    updatedAt: String(thread?.updatedAt || new Date(0).toISOString()),
-    messages: (Array.isArray(thread?.messages) ? thread.messages : []).map(normalizeMessage),
-  };
-}
-
-function normalizeState(value) {
-  return {
-    version: MESSAGING_VERSION,
-    threads: (Array.isArray(value?.threads) ? value.threads : []).map(normalizeThread),
-  };
-}
-
-function readState() {
-  const storage = getBrowserStorage();
-  if (!storage) return createEmptyState();
-
-  try {
-    const raw = storage.getItem(STORAGE_KEYS.messagingPrototype);
-    return raw ? normalizeState(JSON.parse(raw)) : createEmptyState();
-  } catch (error) {
-    console.warn('Ekklesia Pulse could not restore prototype messages.', error);
-    return createEmptyState();
-  }
-}
-
-function dispatchMessagingUpdated(state) {
-  if (typeof window === 'undefined') return;
-  window.dispatchEvent(new CustomEvent(MESSAGING_UPDATED_EVENT, {
-    detail: { state: clone(state) },
-  }));
-}
-
-function writeState(state) {
-  const normalized = normalizeState(state);
-  const storage = getBrowserStorage();
-
-  if (storage) {
-    try {
-      storage.setItem(STORAGE_KEYS.messagingPrototype, JSON.stringify(normalized));
-    } catch (error) {
-      console.warn('Ekklesia Pulse could not save prototype messages.', error);
-    }
-  }
-
-  dispatchMessagingUpdated(normalized);
-  return clone(normalized);
-}
+export { MESSAGE_REACTION_OPTIONS, MESSAGING_UPDATED_EVENT };
+export { installMessagingSyncTriggers, synchronizeMessaging };
 
 function createThread(target) {
   const type = target?.type === 'room' ? 'room' : 'direct';
   const targetId = String(target?.id || '').trim();
   if (!targetId) return null;
-
   const now = new Date().toISOString();
-  return {
+  return normalizeMessagingThread({
     id: `${type}:${targetId}`,
+    clientConversationId: createMessagingClientId('conversation'),
     type,
     targetId,
-    callTargetId: type === 'direct' ? String(target?.callTargetId || target?.backendUserId || '').trim() : '',
+    callTargetId: type === 'direct'
+      ? String(target?.callTargetId || target?.backendUserId || '').trim()
+      : '',
+    roomType: type === 'room' && target?.roomType === 'dgroup' ? 'dgroup' : 'ministry',
+    roomKey: type === 'room' ? String(target?.roomKey || targetId).trim() : '',
+    participantUserIds: type === 'room'
+      ? (Array.isArray(target?.participantUserIds) ? target.participantUserIds : []).map(String)
+      : [],
     title: String(target?.name || (type === 'room' ? 'Room chat' : 'Conversation')),
     subtitle: String(target?.subtitle || (type === 'room' ? 'Members of this room' : 'Private conversation')),
     unreadCount: 0,
     updatedAt: now,
+    syncStatus: 'pending',
     messages: type === 'room' ? [{
       id: `system-${targetId}`,
+      clientMessageId: createMessagingClientId('system'),
       senderType: 'system',
       senderName: 'Ekklesia Pulse',
-      text: 'This room chat is a local prototype. Messages stay on this device and are not delivered to other members yet.',
+      text: 'Messages synchronize for connected room members. Secure attachment transfer will be enabled in the file-sync phase.',
       attachments: [],
       reactions: [],
       replyTo: null,
       deletedAt: null,
       createdAt: now,
+      syncStatus: 'local-only',
     }] : [],
-  };
+  });
 }
 
 function findThreadAndMessage(state, threadId, messageId) {
@@ -153,19 +63,23 @@ function findThreadAndMessage(state, threadId, messageId) {
   return { thread, message };
 }
 
+function queueThreadSync(thread) {
+  queueMessagingSync({ operation: 'ensure-thread', threadId: thread.id });
+}
+
 export function getMessagingState() {
-  return clone(readState());
+  return cloneMessagingValue(readMessagingState());
 }
 
 export function ensureMessagingThread(target) {
-  const state = readState();
+  const state = readMessagingState();
   const threadId = `${target?.type === 'room' ? 'room' : 'direct'}:${String(target?.id || '').trim()}`;
   let thread = state.threads.find((item) => item.id === threadId);
   let changed = false;
 
   if (!thread) {
     thread = createThread(target);
-    if (!thread) return { ok: false, state: clone(state), thread: null };
+    if (!thread) return { ok: false, state: cloneMessagingValue(state), thread: null };
     state.threads.push(thread);
     changed = true;
   } else {
@@ -174,35 +88,45 @@ export function ensureMessagingThread(target) {
     const nextCallTargetId = thread.type === 'direct'
       ? String(target?.callTargetId || target?.backendUserId || thread.callTargetId || '').trim()
       : '';
+    const nextRoomType = thread.type === 'room'
+      ? target?.roomType === 'dgroup' ? 'dgroup' : target?.roomType || thread.roomType || 'ministry'
+      : '';
+    const nextRoomKey = thread.type === 'room'
+      ? String(target?.roomKey || thread.roomKey || target?.id || '').trim()
+      : '';
+    const nextParticipants = thread.type === 'room' && Array.isArray(target?.participantUserIds)
+      ? [...new Set(target.participantUserIds.map(String).filter(Boolean))]
+      : thread.participantUserIds;
 
-    if (thread.title !== nextTitle) {
-      thread.title = nextTitle;
-      changed = true;
-    }
-    if (thread.subtitle !== nextSubtitle) {
-      thread.subtitle = nextSubtitle;
-      changed = true;
-    }
-    if (thread.callTargetId !== nextCallTargetId) {
-      thread.callTargetId = nextCallTargetId;
+    if (thread.title !== nextTitle) { thread.title = nextTitle; changed = true; }
+    if (thread.subtitle !== nextSubtitle) { thread.subtitle = nextSubtitle; changed = true; }
+    if (thread.callTargetId !== nextCallTargetId) { thread.callTargetId = nextCallTargetId; changed = true; }
+    if (thread.roomType !== nextRoomType) { thread.roomType = nextRoomType; changed = true; }
+    if (thread.roomKey !== nextRoomKey) { thread.roomKey = nextRoomKey; changed = true; }
+    if (JSON.stringify(thread.participantUserIds) !== JSON.stringify(nextParticipants)) {
+      thread.participantUserIds = nextParticipants;
       changed = true;
     }
   }
 
-  const savedState = changed ? writeState(state) : clone(state);
+  const savedState = changed ? writeMessagingState(state) : cloneMessagingValue(state);
   const savedThread = savedState.threads.find((item) => item.id === threadId);
-  return { ok: true, state: savedState, thread: clone(savedThread) };
+  if (savedThread && !savedThread.backendConversationId) queueThreadSync(savedThread);
+  return { ok: true, state: savedState, thread: cloneMessagingValue(savedThread) };
 }
 
 export function sendPrototypeMessage(threadId, payload, senderName = 'You') {
   const content = typeof payload === 'string' ? { text: payload } : (payload || {});
   const normalizedText = String(content.text || '').trim();
-  const attachments = (Array.isArray(content.attachments) ? content.attachments : []).map(normalizeAttachment);
-  if (!normalizedText && !attachments.length) return { ok: false, error: 'Write a message or attach a file first.' };
+  const attachments = (Array.isArray(content.attachments) ? content.attachments : [])
+    .map(normalizeMessagingAttachment);
+  if (!normalizedText && !attachments.length) {
+    return { ok: false, error: 'Write a message or attach a file first.' };
+  }
   if (normalizedText.length > 4000) return { ok: false, error: 'Keep messages under 4,000 characters.' };
   if (attachments.length > 3) return { ok: false, error: 'You can send up to three attachments in one message.' };
 
-  const state = readState();
+  const state = readMessagingState();
   const thread = state.threads.find((item) => item.id === threadId);
   if (!thread) return { ok: false, error: 'This conversation is unavailable.' };
 
@@ -210,8 +134,10 @@ export function sendPrototypeMessage(threadId, payload, senderName = 'You') {
   const replyMessage = content.replyToId
     ? thread.messages.find((message) => message.id === content.replyToId)
     : null;
-  thread.messages.push({
-    id: `message-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  const clientMessageId = createMessagingClientId('message');
+  const message = normalizeMessagingMessage({
+    id: clientMessageId,
+    clientMessageId,
     senderType: 'me',
     senderName: String(senderName || 'You'),
     text: normalizedText,
@@ -219,34 +145,49 @@ export function sendPrototypeMessage(threadId, payload, senderName = 'You') {
     reactions: [],
     replyTo: replyMessage ? {
       id: replyMessage.id,
+      backendMessageId: replyMessage.backendMessageId || '',
       senderName: replyMessage.senderType === 'me' ? 'You' : replyMessage.senderName,
       text: replyMessage.deletedAt ? 'Message removed' : replyMessage.text.slice(0, 180),
     } : null,
     deletedAt: null,
     createdAt: now,
+    version: 1,
+    deliveryStatus: 'accepted',
+    readBy: [],
+    syncStatus: normalizedText ? 'pending' : 'local-only',
+    lastError: normalizedText ? '' : 'Secure attachment transfer will be enabled in the file-sync phase.',
   });
+  thread.messages.push(message);
   thread.updatedAt = now;
   thread.unreadCount = 0;
 
-  const saved = writeState(state);
-  return {
-    ok: true,
-    state: saved,
-    thread: clone(saved.threads.find((item) => item.id === threadId)),
-  };
+  const saved = writeMessagingState(state);
+  const savedThread = saved.threads.find((item) => item.id === threadId);
+  if (!savedThread.backendConversationId) queueThreadSync(savedThread);
+  if (normalizedText) {
+    queueMessagingSync({ operation: 'send', threadId: savedThread.id, messageId: message.id });
+  }
+
+  return { ok: true, state: saved, thread: cloneMessagingValue(savedThread) };
 }
 
 export function togglePrototypeReaction(threadId, messageId, emoji) {
-  if (!MESSAGE_REACTION_OPTIONS.includes(emoji)) return { ok: false, error: 'That reaction is unavailable.' };
-  const state = readState();
+  if (!MESSAGE_REACTION_OPTIONS.includes(emoji)) {
+    return { ok: false, error: 'That reaction is unavailable.' };
+  }
+  const state = readMessagingState();
   const { thread, message } = findThreadAndMessage(state, threadId, messageId);
-  if (!thread || !message || message.deletedAt) return { ok: false, error: 'This message is unavailable.' };
+  if (!thread || !message || message.deletedAt) {
+    return { ok: false, error: 'This message is unavailable.' };
+  }
 
   const existing = message.reactions.find((reaction) => reaction.emoji === emoji);
+  let operation = 'reaction-add';
   if (existing?.reactedByMe) {
     existing.count -= 1;
     existing.reactedByMe = false;
     message.reactions = message.reactions.filter((reaction) => reaction.count > 0);
+    operation = 'reaction-remove';
   } else if (existing) {
     existing.count += 1;
     existing.reactedByMe = true;
@@ -254,12 +195,49 @@ export function togglePrototypeReaction(threadId, messageId, emoji) {
     message.reactions.push({ emoji, count: 1, reactedByMe: true });
   }
 
-  const saved = writeState(state);
-  return { ok: true, state: saved, thread: clone(saved.threads.find((item) => item.id === threadId)) };
+  const saved = writeMessagingState(state);
+  if (message.backendMessageId || message.syncStatus === 'pending' || message.syncStatus === 'syncing') {
+    queueMessagingSync({ operation, threadId, messageId, emoji });
+  }
+  return {
+    ok: true,
+    state: saved,
+    thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)),
+  };
+}
+
+export function editPrototypeMessage(threadId, messageId, nextText) {
+  const normalizedText = String(nextText || '').trim();
+  if (!normalizedText) return { ok: false, error: 'A message cannot be empty.' };
+  if (normalizedText.length > 4000) return { ok: false, error: 'Keep messages under 4,000 characters.' };
+
+  const state = readMessagingState();
+  const { thread, message } = findThreadAndMessage(state, threadId, messageId);
+  if (!thread || !message) return { ok: false, error: 'This message is unavailable.' };
+  if (message.senderType !== 'me') return { ok: false, error: 'Only your own messages can be edited.' };
+  if (message.deletedAt) return { ok: false, error: 'A removed message cannot be edited.' };
+  if (message.text === normalizedText) {
+    return { ok: true, state: cloneMessagingValue(state), thread: cloneMessagingValue(thread) };
+  }
+
+  message.text = normalizedText;
+  message.editedAt = new Date().toISOString();
+  message.syncStatus = 'pending';
+  message.lastError = '';
+  thread.updatedAt = message.editedAt;
+  const saved = writeMessagingState(state);
+  if (message.backendMessageId) {
+    queueMessagingSync({ operation: 'edit', threadId, messageId });
+  }
+  return {
+    ok: true,
+    state: saved,
+    thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)),
+  };
 }
 
 export function deletePrototypeMessage(threadId, messageId) {
-  const state = readState();
+  const state = readMessagingState();
   const { thread, message } = findThreadAndMessage(state, threadId, messageId);
   if (!thread || !message) return { ok: false, error: 'This message is unavailable.' };
   if (message.senderType !== 'me') return { ok: false, error: 'Only your own messages can be removed.' };
@@ -268,18 +246,64 @@ export function deletePrototypeMessage(threadId, messageId) {
   message.attachments = [];
   message.reactions = [];
   message.deletedAt = new Date().toISOString();
-  const saved = writeState(state);
-  return { ok: true, state: saved, thread: clone(saved.threads.find((item) => item.id === threadId)) };
+  message.syncStatus = message.backendMessageId ? 'pending' : 'synced';
+  message.lastError = '';
+  const saved = writeMessagingState(state);
+  if (message.backendMessageId) {
+    queueMessagingSync({ operation: 'delete', threadId, messageId });
+  }
+  return {
+    ok: true,
+    state: saved,
+    thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)),
+  };
 }
 
 export function markPrototypeThreadRead(threadId) {
-  const state = readState();
+  const state = readMessagingState();
   const thread = state.threads.find((item) => item.id === threadId);
-  if (!thread || thread.unreadCount === 0) return clone(state);
+  if (!thread) return cloneMessagingValue(state);
   thread.unreadCount = 0;
-  return writeState(state);
+  const latestRemoteMessage = [...thread.messages]
+    .reverse()
+    .find((message) => message.backendMessageId);
+  const saved = writeMessagingState(state);
+  if (thread.backendConversationId && latestRemoteMessage) {
+    queueMessagingSync({
+      operation: 'read',
+      threadId,
+      messageId: latestRemoteMessage.id,
+    });
+  }
+  return saved;
+}
+
+export function retryPrototypeMessage(threadId, messageId) {
+  const state = readMessagingState();
+  const { thread, message } = findThreadAndMessage(state, threadId, messageId);
+  if (!thread || !message || message.senderType !== 'me' || message.deletedAt) {
+    return { ok: false, error: 'This message cannot be retried.' };
+  }
+  if (!message.text.trim()) {
+    return { ok: false, error: 'Secure attachment transfer will be enabled in the file-sync phase.' };
+  }
+  message.syncStatus = 'pending';
+  message.lastError = '';
+  const saved = writeMessagingState(state);
+  queueMessagingSync({
+    operation: message.backendMessageId ? 'edit' : 'send',
+    threadId,
+    messageId,
+  });
+  return {
+    ok: true,
+    state: saved,
+    thread: cloneMessagingValue(saved.threads.find((item) => item.id === threadId)),
+  };
 }
 
 export function getPrototypeUnreadCount() {
-  return readState().threads.reduce((total, thread) => total + thread.unreadCount, 0);
+  return readMessagingState().threads.reduce((total, thread) => total + thread.unreadCount, 0);
 }
+
+installMessagingSyncTriggers();

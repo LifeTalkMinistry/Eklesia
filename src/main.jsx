@@ -24,6 +24,7 @@ import './font-preferences.css';
 import './components/GroupRhythm.css';
 import './messaging-thread-navigation.css';
 import './components/MessagingCalls.css';
+import './messaging-sync-status.css';
 import './theme-system.css';
 import './theme-primitives.css';
 import './theme-semantic.css';

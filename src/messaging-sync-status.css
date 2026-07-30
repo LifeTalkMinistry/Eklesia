@@ -1,0 +1,50 @@
+.messaging-message-status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  min-height: 18px;
+  color: var(--ep-component-muted-fg);
+  font-size: 0.68rem;
+}
+
+.messaging-message.is-other .messaging-message-status {
+  justify-content: flex-start;
+}
+
+.messaging-message-status time,
+.messaging-message-status span {
+  color: inherit;
+}
+
+.messaging-message-status button {
+  padding: 2px 7px;
+  border: 1px solid var(--ep-component-card-border);
+  border-radius: var(--ep-component-control-radius);
+  color: var(--ep-component-heading-fg);
+  background: var(--ep-component-card-nested-bg);
+  font: inherit;
+  font-weight: 800;
+}
+
+.messaging-message-status button:focus-visible {
+  outline: 2px solid var(--ep-component-focus-outline);
+  outline-offset: 2px;
+}
+
+.messaging-message-error {
+  max-width: min(78%, 440px);
+  margin-left: auto;
+  color: var(--ep-component-danger-fg);
+  font-size: 0.68rem;
+  overflow-wrap: anywhere;
+}
+
+.messaging-message.is-sync-failed .messaging-bubble {
+  border-color: var(--ep-component-danger-fg);
+}
+
+.messaging-message.is-sync-pending .messaging-bubble,
+.messaging-message.is-sync-syncing .messaging-bubble {
+  opacity: 0.88;
+}
