@@ -5,6 +5,7 @@ import {
   requestToPromise,
   runTransaction,
 } from '../lib/indexedDb.js';
+import { getActiveAccountId, requireActiveAccountId } from './sync/accountContext.js';
 
 function createImageId() {
   const randomPart = globalThis.crypto?.randomUUID?.()
@@ -20,7 +21,8 @@ function normalizeError(error, fallbackCode = 'notebook-storage-failed') {
   const messages = {
     'indexeddb-unavailable': 'Notebook-photo storage is unavailable in this browser. You can still use typed devotions and the Bible reader.',
     'storage-quota-exceeded': 'This device does not have enough available browser storage for the notebook photo. Try replacing it with a smaller image or remove older notebook photos.',
-    'notebook-image-missing': 'The saved notebook photo could not be found on this device.',
+    'notebook-image-missing': 'The saved notebook photo could not be found for this account on this device.',
+    'account-required': 'Sign in before saving or viewing private notebook photos.',
   };
 
   return {
@@ -42,6 +44,19 @@ function normalizeMetadata(blob, metadata = {}) {
   };
 }
 
+function accountIdOrError() {
+  try {
+    return requireActiveAccountId();
+  } catch (error) {
+    error.code = 'account-required';
+    throw error;
+  }
+}
+
+function belongsToAccount(record, accountId = getActiveAccountId()) {
+  return Boolean(record && accountId && String(record.accountId || '') === String(accountId));
+}
+
 export function isNotebookImageStorageAvailable() {
   return isIndexedDbAvailable();
 }
@@ -60,17 +75,18 @@ export async function saveNotebookImage(blob, metadata = {}) {
     return fail(new Error('A processed image Blob is required.'), 'invalid-notebook-image');
   }
 
-  const now = new Date().toISOString();
-  const id = createImageId();
-  const record = {
-    id,
-    blob,
-    ...normalizeMetadata(blob, metadata),
-    createdAt: now,
-    updatedAt: now,
-  };
-
   try {
+    const accountId = accountIdOrError();
+    const now = new Date().toISOString();
+    const id = createImageId();
+    const record = {
+      id,
+      accountId,
+      blob,
+      ...normalizeMetadata(blob, metadata),
+      createdAt: now,
+      updatedAt: now,
+    };
     await runTransaction('readwrite', (store) => requestToPromise(store.add(record)));
     return { ok: true, data: record };
   } catch (error) {
@@ -82,8 +98,11 @@ export async function getNotebookImage(imageId) {
   if (!imageId) return fail(new Error('Notebook image ID is missing.'), 'notebook-image-missing');
 
   try {
+    const accountId = accountIdOrError();
     const record = await runTransaction('readonly', (store) => requestToPromise(store.get(imageId)));
-    if (!record?.blob) return fail(new Error('Notebook image record was not found.'), 'notebook-image-missing');
+    if (!record?.blob || !belongsToAccount(record, accountId)) {
+      return fail(new Error('Notebook image record was not found for this account.'), 'notebook-image-missing');
+    }
     return { ok: true, data: record };
   } catch (error) {
     return fail(error);
@@ -96,11 +115,18 @@ export async function replaceNotebookImage(imageId, blob, metadata = {}) {
   }
 
   try {
+    const accountId = accountIdOrError();
     const record = await runTransaction('readwrite', async (store) => {
       const existing = await requestToPromise(store.get(imageId));
+      if (existing && !belongsToAccount(existing, accountId)) {
+        const error = new Error('Notebook image record was not found for this account.');
+        error.code = 'notebook-image-missing';
+        throw error;
+      }
       const now = new Date().toISOString();
       const replacement = {
         id: imageId,
+        accountId,
         blob,
         ...normalizeMetadata(blob, metadata),
         createdAt: existing?.createdAt || now,
@@ -121,10 +147,41 @@ export async function restoreNotebookImageRecord(record) {
   }
 
   try {
-    await runTransaction('readwrite', (store) => requestToPromise(store.put(record)));
-    return { ok: true, data: record };
+    const accountId = accountIdOrError();
+    const scopedRecord = { ...record, accountId };
+    await runTransaction('readwrite', (store) => requestToPromise(store.put(scopedRecord)));
+    return { ok: true, data: scopedRecord };
   } catch (error) {
     return fail(error);
+  }
+}
+
+export async function claimLegacyNotebookImages(accountId = getActiveAccountId()) {
+  if (!accountId) return { ok: false, data: { claimed: 0 }, error: { code: 'account-required', message: 'Sign in before importing notebook images.' } };
+
+  try {
+    const claimed = await runTransaction('readwrite', async (store) => {
+      const records = await requestToPromise(store.getAll());
+      let count = 0;
+      for (const record of Array.isArray(records) ? records : []) {
+        if (record?.accountId) continue;
+        await requestToPromise(store.put({ ...record, accountId: String(accountId), updatedAt: new Date().toISOString() }));
+        count += 1;
+      }
+      return count;
+    });
+    return { ok: true, data: { claimed } };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function countLegacyNotebookImages() {
+  try {
+    const records = await runTransaction('readonly', (store) => requestToPromise(store.getAll()));
+    return (Array.isArray(records) ? records : []).filter((record) => !record?.accountId).length;
+  } catch {
+    return 0;
   }
 }
 
@@ -132,8 +189,14 @@ export async function deleteNotebookImage(imageId) {
   if (!imageId) return { ok: true, data: { deleted: false } };
 
   try {
-    await runTransaction('readwrite', (store) => requestToPromise(store.delete(imageId)));
-    return { ok: true, data: { deleted: true, imageId } };
+    const accountId = accountIdOrError();
+    const deleted = await runTransaction('readwrite', async (store) => {
+      const record = await requestToPromise(store.get(imageId));
+      if (!belongsToAccount(record, accountId)) return false;
+      await requestToPromise(store.delete(imageId));
+      return true;
+    });
+    return { ok: true, data: { deleted, imageId } };
   } catch (error) {
     return fail(error);
   }
@@ -143,8 +206,9 @@ export async function imageExists(imageId) {
   if (!imageId) return { ok: true, data: false };
 
   try {
-    const count = await runTransaction('readonly', (store) => requestToPromise(store.count(imageId)));
-    return { ok: true, data: count > 0 };
+    const accountId = accountIdOrError();
+    const record = await runTransaction('readonly', (store) => requestToPromise(store.get(imageId)));
+    return { ok: true, data: belongsToAccount(record, accountId) };
   } catch (error) {
     return fail(error);
   }
@@ -152,8 +216,9 @@ export async function imageExists(imageId) {
 
 export async function getNotebookStorageSummary() {
   try {
+    const accountId = accountIdOrError();
     const records = await runTransaction('readonly', (store) => requestToPromise(store.getAll()));
-    const safeRecords = Array.isArray(records) ? records : [];
+    const safeRecords = (Array.isArray(records) ? records : []).filter((record) => belongsToAccount(record, accountId));
     return {
       ok: true,
       data: {
@@ -173,8 +238,18 @@ export async function deleteAllNotebookImages() {
   }
 
   try {
-    await runTransaction('readwrite', (store) => requestToPromise(store.clear()));
-    return { ok: true, data: { deletedAll: true } };
+    const accountId = accountIdOrError();
+    const deleted = await runTransaction('readwrite', async (store) => {
+      const records = await requestToPromise(store.getAll());
+      let count = 0;
+      for (const record of Array.isArray(records) ? records : []) {
+        if (!belongsToAccount(record, accountId)) continue;
+        await requestToPromise(store.delete(record.id));
+        count += 1;
+      }
+      return count;
+    });
+    return { ok: true, data: { deletedAll: true, deleted } };
   } catch (error) {
     return fail(error);
   }
