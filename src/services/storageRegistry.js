@@ -14,14 +14,48 @@ export const STORAGE_KEYS = Object.freeze({
   themePreferences: 'ekklesiaPulse.themePreferences',
   messagingPrototype: 'ekklesiaPulse.messagingPrototype',
   backendAccessToken: 'ekklesiaPulse.backendAccessToken',
+  syncDeviceId: 'ekklesiaPulse.syncDeviceId',
+  syncState: 'ekklesiaPulse.syncState',
+  syncOutboxFallback: 'ekklesiaPulse.syncOutboxFallback',
+  legacyClaimRegistry: 'ekklesiaPulse.legacyClaimRegistry',
   legacyWgapHistory: 'ekklesiaPulse-wgap-history-v1',
 });
+
+export const DEVICE_LOCAL_STORAGE_KEYS = Object.freeze([
+  STORAGE_KEYS.introductionSeen,
+  STORAGE_KEYS.backendAccessToken,
+  STORAGE_KEYS.syncDeviceId,
+  STORAGE_KEYS.legacyClaimRegistry,
+  STORAGE_KEYS.brandMigrationVersion,
+]);
+
+export const ACCOUNT_OWNED_STORAGE_KEYS = Object.freeze([
+  STORAGE_KEYS.localProfile,
+  STORAGE_KEYS.onboardingComplete,
+  STORAGE_KEYS.alphaNoticeAccepted,
+  STORAGE_KEYS.devotions,
+  STORAGE_KEYS.lastBibleLocation,
+  STORAGE_KEYS.devotionDataVersion,
+  STORAGE_KEYS.joinedEcosystemId,
+  STORAGE_KEYS.activeWorkspace,
+  STORAGE_KEYS.organizationPrototype,
+  STORAGE_KEYS.fontPreferences,
+  STORAGE_KEYS.themePreferences,
+  STORAGE_KEYS.messagingPrototype,
+  STORAGE_KEYS.syncState,
+  STORAGE_KEYS.syncOutboxFallback,
+]);
 
 export const INDEXED_DB_STORAGE_AREAS = Object.freeze([
   Object.freeze({
     database: 'ekklesia-pulse',
     store: 'notebookImages',
     purpose: 'Private notebook devotion images',
+  }),
+  Object.freeze({
+    database: 'ekklesia-pulse',
+    store: 'syncOutbox',
+    purpose: 'Offline account mutation queue',
   }),
 ]);
 
