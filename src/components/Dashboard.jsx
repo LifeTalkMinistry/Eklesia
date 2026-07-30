@@ -178,7 +178,22 @@ function Profile({ profile, storageAvailable, onProfileUpdated, onBackendSession
         <button ref={feedbackRef} type="button" onClick={() => setDialog('feedback')}><span><b>Send alpha feedback</b><small>Share a privacy-safe diagnostic message</small></span><span aria-hidden="true">›</span></button>
         <button ref={restartRef} type="button" onClick={() => setDialog('restart')}><span><b>Restart introduction</b><small>Show the one-time welcome experience again</small></span><span aria-hidden="true">›</span></button>
       </div>
-      <section className="alpha-data-controls" aria-labelledby="data-controls-heading"><p className="dashboard-eyebrow">Data controls</p><h3 id="data-controls-heading">Information saved by Ekklesia Pulse</h3><p>Devotions, WGAP reflections, notebook photos, Journey history, Bible position, profile details, font and theme preferences, prototype messages, account token, and church prototype state remain in this browser.</p><button ref={deleteRef} className="alpha-delete-trigger" type="button" onClick={() => setDialog('delete')}>Delete my local data</button></section>
+      <section className="alpha-data-controls" aria-labelledby="data-controls-heading">
+        <p className="dashboard-eyebrow">Data controls</p>
+        <h3 id="data-controls-heading">Information saved by Ekklesia Pulse</h3>
+        <p>Devotions, WGAP reflections, notebook photos, Journey history, Bible position, profile details, font and theme preferences, prototype messages, account token, and church prototype state remain in this browser.</p>
+        <div className="alpha-data-actions">
+          <button ref={deleteRef} className="alpha-delete-trigger" type="button" onClick={() => setDialog('delete')}>Delete my local data</button>
+          <button className="alpha-logout-trigger" type="button" onClick={() => onBackendSessionChanged?.(null)}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 17l5-5-5-5" />
+              <path d="M15 12H3" />
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+            </svg>
+            <span><b>Log out</b><small>Log out of Ekklesia Pulse on this device.</small></span>
+          </button>
+        </div>
+      </section>
       <EditProfileDialog open={dialog === 'edit'} profile={profile} onClose={() => setDialog('')} onSaved={onProfileUpdated} triggerRef={editRef} />
       <BackendConnectionDialog open={dialog === 'backend'} localProfile={profile} onClose={() => setDialog('')} triggerRef={backendRef} onSessionChanged={onBackendSessionChanged} />
       <ThemePreferencesDialog open={dialog === 'theme'} onClose={() => setDialog('')} triggerRef={themeRef} />

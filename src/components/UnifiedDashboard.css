@@ -1,1 +1,70 @@
-.unified-bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))}.unified-bottom-nav button:nth-child(3){position:relative}.unified-bottom-nav button:nth-child(3)::before{position:absolute;top:5px;left:50%;width:30px;height:3px;border-radius:999px;background:rgba(207,228,213,.72);content:"";transform:translateX(-50%);opacity:.55}.unified-bottom-nav button:nth-child(3).active::before{background:#163122;opacity:1}.unified-church-entry{display:grid;width:100%;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;margin:0;padding:16px;border:1px solid rgba(184,215,190,.16);border-radius:20px;color:inherit;background:linear-gradient(145deg,rgba(27,55,38,.92),rgba(10,24,16,.96));font:inherit;text-align:left;cursor:pointer}.unified-church-entry:hover,.unified-church-entry:focus-visible{border-color:rgba(207,228,213,.38);outline:none;box-shadow:0 0 0 3px rgba(207,228,213,.09)}.unified-church-entry-icon{display:grid;width:46px;height:46px;place-items:center;border:1px solid rgba(232,217,170,.22);border-radius:15px;color:#f0e4ba;background:rgba(232,217,170,.06);font-family:Georgia,"Times New Roman",serif;font-size:1.15rem}.unified-church-entry>span:nth-child(2){display:grid;min-width:0;gap:3px}.unified-church-entry small{color:#9bc6aa;font-size:.66rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.unified-church-entry strong{color:#fffdf5;font-size:1rem}.unified-church-entry em{overflow:hidden;color:rgba(244,245,239,.55);font-size:.7rem;font-style:normal;text-overflow:ellipsis;white-space:nowrap}.unified-church-entry>b{color:#cfe4d5;font-size:1.35rem}.unified-tools-page>h2{margin:7px 0 0;color:#fffdf5;font-family:Georgia,"Times New Roman",serif;font-size:clamp(2rem,8vw,3.2rem);font-weight:500}.unified-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:24px}.unified-tool-grid button{display:grid;min-height:180px;align-content:end;gap:8px;padding:20px;border:1px solid rgba(255,255,255,.08);border-radius:23px;color:inherit;background:linear-gradient(155deg,#183123,#0a1710);font:inherit;text-align:left;cursor:pointer}.unified-tool-grid button:hover,.unified-tool-grid button:focus-visible{border-color:rgba(207,228,213,.3);outline:none}.unified-tool-grid button>span{display:grid;width:44px;height:44px;place-items:center;margin-bottom:auto;border:1px solid rgba(232,217,170,.17);border-radius:14px;color:#e8d9aa;background:rgba(232,217,170,.05);font-size:1.15rem}.unified-tool-grid strong{color:#fffdf5;font-size:1.05rem}.unified-tool-grid small{color:rgba(244,245,239,.54);font-size:.72rem;line-height:1.5}.dashboard-frame.is-unified-pulse .dashboard-header{display:none}.dashboard-frame.is-unified-pulse .dashboard-content{padding:0}.dashboard-frame.is-unified-pulse .unified-pulse-page{height:100%;min-height:0}.dashboard-frame.is-unified-pulse .church-pulse-feed{height:100%;padding:0}.dashboard-frame.is-unified-pulse .church-pulse-feed-stream{max-height:none;height:100%}.dashboard-frame.is-unified-pulse .church-pulse-post{min-height:100%;border:0;border-radius:0;box-shadow:none}.unified-church-entry{display:none!important}@media(max-width:520px){.unified-tool-grid{grid-template-columns:1fr}.unified-tool-grid button{min-height:150px}.unified-church-entry{padding:14px}.unified-church-entry em{white-space:normal}.unified-bottom-nav button{padding-inline:2px}.unified-bottom-nav button small{font-size:.58rem}}
+.unified-bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))}.unified-bottom-nav button:nth-child(3){position:relative}.unified-bottom-nav button:nth-child(3)::before{position:absolute;top:5px;left:50%;width:30px;height:3px;border-radius:999px;background:rgba(207,228,213,.72);content:"";transform:translateX(-50%);opacity:.55}.unified-bottom-nav button:nth-child(3).active::before{background:#163122;opacity:1}.unified-church-entry{display:grid;width:100%;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;margin:0;padding:16px;border:1px solid rgba(184,215,190,.16);border-radius:20px;color:inherit;background:linear-gradient(145deg,rgba(27,55,38,.92),rgba(10,24,16,.96));font:inherit;text-align:left;cursor:pointer}.unified-church-entry:hover,.unified-church-entry:focus-visible{border-color:rgba(207,228,213,.38);outline:none;box-shadow:0 0 0 3px rgba(207,228,213,.09)}.unified-church-entry-icon{display:grid;width:46px;height:46px;place-items:center;border:1px solid rgba(232,217,170,.22);border-radius:15px;color:#f0e4ba;background:rgba(232,217,170,.06);font-family:Georgia,"Times New Roman",serif;font-size:1.15rem}.unified-church-entry>span:nth-child(2){display:grid;min-width:0;gap:3px}.unified-church-entry small{color:#9bc6aa;font-size:.66rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.unified-church-entry strong{color:#fffdf5;font-size:1rem}.unified-church-entry em{overflow:hidden;color:rgba(244,245,239,.55);font-size:.7rem;font-style:normal;text-overflow:ellipsis;white-space:nowrap}.unified-church-entry>b{color:#cfe4d5;font-size:1.35rem}.unified-tools-page>h2{margin:7px 0 0;color:#fffdf5;font-family:Georgia,"Times New Roman",serif;font-size:clamp(2rem,8vw,3.2rem);font-weight:500}.unified-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:24px}.unified-tool-grid button{display:grid;min-height:180px;align-content:end;gap:8px;padding:20px;border:1px solid rgba(255,255,255,.08);border-radius:23px;color:inherit;background:linear-gradient(155deg,#183123,#0a1710);font:inherit;text-align:left;cursor:pointer}.unified-tool-grid button:hover,.unified-tool-grid button:focus-visible{border-color:rgba(207,228,213,.3);outline:none}.unified-tool-grid button>span{display:grid;width:44px;height:44px;place-items:center;margin-bottom:auto;border:1px solid rgba(232,217,170,.17);border-radius:14px;color:#e8d9aa;background:rgba(232,217,170,.05);font-size:1.15rem}.unified-tool-grid strong{color:#fffdf5;font-size:1.05rem}.unified-tool-grid small{color:rgba(244,245,239,.54);font-size:.72rem;line-height:1.5}.dashboard-frame.is-unified-pulse .dashboard-header{display:none}.dashboard-frame.is-unified-pulse .dashboard-content{padding:0}.dashboard-frame.is-unified-pulse .unified-pulse-page{height:100%;min-height:0}.dashboard-frame.is-unified-pulse .church-pulse-feed{height:100%;padding:0}.dashboard-frame.is-unified-pulse .church-pulse-feed-stream{max-height:none;height:100%}.dashboard-frame.is-unified-pulse .church-pulse-post{min-height:100%;border:0;border-radius:0;box-shadow:none}.unified-church-entry{display:none!important}
+
+.alpha-data-actions {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.alpha-data-actions .alpha-delete-trigger {
+  width: fit-content;
+  margin-top: 0;
+}
+
+.alpha-logout-trigger {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 15px;
+  margin: 0;
+  padding: 17px 18px;
+  border: 1px solid var(--ep-danger-fg, #efb4a7);
+  border-radius: 18px;
+  color: var(--ep-danger-fg, #efb4a7);
+  background: var(--ep-danger-muted, rgba(239, 180, 167, 0.07));
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--ep-duration-fast, 160ms) var(--ep-easing-standard, ease), box-shadow var(--ep-duration-fast, 160ms) var(--ep-easing-standard, ease), transform var(--ep-duration-fast, 160ms) var(--ep-easing-standard, ease);
+}
+
+.alpha-logout-trigger:hover {
+  border-color: var(--ep-danger-fg, #efb4a7);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+.alpha-logout-trigger:focus-visible {
+  outline: 3px solid var(--ep-focus-outline, rgba(207, 228, 213, 0.5));
+  outline-offset: 3px;
+}
+
+.alpha-logout-trigger svg {
+  width: 30px;
+  height: 30px;
+}
+
+.alpha-logout-trigger > span {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.alpha-logout-trigger b {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.alpha-logout-trigger small {
+  color: var(--ep-fg-muted, rgba(244, 245, 239, 0.58));
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+@media(max-width:520px){.unified-tool-grid{grid-template-columns:1fr}.unified-tool-grid button{min-height:150px}.unified-church-entry{padding:14px}.unified-church-entry em{white-space:normal}.unified-bottom-nav button{padding-inline:2px}.unified-bottom-nav button small{font-size:.58rem}.alpha-logout-trigger{gap:13px;padding:15px}.alpha-logout-trigger svg{width:28px;height:28px}}
+
+@media (prefers-reduced-motion: reduce) {
+  .alpha-logout-trigger { transition: none; }
+  .alpha-logout-trigger:hover { transform: none; }
+}
