@@ -33,6 +33,7 @@ import './theme-component-tokens.css';
 import './theme-light.css';
 import './theme-light-edge-fix.css';
 import './theme-preferences.css';
+import './messaging-mobile-layout.css';
 
 runBrandMigration();
 initializeThemePreferences();
