@@ -1,157 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ChurchAnnouncementBillboard from './ChurchAnnouncementBillboard.jsx';
 import ChurchHomeAdmin from './ChurchHomeAdmin.jsx';
+import {
+  createEmptyChurchHome,
+  getChurchHome,
+} from '../services/churchHomeService.js';
 import './ChurchHome.css';
-
-function createDemoHome(organization) {
-  const now = new Date().toISOString();
-  return {
-    announcements: [
-      {
-        id: 'announcement-level-up',
-        category: `THIS WEEK AT ${organization.name.toUpperCase()}`,
-        title: 'LEVEL UP: Identity Seminar',
-        description: 'Discover who you are in Christ and how your identity shapes your decisions, relationships, and calling.',
-        dateLabel: 'Featured this week',
-        eventDate: 'Saturday',
-        time: '2:00 PM',
-        location: 'Main Sanctuary',
-        actionLabel: 'View details',
-        connectedMinistryId: 'youth',
-        connectedGroupId: '',
-        featured: true,
-        imageUrl: '',
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        id: 'announcement-sunday-schedule',
-        category: 'WORSHIP SCHEDULE',
-        title: 'Sunday Worship Schedule',
-        description: 'Our Sunday worship service begins at 9:00 AM this week. Please arrive early for prayer and fellowship.',
-        dateLabel: 'Posted today',
-        eventDate: 'Sunday',
-        time: '9:00 AM',
-        location: 'Main Sanctuary',
-        actionLabel: 'View schedule',
-        connectedMinistryId: '',
-        connectedGroupId: '',
-        featured: true,
-        imageUrl: '',
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        id: 'announcement-outreach-volunteers',
-        category: 'VOLUNTEER CALL',
-        title: 'Outreach Volunteer Call',
-        description: 'The Outreach Ministry needs ten volunteers to help serve families in the community this Saturday.',
-        dateLabel: 'Applications close Friday',
-        eventDate: 'Saturday',
-        time: '8:00 AM',
-        location: 'Church Lobby',
-        actionLabel: 'See volunteer details',
-        connectedMinistryId: 'outreach',
-        connectedGroupId: '',
-        featured: true,
-        imageUrl: '',
-        createdAt: now,
-        updatedAt: now,
-      },
-    ],
-    acknowledgements: [
-      {
-        id: 'ack-level-up-team',
-        category: 'Ministry appreciation',
-        title: 'Thank you, Youth Ministry',
-        message: 'We celebrate every leader and volunteer who prepared the LEVEL UP experience for our young people.',
-        dateLabel: 'This week',
-        memberId: '',
-        ministryId: 'youth',
-        groupId: '',
-        approvedForChurchDisplay: true,
-        imageUrl: '',
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        id: 'ack-sunday-volunteers',
-        category: 'Volunteer appreciation',
-        title: 'Thank you for serving',
-        message: 'Thank you to everyone who welcomed guests, prepared the sanctuary, and served during Sunday worship.',
-        dateLabel: 'Sunday',
-        memberId: '',
-        ministryId: '',
-        groupId: '',
-        approvedForChurchDisplay: true,
-        imageUrl: '',
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        id: 'ack-new-members',
-        category: 'Church family',
-        title: 'Welcome to our new members',
-        message: 'We are grateful to welcome 12 new members into the Amazing Hope Church family.',
-        dateLabel: 'This month',
-        memberId: '',
-        ministryId: '',
-        groupId: '',
-        approvedForChurchDisplay: true,
-        imageUrl: '',
-        createdAt: now,
-        updatedAt: now,
-      },
-    ],
-    events: [
-      {
-        id: 'event-prayer-meeting',
-        title: 'Wednesday Prayer Meeting',
-        description: 'A church-wide evening of prayer, Scripture, and encouragement.',
-        date: 'Wednesday',
-        time: '7:00 PM',
-        location: 'Prayer Hall',
-        ministryId: '',
-        groupId: '',
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        id: 'event-sunday-worship',
-        title: 'Sunday Worship Service',
-        description: 'Gather with the church family for worship, teaching, and fellowship.',
-        date: 'Sunday',
-        time: '9:00 AM',
-        location: 'Main Sanctuary',
-        ministryId: '',
-        groupId: '',
-        createdAt: now,
-        updatedAt: now,
-      },
-      {
-        id: 'event-music-practice',
-        title: 'Music Ministry Practice',
-        description: 'Weekly preparation for the Sunday worship service.',
-        date: 'Sunday',
-        time: '7:00 AM',
-        location: 'Music Room',
-        ministryId: 'music',
-        groupId: '',
-        createdAt: now,
-        updatedAt: now,
-      },
-    ],
-  };
-}
-
-function normalizeHome(home, organization) {
-  const defaults = createDemoHome(organization);
-  return {
-    announcements: Array.isArray(home?.announcements) ? home.announcements : defaults.announcements,
-    acknowledgements: Array.isArray(home?.acknowledgements) ? home.acknowledgements : defaults.acknowledgements,
-    events: Array.isArray(home?.events) ? home.events : defaults.events,
-  };
-}
 
 function DetailsDialog({ item, onClose }) {
   const closeRef = useRef(null);
@@ -191,37 +45,55 @@ const EXPLORE_LINKS = [
   ['privacy', 'Privacy', 'Understand what the church can and cannot see.', '◇'],
 ];
 
-export default function ChurchHome({ organization, profile, workspace, onWorkspaceChange, onOpenGroup, onNavigate, onShowDetails }) {
+export default function ChurchHome({ organization, profile, workspace, onOpenGroup, onNavigate }) {
+  const [home, setHome] = useState(createEmptyChurchHome);
+  const [permissions, setPermissions] = useState({ canManage: false, role: 'member' });
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showAllAnnouncements, setShowAllAnnouncements] = useState(false);
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [detailsItem, setDetailsItem] = useState(null);
   const [status, setStatus] = useState('');
-  const migratedRef = useRef(false);
-  const home = useMemo(() => normalizeHome(workspace.home, organization), [workspace.home, organization]);
-  const currentRole = workspace.currentMember?.organizationRole || 'Church Member';
-  const isAdmin = ['Organization Owner', 'Organization Admin', 'Organization Manager'].includes(currentRole);
+  const loadRequestRef = useRef(0);
+
   const currentMemberName = profile?.displayName || 'Current member';
-  const joinedMinistryIds = new Set(workspace.currentMember?.ministryIds || []);
-  const joinedGroupIds = new Set(workspace.currentMember?.groupIds || []);
-  const joinedMinistries = (workspace.ministries || []).filter((ministry) => joinedMinistryIds.has(ministry.id));
-  const joinedGroups = (workspace.groups || []).filter((group) => joinedGroupIds.has(group.id));
+  const joinedMinistryIds = useMemo(() => new Set(workspace.currentMember?.ministryIds || []), [workspace.currentMember?.ministryIds]);
+  const joinedGroupIds = useMemo(() => new Set(workspace.currentMember?.groupIds || []), [workspace.currentMember?.groupIds]);
+  const joinedMinistries = useMemo(
+    () => (workspace.ministries || []).filter((ministry) => joinedMinistryIds.has(ministry.id)),
+    [workspace.ministries, joinedMinistryIds],
+  );
+  const joinedGroups = useMemo(
+    () => (workspace.groups || []).filter((group) => joinedGroupIds.has(group.id)),
+    [workspace.groups, joinedGroupIds],
+  );
   const approvedAcknowledgements = home.acknowledgements.filter((item) => item.approvedForChurchDisplay);
   const announcementsToShow = showAllAnnouncements ? home.announcements : home.announcements.slice(0, 3);
   const eventsToShow = showAllEvents ? home.events : home.events.slice(0, 3);
 
-  useEffect(() => {
-    const needsMigration = !workspace.home
-      || !Array.isArray(workspace.home.announcements)
-      || !Array.isArray(workspace.home.acknowledgements)
-      || !Array.isArray(workspace.home.events);
-    if (!needsMigration || migratedRef.current) return;
-    migratedRef.current = true;
-    onWorkspaceChange((current) => ({ ...current, home }));
-  }, [workspace.home, home, onWorkspaceChange]);
-
-  function updateHome(nextHome) {
-    onWorkspaceChange((current) => ({ ...current, home: nextHome }));
+  async function loadLiveHome() {
+    const requestId = ++loadRequestRef.current;
+    setLoading(true);
+    setLoadError('');
+    try {
+      const result = await getChurchHome();
+      if (requestId !== loadRequestRef.current) return;
+      setHome(result.home);
+      setPermissions(result.permissions);
+    } catch (error) {
+      if (requestId !== loadRequestRef.current) return;
+      setHome(createEmptyChurchHome());
+      setPermissions({ canManage: false, role: 'member' });
+      setLoadError(error.message || 'Church Home could not be loaded from the backend.');
+    } finally {
+      if (requestId === loadRequestRef.current) setLoading(false);
+    }
   }
+
+  useEffect(() => {
+    void loadLiveHome();
+    return () => { loadRequestRef.current += 1; };
+  }, [organization.id]);
 
   function leaderName(group) {
     if (group.leaderId === 'current-member') return currentMemberName;
@@ -237,6 +109,13 @@ export default function ChurchHome({ organization, profile, workspace, onWorkspa
   return (
     <div className="church-home">
       {status ? <p className="church-home-status" role="status">{status}</p> : null}
+      {loading ? <p className="church-home-status" role="status">Loading live Church Home content…</p> : null}
+      {loadError ? (
+        <div className="church-home-empty-state" role="alert">
+          <p>{loadError}</p>
+          <div><button type="button" onClick={() => void loadLiveHome()}>Try again</button></div>
+        </div>
+      ) : null}
 
       <ChurchAnnouncementBillboard
         announcements={home.announcements}
@@ -249,30 +128,34 @@ export default function ChurchHome({ organization, profile, workspace, onWorkspa
           <div><p className="dashboard-eyebrow">Latest announcements</p><h2 id="church-home-announcements-title">Know what is happening</h2></div>
           {home.announcements.length > 3 ? <button type="button" onClick={() => setShowAllAnnouncements((current) => !current)}>{showAllAnnouncements ? 'Show less' : 'View all announcements'}</button> : null}
         </div>
-        <div className="church-home-announcement-grid">
-          {announcementsToShow.map((announcement) => (
-            <article className="church-home-announcement-card" key={announcement.id}>
-              <span>{announcement.category}</span>
-              <h3>{announcement.title}</h3>
-              <p>{announcement.description}</p>
-              <div><small>{announcement.dateLabel}</small><button type="button" onClick={() => setDetailsItem(announcement)}>View details →</button></div>
-            </article>
-          ))}
-        </div>
+        {announcementsToShow.length ? (
+          <div className="church-home-announcement-grid">
+            {announcementsToShow.map((announcement) => (
+              <article className="church-home-announcement-card" key={announcement.id}>
+                <span>{announcement.category}</span>
+                <h3>{announcement.title}</h3>
+                <p>{announcement.description}</p>
+                <div><small>{announcement.dateLabel}</small><button type="button" onClick={() => setDetailsItem(announcement)}>View details →</button></div>
+              </article>
+            ))}
+          </div>
+        ) : <div className="church-home-empty-state"><p>No church announcements have been published yet.</p></div>}
       </section>
 
       <section className="church-home-section" aria-labelledby="church-home-celebrating-title">
         <div className="church-home-section-heading">
           <div><p className="dashboard-eyebrow">Celebrating our church family</p><h2 id="church-home-celebrating-title">Honor people. Remember grace.</h2></div>
         </div>
-        <div className="church-home-acknowledgement-list">
-          {approvedAcknowledgements.map((acknowledgement, index) => (
-            <article key={acknowledgement.id}>
-              <span aria-hidden="true">{['✦', '♡', '＋'][index % 3]}</span>
-              <div><small>{acknowledgement.category} · {acknowledgement.dateLabel}</small><h3>{acknowledgement.title}</h3><p>{acknowledgement.message}</p></div>
-            </article>
-          ))}
-        </div>
+        {approvedAcknowledgements.length ? (
+          <div className="church-home-acknowledgement-list">
+            {approvedAcknowledgements.map((acknowledgement, index) => (
+              <article key={acknowledgement.id}>
+                <span aria-hidden="true">{['✦', '♡', '＋'][index % 3]}</span>
+                <div><small>{acknowledgement.category} · {acknowledgement.dateLabel}</small><h3>{acknowledgement.title}</h3><p>{acknowledgement.message}</p></div>
+              </article>
+            ))}
+          </div>
+        ) : <div className="church-home-empty-state"><p>No approved acknowledgements have been published yet.</p></div>}
         <p className="church-home-privacy-note">Acknowledgements are manually approved church content. Private prayers, reflections, journals, WGAP responses, and Group conversations are never used automatically.</p>
       </section>
 
@@ -301,17 +184,19 @@ export default function ChurchHome({ organization, profile, workspace, onWorkspa
       <section className="church-home-section" aria-labelledby="church-home-coming-up-title">
         <div className="church-home-section-heading">
           <div><p className="dashboard-eyebrow">Coming up</p><h2 id="church-home-coming-up-title">Gather with the church</h2></div>
-          {home.events.length > 3 ? <button type="button" onClick={() => setShowAllEvents((current) => !current)}>{showAllEvents ? 'Show less' : 'View church calendar'}</button> : <button type="button" onClick={() => setShowAllEvents(true)}>View church calendar</button>}
+          {home.events.length > 3 ? <button type="button" onClick={() => setShowAllEvents((current) => !current)}>{showAllEvents ? 'Show less' : 'View church calendar'}</button> : null}
         </div>
-        <div className="church-home-event-list">
-          {eventsToShow.map((event) => (
-            <article key={event.id}>
-              <div className="church-home-event-date"><strong>{event.date}</strong><span>{event.time}</span></div>
-              <div><h3>{event.title}</h3><p>{event.location}{connectedLabel(event) ? ` · ${connectedLabel(event)}` : ''}</p></div>
-              <button type="button" onClick={() => setDetailsItem(event)}>View details</button>
-            </article>
-          ))}
-        </div>
+        {eventsToShow.length ? (
+          <div className="church-home-event-list">
+            {eventsToShow.map((event) => (
+              <article key={event.id}>
+                <div className="church-home-event-date"><strong>{event.date}</strong><span>{event.time}</span></div>
+                <div><h3>{event.title}</h3><p>{event.location}{connectedLabel(event) ? ` · ${connectedLabel(event)}` : ''}</p></div>
+                <button type="button" onClick={() => setDetailsItem(event)}>View details</button>
+              </article>
+            ))}
+          </div>
+        ) : <div className="church-home-empty-state"><p>No church events have been published yet.</p></div>}
       </section>
 
       <section className="church-home-section" aria-labelledby="church-home-explore-title">
@@ -325,15 +210,12 @@ export default function ChurchHome({ organization, profile, workspace, onWorkspa
         </div>
       </section>
 
-      {isAdmin ? (
+      {permissions.canManage ? (
         <ChurchHomeAdmin
           organization={organization}
           workspace={workspace}
           home={home}
-          onWorkspaceChange={onWorkspaceChange}
-          onHomeChange={updateHome}
-          onNavigate={onNavigate}
-          onShowDetails={onShowDetails}
+          onHomeChange={setHome}
         />
       ) : null}
 
