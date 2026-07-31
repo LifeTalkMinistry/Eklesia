@@ -1,0 +1,242 @@
+/* Mobile conversations should feel like a full messaging screen, not a compressed modal. */
+@media (max-width: 640px) {
+  .messaging-dialog.is-thread-open,
+  .messaging-conversation {
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .messaging-chat-header {
+    grid-template-columns: auto auto minmax(0, 1fr) repeat(4, auto);
+    gap: 5px;
+    min-height: 68px;
+    padding: 8px 8px;
+  }
+
+  .messaging-chat-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 1rem;
+  }
+
+  .messaging-chat-identity {
+    gap: 2px;
+  }
+
+  .messaging-chat-identity strong {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  .messaging-chat-identity small {
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
+
+  .messaging-header-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .messaging-header-icon svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .messaging-message-list {
+    gap: 8px;
+    padding: 18px 10px 14px;
+  }
+
+  .messaging-message {
+    position: relative;
+    width: min(94%, 560px);
+    gap: 4px;
+  }
+
+  .messaging-message-row {
+    position: relative;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .messaging-inline-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 0.78rem;
+  }
+
+  .messaging-sender-name {
+    margin-left: 44px;
+    font-size: 0.76rem;
+    line-height: 1.25;
+  }
+
+  .messaging-bubble {
+    width: fit-content;
+    max-width: calc(100% - 42px);
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 21px 21px 21px 7px;
+  }
+
+  .messaging-message.is-me .messaging-bubble {
+    max-width: 92%;
+    border-radius: 21px 21px 7px 21px;
+  }
+
+  .messaging-bubble p {
+    font-size: 1rem;
+    line-height: 1.38;
+  }
+
+  .messaging-bubble blockquote {
+    padding: 8px 10px;
+    font-size: 0.76rem;
+  }
+
+  .messaging-system-message {
+    font-size: 0.72rem;
+  }
+
+  /* Keep actions available without allowing five buttons to squeeze the bubble. */
+  .messaging-message-actions {
+    position: absolute;
+    z-index: 2;
+    right: 0;
+    bottom: 1px;
+    display: flex;
+    gap: 1px;
+    padding: 2px;
+    border: 1px solid var(--ep-component-card-border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ep-component-card-bg) 92%, transparent);
+    box-shadow: 0 3px 10px rgb(0 0 0 / 16%);
+    opacity: 0.45;
+    backdrop-filter: blur(8px);
+  }
+
+  .messaging-message.is-me .messaging-message-actions {
+    right: auto;
+    left: 0;
+  }
+
+  .messaging-message:hover .messaging-message-actions,
+  .messaging-message:focus-within .messaging-message-actions {
+    opacity: 1;
+  }
+
+  .messaging-message-actions button {
+    width: 27px;
+    height: 27px;
+    font-size: 0.76rem;
+  }
+
+  .messaging-message-status {
+    min-height: 32px;
+    gap: 6px;
+    padding-inline: 4px;
+    font-size: 0.76rem;
+  }
+
+  .messaging-reaction-summary {
+    margin-top: -6px;
+    margin-left: 42px;
+  }
+
+  .messaging-reaction-summary button {
+    min-height: 25px;
+    padding-inline: 8px;
+    font-size: 0.7rem;
+  }
+
+  .message-image-attachment,
+  .message-file-attachment {
+    width: min(100%, 340px);
+  }
+
+  .messaging-composer {
+    gap: 8px;
+    padding: 9px 7px max(10px, env(safe-area-inset-bottom));
+  }
+
+  .messaging-composer-row {
+    gap: 4px;
+  }
+
+  .messaging-composer-icon,
+  .messaging-send-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .messaging-composer-icon svg,
+  .messaging-send-button svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .messaging-input-shell {
+    min-height: 44px;
+    padding: 4px 6px 4px 13px;
+    border-radius: 23px;
+  }
+
+  .messaging-input-shell textarea {
+    min-height: 32px;
+    max-height: 128px;
+    padding: 6px 0 4px;
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  .messaging-input-shell > button {
+    width: 32px;
+    height: 32px;
+    font-size: 1.15rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .messaging-chat-header {
+    gap: 3px;
+    padding-inline: 5px;
+  }
+
+  .messaging-chat-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .messaging-header-icon {
+    width: 31px;
+    height: 31px;
+  }
+
+  .messaging-chat-identity strong {
+    font-size: 0.92rem;
+  }
+
+  .messaging-chat-identity small {
+    font-size: 0.66rem;
+  }
+
+  .messaging-message-list {
+    padding-inline: 8px;
+  }
+
+  .messaging-message {
+    width: 96%;
+  }
+
+  .messaging-composer {
+    padding-inline: 5px;
+  }
+
+  .messaging-composer-icon,
+  .messaging-send-button {
+    width: 36px;
+    height: 36px;
+  }
+}
