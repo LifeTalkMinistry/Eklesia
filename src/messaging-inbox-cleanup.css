@@ -1,0 +1,169 @@
+/*
+ * Keep the messages inbox focused on search and active conversations.
+ * The alpha label and stacked card treatment made the real messaging flow
+ * feel like a prototype instead of a finished inbox.
+ */
+.messaging-dialog:not(.is-thread-open) .messaging-dialog-header {
+  align-items: center;
+  padding: 18px 18px 15px;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-dialog-header .dashboard-eyebrow,
+.messaging-dialog:not(.is-thread-open) .messaging-dialog-header p:not(.dashboard-eyebrow) {
+  display: none;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-dialog-header h2 {
+  font-size: 1.42rem;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-inbox {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 0 16px 20px;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-directory-search {
+  gap: 0;
+  padding: 12px 0 2px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-directory-search > div,
+.messaging-dialog:not(.is-thread-open) .messaging-directory-search > small {
+  display: none;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-search-field {
+  min-height: 50px;
+  padding-inline: 15px;
+  border-radius: 999px;
+  background: var(--ep-component-card-nested-bg);
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-search-field input {
+  font-size: 0.86rem;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-inbox-section {
+  gap: 8px;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-section-heading {
+  padding: 0 2px;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-section-heading h3 {
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-section-heading > span {
+  min-width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  color: var(--ep-component-muted-fg);
+  background: transparent;
+  font-size: 0.7rem;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-thread-list,
+.messaging-dialog:not(.is-thread-open) .messaging-contact-list {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-thread-list > button,
+.messaging-dialog:not(.is-thread-open) .messaging-contact-list > button {
+  min-height: 72px;
+  gap: 12px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--ep-component-card-divider);
+  border-radius: 0;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-thread-list > button:last-child,
+.messaging-dialog:not(.is-thread-open) .messaging-contact-list > button:last-child {
+  border-bottom: 0;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-thread-list > button:hover,
+.messaging-dialog:not(.is-thread-open) .messaging-thread-list > button:focus-visible,
+.messaging-dialog:not(.is-thread-open) .messaging-contact-list > button:hover,
+.messaging-dialog:not(.is-thread-open) .messaging-contact-list > button:focus-visible {
+  border-radius: 14px;
+  background: var(--ep-component-card-nested-bg);
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-thread-avatar {
+  width: 48px;
+  height: 48px;
+  font-size: 1rem;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-inbox strong {
+  font-size: 0.92rem;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-inbox small {
+  font-size: 0.76rem;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-thread-meta time {
+  font-size: 0.68rem;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-contact-list > button > b {
+  padding: 7px 11px;
+  border-radius: 999px;
+}
+
+/* Do not reserve a large empty card when every connected member already has a thread. */
+.messaging-dialog:not(.is-thread-open)
+  .messaging-inbox:has(#messaging-churchmate-search:placeholder-shown)
+  .messaging-inbox-section:has(#churchmate-results-heading):has(.messaging-directory-empty) {
+  display: none;
+}
+
+.messaging-dialog:not(.is-thread-open) .messaging-directory-empty {
+  padding: 24px 18px;
+  border-radius: 18px;
+}
+
+@media (max-width: 640px) {
+  .messaging-dialog:not(.is-thread-open) .messaging-dialog-header {
+    min-height: 70px;
+    padding: 14px 16px 12px;
+  }
+
+  .messaging-dialog:not(.is-thread-open) .messaging-dialog-header h2 {
+    font-size: 1.55rem;
+  }
+
+  .messaging-dialog:not(.is-thread-open) .messaging-inbox {
+    gap: 12px;
+    padding: 0 14px 18px;
+  }
+
+  .messaging-dialog:not(.is-thread-open) .messaging-directory-search {
+    padding-top: 10px;
+  }
+
+  .messaging-dialog:not(.is-thread-open) .messaging-search-field {
+    min-height: 52px;
+  }
+
+  .messaging-dialog:not(.is-thread-open) .messaging-thread-list > button,
+  .messaging-dialog:not(.is-thread-open) .messaging-contact-list > button {
+    min-height: 74px;
+    padding-block: 11px;
+  }
+}
