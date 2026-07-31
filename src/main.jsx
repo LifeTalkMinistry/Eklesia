@@ -39,6 +39,7 @@ import './messaging-mobile-layout.css';
 import './messaging-outgoing-contrast.css';
 import './messaging-inbox-cleanup.css';
 import './messaging-long-press-actions.css';
+import './church-workspace-surface.css';
 
 runBrandMigration();
 removeLegacyStaticMessagingThreads();
