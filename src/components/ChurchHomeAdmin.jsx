@@ -172,7 +172,7 @@ function AdminCollection({ title, description, items, type, busy, onCreate, onEd
   );
 }
 
-export default function ChurchHomeAdmin({ organization, workspace, home, onHomeChange }) {
+export default function ChurchHomeAdmin({ organization, workspace, home, composeRequest, onHomeChange }) {
   const [editor, setEditor] = useState(null);
   const [form, setForm] = useState(createEmptyForm('announcement'));
   const [status, setStatus] = useState('');
@@ -180,6 +180,11 @@ export default function ChurchHomeAdmin({ organization, workspace, home, onHomeC
   const [busy, setBusy] = useState(false);
   const ministries = workspace.ministries || [];
   const groups = workspace.groups || [];
+
+  useEffect(() => {
+    if (!composeRequest?.type || busy) return;
+    openEditor(composeRequest.type);
+  }, [composeRequest?.nonce]);
 
   async function copyCode() {
     try {
