@@ -1,0 +1,42 @@
+/* Message actions stay hidden until the user intentionally long-presses a bubble. */
+.messaging-message .messaging-message-actions {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(3px) scale(0.94);
+  transform-origin: center;
+  transition:
+    opacity 130ms ease,
+    transform 130ms ease,
+    visibility 0s linear 130ms;
+}
+
+.messaging-message.is-message-actions-open {
+  z-index: 6;
+}
+
+.messaging-message.is-message-actions-open .messaging-message-actions {
+  opacity: 1 !important;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition-delay: 0s;
+}
+
+.messaging-message .messaging-bubble {
+  -webkit-touch-callout: none;
+  touch-action: pan-y;
+}
+
+@media (max-width: 640px) {
+  .messaging-message.is-message-actions-open .messaging-message-actions {
+    box-shadow: 0 6px 18px rgb(0 0 0 / 24%);
+    backdrop-filter: blur(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .messaging-message .messaging-message-actions {
+    transition: none;
+  }
+}

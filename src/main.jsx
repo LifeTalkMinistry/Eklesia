@@ -7,6 +7,7 @@ import { initializeFontPreferences } from './services/fontPreferencesService.js'
 import { initializeThemePreferences } from './services/themePreferencesService.js';
 import { installFileSyncBootstrap } from './services/fileSyncBootstrap.js';
 import { removeLegacyStaticMessagingThreads } from './services/messagingLegacyCleanup.js';
+import { installMessagingLongPressActions } from './services/messagingLongPressActions.js';
 import './index.css';
 import './alpha.css';
 import './together-demo-disclosure.css';
@@ -37,12 +38,14 @@ import './theme-preferences.css';
 import './messaging-mobile-layout.css';
 import './messaging-outgoing-contrast.css';
 import './messaging-inbox-cleanup.css';
+import './messaging-long-press-actions.css';
 
 runBrandMigration();
 removeLegacyStaticMessagingThreads();
 initializeThemePreferences();
 initializeFontPreferences();
 installFileSyncBootstrap();
+installMessagingLongPressActions();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
