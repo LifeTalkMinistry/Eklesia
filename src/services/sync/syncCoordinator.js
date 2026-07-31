@@ -209,7 +209,8 @@ export function bootstrapAccountSync() {
   return synchronizeNow({ bootstrap: true, reason: 'login' });
 }
 
-export function mergeCurrentDeviceRecords() {
+export async function mergeCurrentDeviceRecords() {
+  if (activeSyncPromise) await activeSyncPromise;
   return synchronizeNow({ bootstrap: true, reason: 'manual-device-merge' });
 }
 
