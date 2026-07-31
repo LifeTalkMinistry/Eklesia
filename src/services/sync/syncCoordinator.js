@@ -72,8 +72,10 @@ async function pullAllChanges(startCursor) {
   return { cursor, applied };
 }
 
-async function enqueueUnsyncedSnapshot() {
-  const mutations = getSyncableLocalSnapshot({ unsyncedOnly: true });
+async function enqueueUnsyncedSnapshot({ entityTypes = null } = {}) {
+  const allowedTypes = entityTypes ? new Set(entityTypes) : null;
+  const mutations = getSyncableLocalSnapshot({ unsyncedOnly: true })
+    .filter((mutation) => !allowedTypes || allowedTypes.has(mutation.entityType));
   for (const mutation of mutations) await enqueueSyncMutation(mutation);
   return mutations.length;
 }
@@ -133,10 +135,19 @@ async function executeSync({ bootstrap = false } = {}) {
 
   const device = getDeviceDescriptor();
   let cursor = getSyncState().cursor || '0';
-  const pendingBefore = await listPendingMutations(200);
-  setSyncing(pendingBefore.length);
+  let queuedLocal = 0;
 
   try {
+    if (bootstrap) {
+      // Capture additive local content before any server record is applied.
+      // This prevents a second device's bootstrap payload from replacing a
+      // devotion that exists only on this device.
+      queuedLocal += await enqueueUnsyncedSnapshot({ entityTypes: ['devotion-entry'] });
+    }
+
+    let pendingBefore = await listPendingMutations(200);
+    setSyncing(pendingBefore.length);
+
     if (bootstrap) {
       const initial = await bootstrapRemoteSync(device);
       const pendingKeys = new Set(pendingBefore.map(recordKey));
@@ -145,7 +156,13 @@ async function executeSync({ bootstrap = false } = {}) {
       ));
       applyCanonicalRecords(safeBootstrapRecords);
       cursor = String(initial.cursor || cursor);
-      await enqueueUnsyncedSnapshot();
+
+      // Profile identity is intentionally evaluated after the canonical
+      // account profile has been restored. Local-only devotion records were
+      // already protected above.
+      queuedLocal += await enqueueUnsyncedSnapshot();
+      pendingBefore = await listPendingMutations(200);
+      setSyncing(pendingBefore.length);
     }
 
     const pushed = await pushPendingBatches(device, cursor);
@@ -153,7 +170,7 @@ async function executeSync({ bootstrap = false } = {}) {
     if (!pushed.ok) {
       const remaining = await listPendingMutations(200);
       setNeedsAttention('A synchronized devotion changed on another device and needs review.', remaining.length);
-      return pushed;
+      return { ...pushed, queuedLocal };
     }
 
     const pulled = await pullAllChanges(cursor);
@@ -161,7 +178,13 @@ async function executeSync({ bootstrap = false } = {}) {
     const pendingAfter = await listPendingMutations(200);
     setSynced({ cursor, pendingCount: pendingAfter.length });
     clearRetry();
-    return { ok: true, cursor, pendingCount: pendingAfter.length };
+    return {
+      ok: true,
+      cursor,
+      pendingCount: pendingAfter.length,
+      queuedLocal,
+      appliedRemote: pulled.applied.filter((result) => result?.applied).length,
+    };
   } catch (error) {
     const pending = await listPendingMutations(200).catch(() => []);
     if (isOfflineError(error)) {
@@ -170,7 +193,7 @@ async function executeSync({ bootstrap = false } = {}) {
     } else {
       setNeedsAttention(error, pending.length);
     }
-    return { ok: false, error };
+    return { ok: false, error, queuedLocal };
   }
 }
 
@@ -184,6 +207,10 @@ export function synchronizeNow(options = {}) {
 
 export function bootstrapAccountSync() {
   return synchronizeNow({ bootstrap: true, reason: 'login' });
+}
+
+export function mergeCurrentDeviceRecords() {
+  return synchronizeNow({ bootstrap: true, reason: 'manual-device-merge' });
 }
 
 export function installAutomaticSyncTriggers() {
