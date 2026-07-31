@@ -17,6 +17,7 @@ import TodayDevotionCard from './TodayDevotionCard.jsx';
 import Together from './Together.jsx';
 import WhyEklesia from './WhyEklesia.jsx';
 import { formatManilaDate, getManilaGreeting } from '../lib/manilaTime.js';
+import { mergeThisDeviceWithAccount } from '../services/deviceMergeService.js';
 import { getDevotionMetrics } from '../services/devotionService.js';
 import { getJoinedEcosystem } from '../services/ecosystemService.js';
 import { getOrganizationPrototypeState } from '../services/organizationPrototypeService.js';
@@ -144,6 +145,7 @@ function ToolsHome({ onOpenJourney, onOpenBible }) {
 
 function Profile({ profile, storageAvailable, onProfileUpdated, onBackendSessionChanged, onRestartIntroduction, onDeleteLocalData }) {
   const [dialog, setDialog] = useState('');
+  const [mergeStatus, setMergeStatus] = useState({ state: 'idle', message: '' });
   const editRef = useRef(null);
   const backendRef = useRef(null);
   const themeRef = useRef(null);
@@ -155,6 +157,32 @@ function Profile({ profile, storageAvailable, onProfileUpdated, onBackendSession
   const displayName = profile?.displayName || 'Friend';
   const churchName = profile?.churchName || '';
   const ministryName = profile?.ministryName || '';
+
+  async function mergeDeviceData() {
+    if (mergeStatus.state === 'merging') return;
+    setMergeStatus({
+      state: 'merging',
+      message: 'Uploading this device first, then downloading the combined account data…',
+    });
+
+    const result = await mergeThisDeviceWithAccount();
+    if (!result.ok) {
+      const fileFailure = result.phase === 'files';
+      setMergeStatus({
+        state: 'error',
+        message: fileFailure
+          ? 'Your records were merged, but one or more photos or attachments still need another online retry.'
+          : result.error?.message || 'This device could not be merged right now. Keep the local data and try again while online.',
+      });
+      return;
+    }
+
+    setMergeStatus({
+      state: 'success',
+      message: 'Merge complete. This device now has the combined account data. Refreshing the app…',
+    });
+    window.setTimeout(() => window.location.reload(), 900);
+  }
 
   return (
     <section className="panel-page alpha-profile-page">
@@ -181,8 +209,26 @@ function Profile({ profile, storageAvailable, onProfileUpdated, onBackendSession
       <section className="alpha-data-controls" aria-labelledby="data-controls-heading">
         <p className="dashboard-eyebrow">Data controls</p>
         <h3 id="data-controls-heading">Information saved by Ekklesia Pulse</h3>
-        <p>Devotions, WGAP reflections, notebook photos, Journey history, Bible position, profile details, font and theme preferences, prototype messages, account token, and church prototype state remain in this browser.</p>
+        <p>Devotions, WGAP reflections, messages, notebook photos, and attachments are kept locally for offline use and can be merged with your signed-in account. Device preferences such as theme, font, and Bible position remain specific to this browser.</p>
         <div className="alpha-data-actions">
+          <button className="alpha-merge-trigger" type="button" onClick={mergeDeviceData} disabled={mergeStatus.state === 'merging'}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 7h10l-3-3" />
+              <path d="M17 17H7l3 3" />
+              <path d="M17 7a6.8 6.8 0 0 1 1.7 4.5" />
+              <path d="M7 17a6.8 6.8 0 0 1-1.7-4.5" />
+            </svg>
+            <span>
+              <b>{mergeStatus.state === 'merging' ? 'Merging device data…' : 'Merge this device with my account'}</b>
+              <small>Uploads this device first, then downloads the combined records from your other devices.</small>
+            </span>
+          </button>
+          <p className="alpha-merge-helper">Run this once on every device that already contains Ekklesia data.</p>
+          {mergeStatus.message ? (
+            <p className={`alpha-merge-status is-${mergeStatus.state}`} role={mergeStatus.state === 'error' ? 'alert' : 'status'}>
+              {mergeStatus.message}
+            </p>
+          ) : null}
           <button ref={deleteRef} className="alpha-delete-trigger" type="button" onClick={() => setDialog('delete')}>Delete my local data</button>
           <button className="alpha-logout-trigger" type="button" onClick={() => onBackendSessionChanged?.(null)}>
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
