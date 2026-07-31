@@ -6,6 +6,7 @@ import { runBrandMigration } from './services/brandMigration.js';
 import { initializeFontPreferences } from './services/fontPreferencesService.js';
 import { initializeThemePreferences } from './services/themePreferencesService.js';
 import { installFileSyncBootstrap } from './services/fileSyncBootstrap.js';
+import { removeLegacyStaticMessagingThreads } from './services/messagingLegacyCleanup.js';
 import './index.css';
 import './alpha.css';
 import './together-demo-disclosure.css';
@@ -38,6 +39,7 @@ import './messaging-outgoing-contrast.css';
 import './messaging-inbox-cleanup.css';
 
 runBrandMigration();
+removeLegacyStaticMessagingThreads();
 initializeThemePreferences();
 initializeFontPreferences();
 installFileSyncBootstrap();
