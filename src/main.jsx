@@ -34,6 +34,7 @@ import './theme-light.css';
 import './theme-light-edge-fix.css';
 import './theme-preferences.css';
 import './messaging-mobile-layout.css';
+import './messaging-outgoing-contrast.css';
 
 runBrandMigration();
 initializeThemePreferences();
