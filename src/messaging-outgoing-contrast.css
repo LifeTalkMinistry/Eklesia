@@ -1,0 +1,41 @@
+/*
+ * Outgoing messages need a guaranteed foreground/background contrast.
+ * The primary action token is intentionally pale in some dark themes, so it
+ * should not be reused directly as a chat bubble with inherited light text.
+ */
+.messaging-message.is-me .messaging-bubble {
+  border-color: color-mix(
+    in srgb,
+    var(--ep-component-control-primary-bg) 58%,
+    var(--ep-component-card-border)
+  );
+  color: var(--ep-component-heading-fg);
+  background: linear-gradient(
+    180deg,
+    color-mix(
+      in srgb,
+      var(--ep-component-control-primary-bg) 42%,
+      var(--ep-component-dialog-bg)
+    ),
+    color-mix(
+      in srgb,
+      var(--ep-component-control-primary-bg) 32%,
+      var(--ep-component-dialog-bg)
+    )
+  );
+}
+
+.messaging-message.is-me .messaging-bubble :where(
+  p,
+  strong,
+  small,
+  span,
+  blockquote,
+  a
+) {
+  color: inherit;
+}
+
+.messaging-message.is-me .messaging-bubble a {
+  text-decoration-color: currentColor;
+}
