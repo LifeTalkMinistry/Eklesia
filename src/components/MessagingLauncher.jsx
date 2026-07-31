@@ -1,110 +1,72 @@
 import { useEffect, useRef, useState } from 'react';
-import { mockEcosystems } from '../data/mockEcosystems.js';
+import { getBackendAccountId } from '../services/backendSessionService.js';
 import { getEcosystemMembers, getJoinedEcosystem } from '../services/ecosystemService.js';
 import {
   getPrototypeUnreadCount,
   MESSAGING_UPDATED_EVENT,
 } from '../services/messagingService.js';
-import { getOrganizationPrototypeState } from '../services/organizationPrototypeService.js';
 import MessagingCenter, { MessageBubbleIcon } from './MessagingCenter.jsx';
-
-function getMemberRelationship(member, workspace) {
-  const currentMember = workspace?.currentMember || {};
-  const groups = Array.isArray(workspace?.groups) ? workspace.groups : [];
-  const currentGroupIds = new Set(Array.isArray(currentMember.groupIds) ? currentMember.groupIds : []);
-  const sharedGroup = groups.find((group) => (
-    currentGroupIds.has(group.id)
-    && Array.isArray(group.memberIds)
-    && group.memberIds.includes(member.id)
-  ));
-
-  if (sharedGroup) {
-    return {
-      label: sharedGroup.groupType === 'dgroup'
-        ? `Same D-Group · ${sharedGroup.name}`
-        : `Same group · ${sharedGroup.name}`,
-      rank: 0,
-    };
-  }
-
-  const roles = Array.isArray(member.roles) ? member.roles : [];
-  const leaderRole = roles.find((role) => String(role?.role || '').includes('Leader'));
-  if (leaderRole) {
-    return {
-      label: `${leaderRole.role}${leaderRole.scopeName ? ` · ${leaderRole.scopeName}` : ''}`,
-      rank: 1,
-    };
-  }
-
-  if (member.organizationRole && member.organizationRole !== 'Church Member') {
-    return { label: member.organizationRole, rank: 2 };
-  }
-
-  return { label: 'Churchmate', rank: 3 };
-}
 
 function normalizedName(value) {
   return String(value || '').trim().toLowerCase();
 }
 
-function isBackendMember(member) {
+function isConnectedMember(member) {
   return /^\d+$/.test(String(member?.id || '')) && !member?.prototype;
 }
 
-function buildChurchmateDirectory(organization, workspace, currentUserName, availableMembers = []) {
-  const members = Array.isArray(workspace?.members) ? workspace.members : [];
-  const normalizedCurrentName = normalizedName(currentUserName);
-  const backendMembers = availableMembers.filter(isBackendMember);
-  const backendByName = new Map(backendMembers.map((member) => [normalizedName(member.name), member]));
-  const usedBackendIds = new Set();
+function memberSubtitle(member) {
+  const role = String(
+    member?.organizationRole
+    || member?.membershipRole
+    || member?.role
+    || '',
+  ).trim();
+  const ministry = String(member?.ministryName || member?.ministry || '').trim();
+  const group = String(member?.dGroupName || member?.groupName || '').trim();
 
-  const prototypeContacts = members
-    .filter((member) => (
-      member?.id
-      && member.id !== 'current-member'
-      && normalizedName(member.name) !== normalizedCurrentName
-    ))
+  if (role && role.toLowerCase() !== 'member' && role.toLowerCase() !== 'church member') {
+    return role;
+  }
+  if (ministry) return ministry;
+  if (group) return group;
+  return 'Connected churchmate';
+}
+
+function buildConnectedChurchmateDirectory(
+  organization,
+  currentUserName,
+  currentUserId,
+  availableMembers = [],
+) {
+  const normalizedCurrentName = normalizedName(currentUserName);
+
+  return availableMembers
+    .filter(isConnectedMember)
+    .filter((member) => String(member.id) !== String(currentUserId || ''))
+    .filter((member) => normalizedName(member.name) !== normalizedCurrentName)
     .map((member) => {
-      const relationship = getMemberRelationship(member, workspace);
-      const roleKeywords = (member.roles || []).flatMap((role) => [role.role, role.scopeName]);
-      const backendMember = backendByName.get(normalizedName(member.name));
-      if (backendMember) usedBackendIds.add(String(backendMember.id));
+      const subtitle = memberSubtitle(member);
       return {
-        id: member.id,
-        callTargetId: backendMember ? String(backendMember.id) : '',
-        name: member.name || 'Church member',
-        subtitle: relationship.label,
-        rank: relationship.rank,
+        id: `backend-member-${member.id}`,
+        callTargetId: String(member.id),
+        name: String(member.name || 'Church member'),
+        subtitle,
+        rank: subtitle === 'Connected churchmate' ? 2 : 1,
         searchText: [
           member.name,
+          subtitle,
           member.organizationRole,
+          member.membershipRole,
+          member.role,
+          member.ministryName,
+          member.ministry,
+          member.dGroupName,
+          member.groupName,
           organization?.name,
-          member.assignedDGroupId,
-          ...roleKeywords,
         ].filter(Boolean).join(' ').toLowerCase(),
       };
-    });
-
-  const backendOnlyContacts = backendMembers
-    .filter((member) => (
-      !usedBackendIds.has(String(member.id))
-      && normalizedName(member.name) !== normalizedCurrentName
-    ))
-    .map((member) => ({
-      id: `backend-member-${member.id}`,
-      callTargetId: String(member.id),
-      name: member.name || 'Church member',
-      subtitle: member.organizationRole && member.organizationRole !== 'member'
-        ? member.organizationRole
-        : 'Connected churchmate',
-      rank: 2,
-      searchText: [member.name, member.organizationRole, organization?.name, 'connected account']
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase(),
-    }));
-
-  return [...prototypeContacts, ...backendOnlyContacts]
+    })
     .sort((first, second) => first.rank - second.rank || first.name.localeCompare(second.name));
 }
 
@@ -133,20 +95,31 @@ export default function MessagingLauncher({ currentUserName = 'You' }) {
     async function loadDirectory() {
       try {
         const joined = await getJoinedEcosystem();
-        const organization = joined.ok && joined.data ? joined.data : mockEcosystems[0];
-        const workspace = organization ? getOrganizationPrototypeState(organization) : null;
-        const memberResult = organization ? await getEcosystemMembers(organization.id) : { ok: true, data: [] };
-        const availableMembers = memberResult.ok && Array.isArray(memberResult.data) ? memberResult.data : [];
+        const organization = joined.ok && joined.data?.backendConnected ? joined.data : null;
+
+        if (!organization) {
+          if (active) {
+            setChurchName(joined.data?.name || 'your church');
+            setChurchmates([]);
+          }
+          return;
+        }
+
+        const memberResult = await getEcosystemMembers(organization.id);
+        const availableMembers = memberResult.ok && Array.isArray(memberResult.data)
+          ? memberResult.data
+          : [];
+
         if (!active) return;
-        setChurchName(organization?.name || 'your church');
-        setChurchmates(buildChurchmateDirectory(
+        setChurchName(organization.name || 'your church');
+        setChurchmates(buildConnectedChurchmateDirectory(
           organization,
-          workspace,
           currentUserName,
+          getBackendAccountId(),
           availableMembers,
         ));
       } catch (error) {
-        console.warn('Ekklesia Pulse could not prepare the churchmate directory.', error);
+        console.warn('Ekklesia Pulse could not prepare the connected churchmate directory.', error);
         if (active) {
           setChurchName('your church');
           setChurchmates([]);
