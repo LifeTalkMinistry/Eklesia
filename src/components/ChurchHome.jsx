@@ -54,6 +54,7 @@ export default function ChurchHome({ organization, profile, workspace, onOpenGro
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [detailsItem, setDetailsItem] = useState(null);
   const [status, setStatus] = useState('');
+  const [composeRequest, setComposeRequest] = useState(null);
   const loadRequestRef = useRef(0);
 
   const currentMemberName = profile?.displayName || 'Current member';
@@ -95,6 +96,11 @@ export default function ChurchHome({ organization, profile, workspace, onOpenGro
     return () => { loadRequestRef.current += 1; };
   }, [organization.id]);
 
+  function requestAnnouncementComposer() {
+    if (!permissions.canManage) return;
+    setComposeRequest({ type: 'announcement', nonce: Date.now() });
+  }
+
   function leaderName(group) {
     if (group.leaderId === 'current-member') return currentMemberName;
     return (workspace.members || []).find((member) => member.id === group.leaderId)?.name || 'Appointed leader';
@@ -119,6 +125,8 @@ export default function ChurchHome({ organization, profile, workspace, onOpenGro
 
       <ChurchAnnouncementBillboard
         announcements={home.announcements}
+        canManage={permissions.canManage}
+        onCreateAnnouncement={requestAnnouncementComposer}
         onViewDetails={setDetailsItem}
         onAddToCalendar={(announcement) => setStatus(`${announcement.title} is ready to be added when calendar integration becomes available.`)}
       />
@@ -126,7 +134,10 @@ export default function ChurchHome({ organization, profile, workspace, onOpenGro
       <section className="church-home-section" aria-labelledby="church-home-announcements-title">
         <div className="church-home-section-heading">
           <div><p className="dashboard-eyebrow">Latest announcements</p><h2 id="church-home-announcements-title">Know what is happening</h2></div>
-          {home.announcements.length > 3 ? <button type="button" onClick={() => setShowAllAnnouncements((current) => !current)}>{showAllAnnouncements ? 'Show less' : 'View all announcements'}</button> : null}
+          <div className="church-home-section-heading-actions">
+            {home.announcements.length > 3 ? <button type="button" onClick={() => setShowAllAnnouncements((current) => !current)}>{showAllAnnouncements ? 'Show less' : 'View all'}</button> : null}
+            {permissions.canManage ? <button type="button" onClick={requestAnnouncementComposer}>＋ Post</button> : null}
+          </div>
         </div>
         {announcementsToShow.length ? (
           <div className="church-home-announcement-grid">
@@ -139,7 +150,7 @@ export default function ChurchHome({ organization, profile, workspace, onOpenGro
               </article>
             ))}
           </div>
-        ) : <div className="church-home-empty-state"><p>No church announcements have been published yet.</p></div>}
+        ) : <div className="church-home-empty-state"><p>No church announcements have been published yet.</p>{permissions.canManage ? <div><button type="button" onClick={requestAnnouncementComposer}>Post the first announcement</button></div> : null}</div>}
       </section>
 
       <section className="church-home-section" aria-labelledby="church-home-celebrating-title">
@@ -215,6 +226,7 @@ export default function ChurchHome({ organization, profile, workspace, onOpenGro
           organization={organization}
           workspace={workspace}
           home={home}
+          composeRequest={composeRequest}
           onHomeChange={setHome}
         />
       ) : null}
