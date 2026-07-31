@@ -1,9 +1,45 @@
 import { getBrowserStorage, STORAGE_KEYS } from './storageRegistry.js';
 
 const API_TIMEOUT_MS = 12000;
+const API_OVERRIDE_STORAGE_KEY = 'ekklesia.runtimeApiBaseUrl';
+
+function normalizeApiBaseUrl(value) {
+  const text = String(value || '').trim().replace(/\/+$/, '');
+  if (!text) return '';
+
+  try {
+    const parsed = new URL(text);
+    const isLocalHttp = parsed.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(parsed.hostname);
+    if (parsed.protocol !== 'https:' && !isLocalHttp) return '';
+    parsed.hash = '';
+    parsed.search = '';
+    return parsed.toString().replace(/\/+$/, '');
+  } catch {
+    return '';
+  }
+}
+
+function getRuntimeApiOverride() {
+  const storage = getBrowserStorage();
+
+  if (typeof window !== 'undefined') {
+    const query = new URLSearchParams(window.location.search);
+    const supplied = query.get('api');
+
+    if (supplied === 'default') {
+      storage?.removeItem(API_OVERRIDE_STORAGE_KEY);
+    } else if (supplied) {
+      const normalized = normalizeApiBaseUrl(supplied);
+      if (normalized) storage?.setItem(API_OVERRIDE_STORAGE_KEY, normalized);
+    }
+  }
+
+  return normalizeApiBaseUrl(storage?.getItem(API_OVERRIDE_STORAGE_KEY));
+}
 
 export function getApiBaseUrl() {
-  return String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
+  return getRuntimeApiOverride()
+    || normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
 }
 
 export function isApiConfigured() {
