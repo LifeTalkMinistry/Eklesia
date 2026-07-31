@@ -4,6 +4,7 @@ import { getEcosystemMembers, getJoinedEcosystem } from '../services/ecosystemSe
 import {
   getPrototypeUnreadCount,
   MESSAGING_UPDATED_EVENT,
+  synchronizeMessaging,
 } from '../services/messagingService.js';
 import MessagingCenter, { MessageBubbleIcon } from './MessagingCenter.jsx';
 
@@ -84,6 +85,20 @@ export default function MessagingLauncher({ currentUserName = 'You' }) {
     }
     window.addEventListener(MESSAGING_UPDATED_EVENT, handleUpdate);
     return () => window.removeEventListener(MESSAGING_UPDATED_EVENT, handleUpdate);
+  }, []);
+
+  useEffect(() => {
+    function refreshInbox() {
+      if (document.visibilityState === 'visible') void synchronizeMessaging();
+    }
+
+    refreshInbox();
+    const poll = window.setInterval(refreshInbox, 15_000);
+    document.addEventListener('visibilitychange', refreshInbox);
+    return () => {
+      window.clearInterval(poll);
+      document.removeEventListener('visibilitychange', refreshInbox);
+    };
   }, []);
 
   useEffect(() => {
