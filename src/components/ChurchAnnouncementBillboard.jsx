@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import './ChurchWorkspaceHome.css';
 
-export default function ChurchAnnouncementBillboard({ announcements, onViewDetails, onAddToCalendar }) {
+export default function ChurchAnnouncementBillboard({
+  announcements,
+  canManage = false,
+  onCreateAnnouncement,
+  onViewDetails,
+  onAddToCalendar,
+}) {
   const featured = announcements.filter((announcement) => announcement.featured);
   const slides = featured.length ? featured : announcements.slice(0, 1);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -15,7 +21,21 @@ export default function ChurchAnnouncementBillboard({ announcements, onViewDetai
       <section className="church-home-billboard church-home-billboard-empty" aria-labelledby="church-home-featured-heading">
         <p className="dashboard-eyebrow">Featured announcement</p>
         <h2 id="church-home-featured-heading">Nothing featured yet</h2>
-        <p>Church administrators can feature an announcement from Admin Tools.</p>
+        <p>
+          {canManage
+            ? 'Publish the first church announcement and optionally feature it here.'
+            : 'Church administrators have not featured an announcement yet.'}
+        </p>
+        {canManage ? (
+          <button
+            className="church-home-billboard-create-action"
+            type="button"
+            onClick={onCreateAnnouncement}
+          >
+            <span aria-hidden="true">＋</span>
+            <span>Post announcement</span>
+          </button>
+        ) : null}
       </section>
     );
   }
@@ -54,6 +74,11 @@ export default function ChurchAnnouncementBillboard({ announcements, onViewDetai
         {announcement.eventDate ? (
           <button className="church-home-secondary-action" type="button" onClick={() => onAddToCalendar(announcement)}>
             Add to calendar
+          </button>
+        ) : null}
+        {canManage ? (
+          <button className="church-home-secondary-action" type="button" onClick={onCreateAnnouncement}>
+            ＋ New announcement
           </button>
         ) : null}
       </div>
