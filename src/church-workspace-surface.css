@@ -1,0 +1,26 @@
+/*
+ * The church workspace is one continuous themed surface.
+ * The global theme previously painted the outer shell and inner frame with
+ * different surfaces, which exposed contrasting side gutters on narrow screens.
+ */
+.church-workspace-shell {
+  background-color: var(--ui-frame) !important;
+  background-image: var(--ui-frame-art) !important;
+}
+
+.church-workspace-frame {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.church-workspace-header {
+  background: transparent !important;
+}
+
+@media (max-width: 760px) {
+  .church-workspace-frame {
+    border-width: 0 !important;
+    border-radius: 0 !important;
+  }
+}
