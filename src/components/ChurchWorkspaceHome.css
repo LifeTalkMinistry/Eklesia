@@ -72,6 +72,68 @@
   color: #e8d9aa;
 }
 
+.church-home-billboard-create-action {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 48px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 17px 9px 10px;
+  border: 1px solid rgba(220, 233, 223, 0.9);
+  border-radius: 999px;
+  color: #102018;
+  background: #cfe4d5;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.church-home-billboard-create-action > span:first-child {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  color: #f7fbf8;
+  background: #183223;
+  font-size: 1.08rem;
+  line-height: 1;
+}
+
+.church-home-billboard-create-action:focus-visible,
+.church-home-section-heading-actions button:focus-visible {
+  outline: 3px solid rgba(232, 217, 170, 0.7);
+  outline-offset: 3px;
+}
+
+.church-home-section-heading-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+}
+
+.church-home-section-heading-actions button {
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid rgba(184, 215, 190, 0.14);
+  border-radius: 999px;
+  color: #cfe4d5;
+  background: rgba(184, 215, 190, 0.045);
+  font: inherit;
+  font-size: 0.67rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.church-home-section-heading-actions button:last-child {
+  border-color: rgba(220, 233, 223, 0.34);
+  color: #102018;
+  background: #cfe4d5;
+}
+
 @media (max-width: 520px) {
   .church-workspace-primary-nav {
     margin-right: -4px;
@@ -82,6 +144,15 @@
   .church-workspace-primary-nav button {
     padding-right: 12px;
     padding-left: 12px;
+  }
+
+  .church-home-section-heading-actions {
+    align-self: center;
+  }
+
+  .church-home-section-heading-actions button {
+    min-height: 32px;
+    padding: 6px 9px;
   }
 }
 
@@ -95,5 +166,10 @@
     min-height: 38px;
     padding: 7px 10px;
     font-size: 0.66rem;
+  }
+
+  .church-home-billboard-create-action {
+    width: 100%;
+    justify-content: center;
   }
 }
