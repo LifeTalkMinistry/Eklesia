@@ -31,6 +31,7 @@ const messagingLocal = await read('src/services/messagingLocalRepository.js');
 const messagingRemote = await read('src/services/messagingRemoteRepository.js');
 const messagingSync = await read('src/services/messagingSyncService.js');
 const messagingCenter = await read('src/components/MessagingCenter.jsx');
+const messagingLauncher = await read('src/components/MessagingLauncher.jsx');
 
 assert.match(storage, /ACCOUNT_OWNED_STORAGE_KEYS/);
 assert.match(storage, /ekklesiaPulse\.account/);
@@ -118,5 +119,11 @@ assert.match(messagingCenter, /Delivered/);
 assert.match(messagingCenter, /Read/);
 assert.match(messagingCenter, /Retry/);
 assert.match(messagingCenter, /synchronizeMessaging/);
+assert.match(messagingLauncher, /getBackendAccountId/);
+assert.match(messagingLauncher, /isConnectedMember/);
+assert.match(messagingLauncher, /backend-member-\$\{member\.id\}/);
+assert.match(messagingLauncher, /setInterval\(refreshInbox, 15_000\)/);
+assert.match(messagingLauncher, /synchronizeMessaging/);
+assert.doesNotMatch(messagingLauncher, /mockEcosystems|getOrganizationPrototypeState/);
 
-console.log('Ekklesia account-scoped devotion, messaging, file, and device-merge sync contracts validated.');
+console.log('Ekklesia account-scoped devotion, real messaging, file, and device-merge sync contracts validated.');
