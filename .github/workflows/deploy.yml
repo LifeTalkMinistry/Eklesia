@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Ekklesia Pulse
         env:
-          VITE_API_BASE_URL: https://trips-tee-betty-powerful.trycloudflare.com
+          VITE_API_BASE_URL: https://api.clarapmc.com
           VITE_WEBRTC_ICE_SERVERS: ${{ vars.VITE_WEBRTC_ICE_SERVERS }}
         run: npm run build -- --base=/Eklesia/
 
