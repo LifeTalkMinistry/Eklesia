@@ -137,12 +137,7 @@ export async function restoreBackendSession({ startSync = true } = {}) {
   }
 }
 
-export async function loginBackendAccount({ email, password }) {
-  const payload = await apiRequest('/api/login', {
-    method: 'POST',
-    auth: false,
-    body: { email, password },
-  });
+async function activateAuthenticatedPayload(payload) {
   saveAccessToken(payload.token);
 
   try {
@@ -156,13 +151,22 @@ export async function loginBackendAccount({ email, password }) {
   }
 }
 
+export async function loginBackendAccount({ email, password }) {
+  const payload = await apiRequest('/api/ekklesia/auth/login', {
+    method: 'POST',
+    auth: false,
+    body: { email, password },
+  });
+  return activateAuthenticatedPayload(payload);
+}
+
 export async function registerBackendAccount({ name, email, password }) {
-  await apiRequest('/api/users', {
+  const payload = await apiRequest('/api/ekklesia/auth/register', {
     method: 'POST',
     auth: false,
     body: { name, email, password },
   });
-  return loginBackendAccount({ email, password });
+  return activateAuthenticatedPayload(payload);
 }
 
 export async function updateBackendProfile(displayName) {
