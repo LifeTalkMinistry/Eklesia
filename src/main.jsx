@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import CallOverlayHost from './components/CallOverlay.jsx';
+import { hasBackendSession, restoreBackendSession } from './services/backendSessionService.js';
 import { runBrandMigration } from './services/brandMigration.js';
 import { initializeFontPreferences } from './services/fontPreferencesService.js';
 import { initializeThemePreferences } from './services/themePreferencesService.js';
@@ -41,16 +42,30 @@ import './messaging-inbox-cleanup.css';
 import './messaging-long-press-actions.css';
 import './church-workspace-surface.css';
 
-runBrandMigration();
-removeLegacyStaticMessagingThreads();
-initializeThemePreferences();
-initializeFontPreferences();
-installFileSyncBootstrap();
-installMessagingLongPressActions();
+async function bootstrapApplication() {
+  // Account-owned browser storage is namespaced by the authenticated backend
+  // account. Recover that account scope before React initializes profile,
+  // devotion, workspace, and sync state. Without this bootstrap, a valid token
+  // with a missing/stale local account marker can make the first render try to
+  // migrate account-owned data before an account ID exists, which leaves the UI
+  // in a partially initialized state.
+  if (hasBackendSession()) {
+    await restoreBackendSession({ startSync: false });
+  }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-    <CallOverlayHost />
-  </React.StrictMode>,
-);
+  runBrandMigration();
+  removeLegacyStaticMessagingThreads();
+  initializeThemePreferences();
+  initializeFontPreferences();
+  installFileSyncBootstrap();
+  installMessagingLongPressActions();
+
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <App />
+      <CallOverlayHost />
+    </React.StrictMode>,
+  );
+}
+
+void bootstrapApplication();
