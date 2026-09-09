@@ -19,6 +19,37 @@ function normalizeApiBaseUrl(value) {
   }
 }
 
+function isTemporaryCloudflareQuickTunnel(value) {
+  const normalized = normalizeApiBaseUrl(value);
+  if (!normalized) return false;
+
+  try {
+    const hostname = new URL(normalized).hostname.toLowerCase();
+    return hostname.endsWith('.trycloudflare.com');
+  } catch {
+    return false;
+  }
+}
+
+function shouldDiscardTemporaryApiOverride(value) {
+  const productionApiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL);
+  return Boolean(import.meta.env.PROD && productionApiBaseUrl && isTemporaryCloudflareQuickTunnel(value));
+}
+
+function removeApiOverrideFromAddressBar() {
+  if (typeof window === 'undefined' || !window.history?.replaceState) return;
+
+  const currentUrl = new URL(window.location.href);
+  if (!currentUrl.searchParams.has('api')) return;
+
+  currentUrl.searchParams.delete('api');
+  window.history.replaceState(
+    window.history.state,
+    '',
+    `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`,
+  );
+}
+
 function getRuntimeApiOverride() {
   const storage = getBrowserStorage();
 
@@ -28,13 +59,27 @@ function getRuntimeApiOverride() {
 
     if (supplied === 'default') {
       storage?.removeItem(API_OVERRIDE_STORAGE_KEY);
+      removeApiOverrideFromAddressBar();
     } else if (supplied) {
       const normalized = normalizeApiBaseUrl(supplied);
-      if (normalized) storage?.setItem(API_OVERRIDE_STORAGE_KEY, normalized);
+      if (normalized) {
+        if (shouldDiscardTemporaryApiOverride(normalized)) {
+          storage?.removeItem(API_OVERRIDE_STORAGE_KEY);
+          removeApiOverrideFromAddressBar();
+        } else {
+          storage?.setItem(API_OVERRIDE_STORAGE_KEY, normalized);
+        }
+      }
     }
   }
 
-  return normalizeApiBaseUrl(storage?.getItem(API_OVERRIDE_STORAGE_KEY));
+  const storedOverride = normalizeApiBaseUrl(storage?.getItem(API_OVERRIDE_STORAGE_KEY));
+  if (shouldDiscardTemporaryApiOverride(storedOverride)) {
+    storage?.removeItem(API_OVERRIDE_STORAGE_KEY);
+    return '';
+  }
+
+  return storedOverride;
 }
 
 export function getApiBaseUrl() {
