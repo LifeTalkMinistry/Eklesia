@@ -133,6 +133,7 @@ export default function NotesDialog({ open, onClose, triggerRef, initialNoteId =
       labelledBy="notes-dialog-title"
       initialFocusRef={titleRef}
       className="notes-dialog"
+      backdropClassName="notes-editor-backdrop"
     >
       <h2 id="notes-dialog-title" className="notes-visually-hidden">Note editor</h2>
 
