@@ -9,21 +9,18 @@ const WGAP_FIELDS = [
     letter: 'G',
     label: 'Gets Ko',
     placeholder: 'What did you understand or receive from this passage?',
-    rows: 4,
   },
   {
     key: 'application',
     letter: 'A',
     label: 'Application',
     placeholder: 'What specific response will you carry into your life?',
-    rows: 4,
   },
   {
     key: 'prayer',
     letter: 'P',
     label: 'Prayer',
     placeholder: 'Write your honest prayer to God...',
-    rows: 5,
   },
 ];
 
@@ -45,6 +42,7 @@ export default function Devotion({
   const [reviewVerseText, setReviewVerseText] = useState('');
   const [reviewVerseError, setReviewVerseError] = useState('');
   const [showContext, setShowContext] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const isAdditional = devotion?.flowType === 'additional' || completionType === 'additional';
   const devotionLabel = isAdditional ? 'Additional devotion' : 'Today’s devotion';
@@ -55,6 +53,7 @@ export default function Devotion({
 
   useEffect(() => {
     setShowContext(false);
+    setMenuOpen(false);
   }, [devotion?.reference]);
 
   useEffect(() => {
@@ -102,7 +101,17 @@ export default function Devotion({
   }
 
   if (!devotion) {
-    return <main className="devotion-shell"><div className="devotion-frame"><header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>Personal devotion</p><strong>Scripture unavailable</strong></div></header><p className="page-error" role="alert">The selected Scripture could not be loaded. Please return and choose a verse again.</p></div></main>;
+    return (
+      <main className="devotion-shell devotion-writing-shell">
+        <div className="devotion-frame devotion-writing-frame">
+          <header className="devotion-writing-topbar">
+            <span />
+            <button className="devotion-writing-close" type="button" onClick={onBack} aria-label="Close devotion">×</button>
+          </header>
+          <p className="page-error" role="alert">The selected Scripture could not be loaded. Please return and choose a verse again.</p>
+        </div>
+      </main>
+    );
   }
 
   const savedScriptureText = devotion.scriptureText || devotion.fullText || devotion.previewText || devotion.text;
@@ -115,97 +124,131 @@ export default function Devotion({
   const verseContext = getVerseContext(devotion);
 
   return (
-    <main className="devotion-shell">
-      <div className="devotion-frame">
-        <header className="devotion-header"><button className="icon-button" type="button" onClick={onBack} aria-label="Back to dashboard">←</button><div><p>{devotionLabel}</p><strong>WGAP Devotion</strong></div></header>
+    <main className="devotion-shell devotion-writing-shell">
+      <div className="devotion-frame devotion-writing-frame">
+        <header className="devotion-writing-topbar">
+          <div className="devotion-writing-topbar-copy">
+            <small>{devotionLabel}</small>
+            <strong>WGAP</strong>
+          </div>
+          <div className="devotion-writing-actions">
+            <button
+              className="devotion-writing-more"
+              type="button"
+              aria-label="More devotion actions"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((current) => !current)}
+            >
+              <span aria-hidden="true">•••</span>
+            </button>
+            <button className="devotion-writing-close" type="button" onClick={onBack} aria-label="Close devotion">×</button>
+          </div>
 
-        {isAdditional && !completed && (
-          <p className="devotion-context-note">Your daily rhythm is already complete. This devotion will be added to Journey.</p>
-        )}
-
-        <article className={`scripture-card wgap-word-card ${showContext ? 'is-context-view' : ''}`}>
-          {showContext ? (
-            <>
-              <div className="wgap-section-title">
-                <span className="wgap-letter">C</span>
-                <div>
-                  <strong>Verse context</strong>
-                  <p className="dashboard-eyebrow">{devotion.reference} · BSB</p>
-                </div>
-              </div>
-              <p className="inline-verse-context-kicker">What is happening here?</p>
-              <p className="inline-verse-context-copy">{verseContext}</p>
-              <button className="secondary-button inline-context-back" type="button" onClick={() => setShowContext(false)}>
-                <span aria-hidden="true">←</span>
-                Back to verse
+          {menuOpen ? (
+            <div className="devotion-writing-menu" role="menu" aria-label="Devotion actions">
+              <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); onReadChapter(); }}>{passageButtonLabel}</button>
+              <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); setShowContext((current) => !current); }}>
+                {showContext ? 'Show verse' : 'Understand context'}
               </button>
-            </>
-          ) : (
-            <>
-              <div className="wgap-section-title">
-                <span className="wgap-letter">W</span>
-                <div>
-                  <strong>Word of God</strong>
-                  <p className="dashboard-eyebrow">{devotion.reference} · BSB</p>
+            </div>
+          ) : null}
+        </header>
+
+        <div className="devotion-writing-scroll">
+          {isAdditional && !completed ? (
+            <p className="devotion-writing-note">Your daily rhythm is already complete. This devotion will be added to Journey.</p>
+          ) : null}
+
+          <section className="devotion-writing-section devotion-word-section" aria-labelledby="devotion-word-heading">
+            <div className="devotion-writing-section-heading">
+              <span className="devotion-writing-letter" aria-hidden="true">W</span>
+              <div>
+                <small>Word of God</small>
+                <strong id="devotion-word-heading">{devotion.reference} · BSB</strong>
+              </div>
+            </div>
+
+            {showContext ? (
+              <div className="devotion-context-surface">
+                <p className="inline-verse-context-kicker">What is happening here?</p>
+                <p className="inline-verse-context-copy">{verseContext}</p>
+                <button className="devotion-inline-action" type="button" onClick={() => setShowContext(false)}>← Back to verse</button>
+              </div>
+            ) : (
+              <>
+                {scripturePreview ? (
+                  <blockquote>“{scripturePreview}”</blockquote>
+                ) : shouldCompactCompletedPassage && !reviewVerseError ? (
+                  <p className="status-message" role="status">Loading the starting verse…</p>
+                ) : null}
+                {reviewVerseError ? <p className="status-message error-message" role="alert">{reviewVerseError}</p> : null}
+                <div className="devotion-word-actions">
+                  <button className="devotion-inline-action" type="button" onClick={onReadChapter}>{passageButtonLabel}</button>
+                  <button className="devotion-inline-action" type="button" onClick={() => setShowContext(true)}>Understand context</button>
                 </div>
-              </div>
-              {scripturePreview ? (
-                <blockquote>“{scripturePreview}”</blockquote>
-              ) : shouldCompactCompletedPassage && !reviewVerseError ? (
-                <p className="status-message" role="status">Loading the starting verse…</p>
-              ) : null}
-              {reviewVerseError && <p className="status-message error-message" role="alert">{reviewVerseError}</p>}
-              <div className="scripture-card-actions">
-                <button className="secondary-button" type="button" onClick={onReadChapter}>{passageButtonLabel}</button>
-                <button className="secondary-button" type="button" onClick={() => setShowContext(true)}>
-                  Understand context
-                </button>
-              </div>
-            </>
-          )}
-        </article>
+              </>
+            )}
+          </section>
 
-        <form className="wgap-form" onSubmit={submitDevotion}>
-          {WGAP_FIELDS.map((field) => (
-            <section className="wgap-field" key={field.key}>
-              <div className="wgap-section-title">
-                <span className="wgap-letter">{field.letter}</span>
-                <label htmlFor={`wgap-${field.key}`}>{field.label}</label>
-              </div>
-              <textarea
-                id={`wgap-${field.key}`}
-                value={wgap[field.key] || ''}
-                onChange={(event) => updateField(field.key, event.target.value)}
-                placeholder={field.placeholder}
-                rows={field.rows}
-                readOnly={completed}
-              />
-            </section>
-          ))}
+          <form id="wgap-devotion-form" className="devotion-writing-form" onSubmit={submitDevotion}>
+            {WGAP_FIELDS.map((field) => (
+              <section className="devotion-writing-section devotion-response-section" key={field.key}>
+                <div className="devotion-writing-section-heading">
+                  <span className="devotion-writing-letter" aria-hidden="true">{field.letter}</span>
+                  <div>
+                    <small>{field.label}</small>
+                    <label htmlFor={`wgap-${field.key}`}>{field.placeholder}</label>
+                  </div>
+                </div>
+                <textarea
+                  id={`wgap-${field.key}`}
+                  value={wgap[field.key] || ''}
+                  onChange={(event) => updateField(field.key, event.target.value)}
+                  placeholder="Start writing…"
+                  readOnly={completed}
+                />
+              </section>
+            ))}
 
-          {message && <p className="form-message error-message" role="alert">{message}</p>}
+            {message ? <p className="devotion-writing-message error-message" role="alert">{message}</p> : null}
 
+            {completed ? (
+              <section className="devotion-complete-card devotion-writing-complete" aria-live="polite">
+                <div className="devotion-complete-message">
+                  <span aria-hidden="true">✓</span>
+                  <div>
+                    <strong>{completionType === 'additional' ? 'Additional devotion saved' : 'Daily rhythm complete'}</strong>
+                    <p>{completionType === 'additional'
+                      ? 'Your daily rhythm was already complete. This reflection has been added to your Journey.'
+                      : 'You made room for God today. Your reflection has been saved.'}</p>
+                  </div>
+                </div>
+                <div className="devotion-complete-actions">
+                  <button className="primary-button" type="button" onClick={onViewSaved}>View in Journey</button>
+                  <button className="secondary-button" type="button" onClick={onReturnHome}>Return home</button>
+                  <button className="secondary-button" type="button" onClick={onSpendMore}>Spend more time in the Word</button>
+                </div>
+              </section>
+            ) : null}
+          </form>
+        </div>
+
+        <footer className="devotion-writing-toolbar">
+          <div className="devotion-writing-progress" aria-label="WGAP sections">
+            <span className="is-word">W</span>
+            <span className={wgap.gratitude?.trim() ? 'is-filled' : ''}>G</span>
+            <span className={wgap.application?.trim() ? 'is-filled' : ''}>A</span>
+            <span className={wgap.prayer?.trim() ? 'is-filled' : ''}>P</span>
+          </div>
           {completed ? (
-            <section className="devotion-complete-card" aria-live="polite">
-              <div className="devotion-complete-message">
-                <span aria-hidden="true">✓</span>
-                <div>
-                  <strong>{completionType === 'additional' ? 'Additional devotion saved' : 'Daily rhythm complete'}</strong>
-                  <p>{completionType === 'additional'
-                    ? 'Your daily rhythm was already complete. This reflection has been added to your Journey.'
-                    : 'You made room for God today. Your reflection has been saved.'}</p>
-                </div>
-              </div>
-              <div className="devotion-complete-actions">
-                <button className="primary-button" type="button" onClick={onViewSaved}>View in Journey</button>
-                <button className="secondary-button" type="button" onClick={onReturnHome}>Return home</button>
-                <button className="secondary-button" type="button" onClick={onSpendMore}>Spend more time in the Word</button>
-              </div>
-            </section>
+            <span className="devotion-writing-saved">Saved</span>
           ) : (
-            <button className="primary-button submit-button" type="submit" disabled={isSaving}>{isSaving ? 'Saving reflection…' : isAdditional ? 'Save additional devotion' : 'Complete today’s devotion'}</button>
+            <button className="devotion-writing-submit" type="submit" form="wgap-devotion-form" disabled={isSaving}>
+              {isSaving ? 'Saving…' : isAdditional ? 'Save devotion' : 'Complete devotion'}
+            </button>
           )}
-        </form>
+        </footer>
       </div>
     </main>
   );
