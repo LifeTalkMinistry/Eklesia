@@ -1,0 +1,39 @@
+.dashboard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-header-actions .notes-header-button,
+.dashboard-header-actions .notification-button {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  margin-left: 0;
+  border-radius: 14px;
+}
+
+.dashboard-header-actions .notes-header-button {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #d8e8dc;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.dashboard-header-actions .notes-header-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 390px) {
+  .dashboard-header-actions {
+    gap: 9px;
+  }
+
+  .dashboard-header-actions .notes-header-button,
+  .dashboard-header-actions .notification-button {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+    border-radius: 14px;
+  }
+}
