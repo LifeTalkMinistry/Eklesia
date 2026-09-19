@@ -1,39 +1,62 @@
-.dashboard-header-actions {
+.dashboard-header .dashboard-header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.dashboard-header-actions .notes-header-button,
-.dashboard-header-actions .notification-button {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
-  margin-left: 0;
-  border-radius: 14px;
-}
-
-.dashboard-header-actions .notes-header-button {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.dashboard-header .dashboard-header-actions > .notes-header-button,
+.dashboard-header .dashboard-header-actions > .notification-button {
+  display: grid;
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  flex: 0 0 40px !important;
+  place-items: center;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
   color: #d8e8dc;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.04) !important;
+  box-sizing: border-box;
+  line-height: 1;
+  transform: none;
 }
 
-.dashboard-header-actions .notes-header-button svg {
+.dashboard-header .dashboard-header-actions > .notes-header-button svg,
+.dashboard-header .dashboard-header-actions > .notification-button svg {
+  display: block;
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 18px;
+}
+
+.dashboard-header .dashboard-header-actions > .why-eklesia-trigger .information-glyph {
+  display: grid;
   width: 18px;
   height: 18px;
+  place-items: center;
+  font-size: 15px;
+  line-height: 18px;
 }
 
 @media (max-width: 390px) {
-  .dashboard-header-actions {
-    gap: 9px;
+  .dashboard-header .dashboard-header-actions {
+    gap: 10px;
   }
 
-  .dashboard-header-actions .notes-header-button,
-  .dashboard-header-actions .notification-button {
-    width: 40px;
-    height: 40px;
-    flex-basis: 40px;
-    border-radius: 14px;
+  .dashboard-header .dashboard-header-actions > .notes-header-button,
+  .dashboard-header .dashboard-header-actions > .notification-button {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    flex-basis: 40px !important;
+    border-radius: 14px !important;
   }
 }
