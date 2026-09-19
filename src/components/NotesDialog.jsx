@@ -61,6 +61,18 @@ export default function NotesDialog({ open, onClose, triggerRef, initialNoteId =
   }, [initialNoteId, open]);
 
   const activeNote = notes.find((note) => note.id === activeId) || null;
+  const fullscreenBackdropStyle = typeof window !== 'undefined'
+    && window.matchMedia('(max-width: 640px)').matches
+    ? {
+      padding: 0,
+      placeItems: 'stretch',
+      alignItems: 'stretch',
+      justifyItems: 'stretch',
+      background: 'var(--ep-component-dialog-bg)',
+      backdropFilter: 'none',
+      WebkitBackdropFilter: 'none',
+    }
+    : undefined;
 
   function persist(nextNotes, successMessage = 'Saved') {
     setNotes(nextNotes);
@@ -134,6 +146,7 @@ export default function NotesDialog({ open, onClose, triggerRef, initialNoteId =
       initialFocusRef={titleRef}
       className="notes-dialog"
       backdropClassName="notes-editor-backdrop"
+      backdropStyle={fullscreenBackdropStyle}
     >
       <h2 id="notes-dialog-title" className="notes-visually-hidden">Note editor</h2>
 
