@@ -9,19 +9,16 @@ const WGAP_FIELDS = [
     key: 'gratitude',
     letter: 'G',
     label: 'Gets Ko',
-    placeholder: 'What did you understand or receive from this passage?',
   },
   {
     key: 'application',
     letter: 'A',
     label: 'Application',
-    placeholder: 'What specific response will you carry into your life?',
   },
   {
     key: 'prayer',
     letter: 'P',
     label: 'Prayer',
-    placeholder: 'Write your honest prayer to God...',
   },
 ];
 
@@ -207,8 +204,7 @@ export default function Devotion({
                 <div className="devotion-writing-section-heading">
                   <span className="devotion-writing-letter" aria-hidden="true">{field.letter}</span>
                   <div>
-                    <small>{field.label}</small>
-                    <label htmlFor={`wgap-${field.key}`}>{field.placeholder}</label>
+                    <label htmlFor={`wgap-${field.key}`}>{field.label}</label>
                   </div>
                 </div>
                 <textarea
