@@ -41,6 +41,7 @@ import './messaging-outgoing-contrast.css';
 import './messaging-inbox-cleanup.css';
 import './messaging-long-press-actions.css';
 import './church-workspace-surface.css';
+import './components/HeaderActions.css';
 
 async function bootstrapApplication() {
   // Account-owned browser storage is namespaced by the authenticated backend
