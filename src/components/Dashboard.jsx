@@ -311,8 +311,9 @@ export default function Dashboard({ profile, storageAvailable, activeTab, setAct
       <div className="dashboard-frame">
         {showHomeHeader ? (
           <header className="dashboard-header">
-            <div className="alpha-brand-cluster"><button className="brand-button" type="button" onClick={onExit} aria-label="Go to Home"><span className="brand-mark">E</span><span>{APP_NAME}</span></button><AlphaBadge compact /></div>
+            <div className="alpha-brand-cluster"><button className="brand-button" type="button" onClick={onExit} aria-label="Go to Home"><span className="brand-mark">E</span><span>{APP_NAME}</span></button></div>
             <div className="dashboard-header-actions">
+              <AlphaBadge compact />
               <MessagingLauncher currentUserName={profile?.displayName || 'You'} />
               <button className="notification-button why-eklesia-trigger" type="button" aria-label="Why Ekklesia Pulse?" onClick={() => setShowWhyEklesia(true)} ref={whyEklesiaButtonRef}><span className="information-glyph" aria-hidden="true">i</span></button>
             </div>
