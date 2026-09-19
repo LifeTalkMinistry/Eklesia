@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getVerseContext } from '../data/verseContexts.js';
 import { getBibleVerse } from '../lib/bible.js';
+import { getWeeklyRhythm } from '../services/devotionService.js';
 import './DevotionContext.css';
 
 const WGAP_FIELDS = [
@@ -45,7 +46,7 @@ export default function Devotion({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isAdditional = devotion?.flowType === 'additional' || completionType === 'additional';
-  const devotionLabel = isAdditional ? 'Additional devotion' : 'Today’s devotion';
+  const weeklyRhythm = useMemo(() => getWeeklyRhythm(), [completed, devotion?.reference]);
   const verseStart = devotion?.verseStart ?? devotion?.startVerse ?? devotion?.verse;
   const verseEnd = devotion?.verseEnd ?? devotion?.endVerse ?? verseStart;
   const isSelectedPassage = Boolean(verseStart && verseEnd > verseStart);
@@ -127,9 +128,18 @@ export default function Devotion({
     <main className="devotion-shell devotion-writing-shell">
       <div className="devotion-frame devotion-writing-frame">
         <header className="devotion-writing-topbar">
-          <div className="devotion-writing-topbar-copy">
-            <small>{devotionLabel}</small>
-            <strong>WGAP</strong>
+          <div
+            className="devotion-week-rhythm"
+            aria-label={`${weeklyRhythm.weeklyCount} of 7 devotional days completed this week`}
+          >
+            {weeklyRhythm.week.map((day) => (
+              <span
+                className={`devotion-week-dot ${day.complete ? 'is-complete' : ''} ${day.isToday ? 'is-today' : ''} ${day.isFuture ? 'is-future' : ''}`}
+                key={day.dateKey}
+                aria-label={`${day.label}: ${day.complete ? 'devotion completed' : day.isFuture ? 'upcoming' : 'not completed'}`}
+                aria-current={day.isToday ? 'date' : undefined}
+              />
+            ))}
           </div>
           <div className="devotion-writing-actions">
             <button
