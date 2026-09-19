@@ -16,6 +16,7 @@ export default function AccessibleDialog({
   labelledBy,
   describedBy,
   className = '',
+  backdropClassName = '',
   initialFocusRef,
   children,
 }) {
@@ -74,7 +75,7 @@ export default function AccessibleDialog({
 
   return (
     <div
-      className="alpha-dialog-backdrop"
+      className={`alpha-dialog-backdrop ${backdropClassName}`.trim()}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onRequestClose?.();
       }}
