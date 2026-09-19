@@ -43,6 +43,7 @@ import './messaging-long-press-actions.css';
 import './church-workspace-surface.css';
 import './components/HeaderActions.css';
 import './notes-fullscreen-edge-fix.css';
+import './devotion-writing-surface.css';
 
 async function bootstrapApplication() {
   // Account-owned browser storage is namespaced by the authenticated backend
