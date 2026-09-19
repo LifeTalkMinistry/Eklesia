@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import NotesDialog from './NotesDialog.jsx';
 
 export default function AlphaBadge({ compact = false }) {
@@ -29,7 +30,12 @@ export default function AlphaBadge({ compact = false }) {
           <path d="M18.3 7.2 20 5.5" />
         </svg>
       </button>
-      <NotesDialog open={notesOpen} onClose={() => setNotesOpen(false)} triggerRef={notesButtonRef} />
+      {typeof document !== 'undefined'
+        ? createPortal(
+          <NotesDialog open={notesOpen} onClose={() => setNotesOpen(false)} triggerRef={notesButtonRef} />,
+          document.body,
+        )
+        : null}
     </>
   );
 }
