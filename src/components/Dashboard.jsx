@@ -11,6 +11,7 @@ import FeedbackDialog from './FeedbackDialog.jsx';
 import FontPreferencesDialog from './FontPreferencesDialog.jsx';
 import Journey from './Journey.jsx';
 import MessagingLauncher from './MessagingLauncher.jsx';
+import NotesCabinet from './NotesCabinet.jsx';
 import RestartIntroductionDialog from './RestartIntroductionDialog.jsx';
 import ThemePreferencesDialog from './ThemePreferencesDialog.jsx';
 import TodayDevotionCard from './TodayDevotionCard.jsx';
@@ -139,6 +140,7 @@ function ToolsHome({ onOpenJourney, onOpenBible }) {
           <span aria-hidden="true">✦</span><strong>Bible</strong><small>Read Scripture or continue from your last position</small>
         </button>
       </div>
+      <NotesCabinet />
     </section>
   );
 }
