@@ -1,0 +1,525 @@
+.devotion-writing-shell {
+  min-height: 100dvh;
+  background: var(--ep-component-app-canvas-bg);
+}
+
+.devotion-writing-frame {
+  position: relative;
+  display: grid;
+  width: min(100%, 920px) !important;
+  min-height: 100dvh;
+  height: 100dvh;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding-bottom: 0 !important;
+  overflow: hidden;
+  color: var(--ep-component-body-fg);
+  background: var(--ep-component-dialog-bg) !important;
+}
+
+.devotion-writing-topbar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--ep-component-card-divider);
+  background: color-mix(in srgb, var(--ep-component-dialog-bg) 94%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.devotion-writing-topbar-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  padding-left: 8px;
+}
+
+.devotion-writing-topbar-copy small {
+  color: var(--ep-component-subtle-fg);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.devotion-writing-topbar-copy strong {
+  color: var(--ep-component-heading-fg);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.devotion-writing-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+}
+
+.devotion-writing-more,
+.devotion-writing-close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 14px !important;
+  color: var(--ep-component-muted-fg) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.devotion-writing-more {
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.devotion-writing-close {
+  font-size: 1.75rem;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.devotion-writing-more:hover,
+.devotion-writing-more:focus-visible,
+.devotion-writing-close:hover,
+.devotion-writing-close:focus-visible {
+  outline: none;
+  color: var(--ep-component-heading-fg) !important;
+  background: var(--ep-component-card-bg) !important;
+}
+
+.devotion-writing-menu {
+  position: absolute;
+  z-index: 30;
+  top: 56px;
+  right: 60px;
+  display: grid;
+  width: 210px;
+  gap: 4px;
+  padding: 7px;
+  border: 1px solid var(--ep-component-card-border);
+  border-radius: 16px;
+  background: var(--ep-component-card-strong-bg);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.34);
+}
+
+.devotion-writing-menu button {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 11px;
+  border: 0 !important;
+  border-radius: 11px !important;
+  color: var(--ep-component-body-fg) !important;
+  background: transparent !important;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.devotion-writing-menu button:hover,
+.devotion-writing-menu button:focus-visible {
+  outline: none;
+  background: var(--ep-component-card-bg) !important;
+}
+
+.devotion-writing-scroll {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+.devotion-writing-note {
+  margin: 0;
+  padding: 12px clamp(28px, 6vw, 64px);
+  border-bottom: 1px solid var(--ep-component-card-divider);
+  color: var(--ep-component-muted-fg);
+  background: var(--ep-component-accent-muted-bg);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.devotion-writing-section {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: clamp(30px, 5vw, 54px) clamp(28px, 7vw, 76px);
+  border-bottom: 1px solid var(--ep-component-card-divider);
+  background: transparent;
+}
+
+.devotion-word-section {
+  min-height: clamp(360px, 48dvh, 560px);
+  justify-content: flex-start;
+}
+
+.devotion-response-section {
+  min-height: clamp(360px, 46dvh, 540px);
+}
+
+.devotion-writing-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.devotion-writing-letter {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border: 1px solid var(--ep-component-card-border-emphasis);
+  border-radius: 13px;
+  color: var(--ep-component-accent-secondary-fg);
+  background: var(--ep-component-accent-secondary-muted-bg);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.02rem;
+  font-weight: 750;
+}
+
+.devotion-writing-section-heading > div {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.devotion-writing-section-heading small {
+  color: var(--ep-component-accent-fg);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.devotion-writing-section-heading strong,
+.devotion-writing-section-heading label {
+  color: var(--ep-component-heading-fg);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1rem, 2.8vw, 1.35rem);
+  font-weight: 550;
+  line-height: 1.35;
+}
+
+.devotion-word-section blockquote {
+  max-width: 760px;
+  margin: clamp(30px, 5vw, 48px) 0 24px;
+  color: var(--ep-component-heading-fg);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 5vw, 2.8rem);
+  font-weight: 500;
+  line-height: 1.42;
+}
+
+.devotion-word-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: auto;
+  padding-top: 28px;
+}
+
+.devotion-inline-action {
+  padding: 6px 0;
+  border: 0 !important;
+  color: var(--ep-component-accent-fg) !important;
+  background: transparent !important;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.devotion-inline-action:hover,
+.devotion-inline-action:focus-visible {
+  outline: none;
+  color: var(--ep-component-heading-fg) !important;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.devotion-context-surface {
+  display: flex;
+  min-height: 240px;
+  flex: 1;
+  flex-direction: column;
+  padding-top: 26px;
+}
+
+.devotion-context-surface .inline-verse-context-copy {
+  max-width: 720px;
+}
+
+.devotion-context-surface .devotion-inline-action {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.devotion-writing-form {
+  margin: 0;
+}
+
+.devotion-response-section textarea {
+  width: 100%;
+  min-height: 220px;
+  flex: 1;
+  margin-top: 30px;
+  padding: 0 0 30px !important;
+  resize: none;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  color: var(--ep-component-body-fg) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.8;
+  caret-color: var(--ep-component-accent-fg);
+}
+
+.devotion-response-section textarea:focus,
+.devotion-response-section textarea:focus-visible {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+.devotion-response-section textarea::placeholder {
+  color: var(--ep-component-subtle-fg) !important;
+  opacity: 0.58;
+}
+
+.devotion-response-section textarea[readonly] {
+  cursor: default;
+  opacity: 0.9;
+}
+
+.devotion-writing-message {
+  margin: 0;
+  padding: 14px clamp(28px, 7vw, 76px);
+  border-bottom: 1px solid color-mix(in srgb, var(--ep-component-danger-fg) 20%, transparent);
+  background: var(--ep-component-danger-muted-bg);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.devotion-writing-complete {
+  margin: 28px clamp(28px, 7vw, 76px) 40px;
+}
+
+.devotion-writing-toolbar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  min-height: 66px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 16px calc(9px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--ep-component-card-divider);
+  background: color-mix(in srgb, var(--ep-component-dialog-bg) 96%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.devotion-writing-progress {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.devotion-writing-progress span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--ep-component-card-border);
+  border-radius: 10px;
+  color: var(--ep-component-subtle-fg);
+  background: transparent;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.73rem;
+  font-weight: 800;
+}
+
+.devotion-writing-progress span.is-word {
+  border-color: var(--ep-component-card-border-emphasis);
+  color: var(--ep-component-accent-secondary-fg);
+  background: var(--ep-component-accent-secondary-muted-bg);
+}
+
+.devotion-writing-progress span.is-filled {
+  border-color: color-mix(in srgb, var(--ep-component-accent-fg) 35%, transparent);
+  color: var(--ep-component-accent-fg);
+  background: var(--ep-component-accent-muted-bg);
+}
+
+.devotion-writing-submit {
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 0 !important;
+  border-radius: 13px !important;
+  color: var(--ep-component-control-primary-fg) !important;
+  background: var(--ep-component-control-primary-bg) !important;
+  box-shadow: none !important;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.devotion-writing-submit:disabled {
+  cursor: progress;
+  opacity: 0.55;
+}
+
+.devotion-writing-saved {
+  color: var(--ep-component-accent-fg);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .devotion-writing-shell {
+    width: 100vw;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .devotion-writing-frame {
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .devotion-writing-topbar {
+    min-height: 58px;
+    padding: calc(7px + env(safe-area-inset-top)) 8px 5px 14px;
+  }
+
+  .devotion-writing-topbar-copy {
+    padding-left: 4px;
+  }
+
+  .devotion-writing-more,
+  .devotion-writing-close {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px !important;
+  }
+
+  .devotion-writing-menu {
+    top: calc(52px + env(safe-area-inset-top));
+    right: 50px;
+  }
+
+  .devotion-writing-note {
+    padding-inline: 22px;
+  }
+
+  .devotion-writing-section {
+    padding: 30px 24px 34px;
+  }
+
+  .devotion-word-section {
+    min-height: max(380px, 48dvh);
+  }
+
+  .devotion-response-section {
+    min-height: max(360px, 46dvh);
+  }
+
+  .devotion-writing-letter {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+    border-radius: 12px;
+  }
+
+  .devotion-word-section blockquote {
+    margin-top: 30px;
+    font-size: clamp(1.55rem, 7vw, 2.2rem);
+  }
+
+  .devotion-response-section textarea {
+    min-height: 210px;
+    margin-top: 26px;
+    font-size: 0.98rem;
+    line-height: 1.76;
+  }
+
+  .devotion-writing-message {
+    padding-inline: 24px;
+  }
+
+  .devotion-writing-complete {
+    margin-inline: 20px;
+  }
+
+  .devotion-writing-toolbar {
+    min-height: 60px;
+    padding-inline: 10px;
+  }
+
+  .devotion-writing-progress {
+    gap: 5px;
+  }
+
+  .devotion-writing-progress span {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    font-size: 0.68rem;
+  }
+
+  .devotion-writing-submit {
+    min-height: 40px;
+    padding-inline: 13px;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .devotion-writing-section {
+    padding-inline: 20px;
+  }
+
+  .devotion-writing-section-heading {
+    gap: 12px;
+  }
+
+  .devotion-writing-section-heading label,
+  .devotion-writing-section-heading strong {
+    font-size: 1rem;
+  }
+
+  .devotion-writing-toolbar {
+    gap: 8px;
+  }
+
+  .devotion-writing-progress span {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .devotion-writing-scroll {
+    scroll-behavior: auto;
+  }
+}
