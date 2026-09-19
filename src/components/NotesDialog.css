@@ -1,6 +1,7 @@
 .alpha-brand-cluster {
   display: flex;
   min-width: 0;
+  flex: 1;
   align-items: center;
   gap: 8px;
 }
@@ -11,6 +12,7 @@
   height: 34px;
   flex: 0 0 34px;
   place-items: center;
+  margin-left: auto;
   padding: 0;
   border: 1px solid rgba(232, 217, 170, 0.22);
   border-radius: 11px;
