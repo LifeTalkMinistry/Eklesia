@@ -1,0 +1,62 @@
+.devotion-week-rhythm {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  padding-left: 8px;
+}
+
+.devotion-week-dot {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border: 1px solid var(--ep-component-card-border);
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: inset 0 0 0 2px transparent;
+}
+
+.devotion-week-dot.is-complete {
+  border-color: var(--ep-component-accent-fg);
+  background: var(--ep-component-accent-fg);
+}
+
+.devotion-week-dot.is-today {
+  border-color: var(--ep-component-accent-secondary-fg);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ep-component-accent-secondary-fg) 18%, transparent);
+}
+
+.devotion-week-dot.is-complete.is-today {
+  border-color: var(--ep-component-accent-fg);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ep-component-accent-fg) 20%, transparent);
+}
+
+.devotion-week-dot.is-future {
+  opacity: 0.34;
+}
+
+@media (max-width: 640px) {
+  .devotion-week-rhythm {
+    gap: 6px;
+    padding-left: 4px;
+  }
+
+  .devotion-week-dot {
+    width: 17px;
+    height: 17px;
+    flex-basis: 17px;
+  }
+}
+
+@media (max-width: 390px) {
+  .devotion-week-rhythm {
+    gap: 5px;
+  }
+
+  .devotion-week-dot {
+    width: 16px;
+    height: 16px;
+    flex-basis: 16px;
+  }
+}
