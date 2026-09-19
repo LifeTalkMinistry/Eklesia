@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import NotesDialog from './NotesDialog.jsx';
-import './HeaderActions.css';
 
 export default function AlphaBadge({ compact = false }) {
   const [notesOpen, setNotesOpen] = useState(false);
