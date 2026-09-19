@@ -27,7 +27,7 @@ function formatUpdatedAt(value) {
   }).format(date);
 }
 
-export default function NotesDialog({ open, onClose, triggerRef }) {
+export default function NotesDialog({ open, onClose, triggerRef, initialNoteId = '' }) {
   const [notes, setNotes] = useState([]);
   const [activeId, setActiveId] = useState('');
   const [status, setStatus] = useState('');
@@ -38,8 +38,11 @@ export default function NotesDialog({ open, onClose, triggerRef }) {
 
     const restored = getNotes();
     if (restored.length) {
+      const preferredNote = initialNoteId
+        ? restored.find((note) => note.id === initialNoteId)
+        : null;
       setNotes(restored);
-      setActiveId(restored[0].id);
+      setActiveId(preferredNote?.id || restored[0].id);
       setStatus('');
       return;
     }
@@ -49,7 +52,7 @@ export default function NotesDialog({ open, onClose, triggerRef }) {
     setNotes([firstNote]);
     setActiveId(firstNote.id);
     setStatus(result.persisted ? '' : result.message);
-  }, [open]);
+  }, [initialNoteId, open]);
 
   const activeNote = notes.find((note) => note.id === activeId) || null;
 
