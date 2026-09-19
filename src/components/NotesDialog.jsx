@@ -10,32 +10,38 @@ function noteLabel(note) {
   return firstLine || 'Untitled note';
 }
 
-function notePreview(note) {
-  const text = note?.body?.trim().replace(/\s+/g, ' ');
-  return text || 'Start writing…';
-}
-
 function formatUpdatedAt(value) {
   const timestamp = Date.parse(value || '');
   if (!Number.isFinite(timestamp)) return '';
-  const date = new Date(timestamp);
   return new Intl.DateTimeFormat(undefined, {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-  }).format(date);
+  }).format(new Date(timestamp));
+}
+
+function formatInsertDate() {
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date());
 }
 
 export default function NotesDialog({ open, onClose, triggerRef, initialNoteId = '' }) {
   const [notes, setNotes] = useState([]);
   const [activeId, setActiveId] = useState('');
   const [status, setStatus] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const titleRef = useRef(null);
+  const bodyRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
 
+    setMenuOpen(false);
     const restored = getNotes();
     if (restored.length) {
       const preferredNote = initialNoteId
@@ -60,12 +66,26 @@ export default function NotesDialog({ open, onClose, triggerRef, initialNoteId =
     setNotes(nextNotes);
     const result = saveNotes(nextNotes);
     setStatus(result.persisted ? successMessage : result.message);
+    return result;
   }
 
   function addNote() {
     const nextNote = createNote();
     persist([nextNote, ...notes], 'New note created');
     setActiveId(nextNote.id);
+    setMenuOpen(false);
+    window.requestAnimationFrame(() => titleRef.current?.focus());
+  }
+
+  function duplicateActive() {
+    if (!activeNote) return;
+    const copy = createNote({
+      title: activeNote.title?.trim() ? `${activeNote.title.trim()} copy` : '',
+      body: activeNote.body || '',
+    });
+    persist([copy, ...notes], 'Note duplicated');
+    setActiveId(copy.id);
+    setMenuOpen(false);
     window.requestAnimationFrame(() => titleRef.current?.focus());
   }
 
@@ -86,7 +106,23 @@ export default function NotesDialog({ open, onClose, triggerRef, initialNoteId =
 
     const nextNotes = notes.filter((note) => note.id !== activeNote.id);
     persist(nextNotes, 'Note deleted');
-    setActiveId(nextNotes[0]?.id || '');
+    setMenuOpen(false);
+    onClose?.();
+  }
+
+  function insertBodyText(text) {
+    if (!activeNote) return;
+    const textarea = bodyRef.current;
+    const start = textarea?.selectionStart ?? activeNote.body.length;
+    const end = textarea?.selectionEnd ?? start;
+    const nextBody = `${activeNote.body.slice(0, start)}${text}${activeNote.body.slice(end)}`;
+    updateActive({ body: nextBody });
+
+    window.requestAnimationFrame(() => {
+      const nextCursor = start + text.length;
+      bodyRef.current?.focus();
+      bodyRef.current?.setSelectionRange(nextCursor, nextCursor);
+    });
   }
 
   return (
@@ -95,96 +131,79 @@ export default function NotesDialog({ open, onClose, triggerRef, initialNoteId =
       onRequestClose={onClose}
       triggerRef={triggerRef}
       labelledBy="notes-dialog-title"
-      describedBy="notes-dialog-description"
       initialFocusRef={titleRef}
       className="notes-dialog"
     >
-      <div className="notes-dialog-topline">
-        <div>
-          <p className="dashboard-eyebrow">Personal space</p>
-          <h2 id="notes-dialog-title">Notes</h2>
+      <h2 id="notes-dialog-title" className="notes-visually-hidden">Note editor</h2>
+
+      <div className="notes-editor-topbar">
+        <div className="notes-editor-actions">
+          <button
+            className="notes-editor-more"
+            type="button"
+            aria-label="More note actions"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((current) => !current)}
+          >
+            <span aria-hidden="true">•••</span>
+          </button>
+          <button className="notes-editor-close" type="button" onClick={onClose} aria-label="Close note">×</button>
         </div>
-        <button className="notes-dialog-close" type="button" onClick={onClose} aria-label="Close notes">×</button>
+
+        {menuOpen ? (
+          <div className="notes-editor-menu" role="menu" aria-label="Note actions">
+            <button type="button" role="menuitem" onClick={addNote}>New note</button>
+            <button type="button" role="menuitem" onClick={duplicateActive} disabled={!activeNote}>Duplicate note</button>
+            <button className="is-danger" type="button" role="menuitem" onClick={deleteActive} disabled={!activeNote}>Delete note</button>
+          </div>
+        ) : null}
       </div>
 
-      <p id="notes-dialog-description" className="notes-dialog-description">
-        Keep quick thoughts, reminders, or anything you want to return to inside Ekklesia Pulse.
-      </p>
+      <section className="notes-writing-surface" aria-label="Note editor">
+        {activeNote ? (
+          <>
+            <label className="notes-visually-hidden" htmlFor="notes-title">Note title</label>
+            <input
+              ref={titleRef}
+              id="notes-title"
+              className="notes-title-input"
+              type="text"
+              maxLength="120"
+              placeholder="Untitled note"
+              value={activeNote.title}
+              onChange={(event) => updateActive({ title: event.target.value })}
+            />
 
-      <div className="notes-dialog-layout">
-        <aside className="notes-list-panel" aria-label="Your notes">
-          <div className="notes-list-heading">
-            <span>{notes.length} {notes.length === 1 ? 'note' : 'notes'}</span>
-            <button type="button" onClick={addNote} aria-label="Create a new note">+ New</button>
+            <label className="notes-visually-hidden" htmlFor="notes-body">Note</label>
+            <textarea
+              ref={bodyRef}
+              id="notes-body"
+              className="notes-body-input"
+              maxLength="20000"
+              placeholder="Start writing…"
+              value={activeNote.body}
+              onChange={(event) => updateActive({ body: event.target.value })}
+            />
+          </>
+        ) : (
+          <div className="notes-editor-empty">
+            <strong>No note selected</strong>
+            <button type="button" onClick={addNote}>Create note</button>
           </div>
+        )}
+      </section>
 
-          <div className="notes-list" role="list">
-            {notes.length ? notes.map((note) => (
-              <button
-                className={`notes-list-item ${note.id === activeId ? 'is-active' : ''}`}
-                type="button"
-                key={note.id}
-                onClick={() => {
-                  setActiveId(note.id);
-                  setStatus('');
-                }}
-                role="listitem"
-                aria-current={note.id === activeId ? 'true' : undefined}
-              >
-                <strong>{noteLabel(note)}</strong>
-                <span>{notePreview(note)}</span>
-                <small>{formatUpdatedAt(note.updatedAt)}</small>
-              </button>
-            )) : (
-              <div className="notes-list-empty">No notes yet.</div>
-            )}
-          </div>
-        </aside>
-
-        <section className="notes-editor" aria-label="Note editor">
-          {activeNote ? (
-            <>
-              <label className="notes-visually-hidden" htmlFor="notes-title">Note title</label>
-              <input
-                ref={titleRef}
-                id="notes-title"
-                className="notes-title-input"
-                type="text"
-                maxLength="120"
-                placeholder="Untitled note"
-                value={activeNote.title}
-                onChange={(event) => updateActive({ title: event.target.value })}
-              />
-
-              <label className="notes-visually-hidden" htmlFor="notes-body">Note</label>
-              <textarea
-                id="notes-body"
-                className="notes-body-input"
-                maxLength="20000"
-                placeholder="Write anything you want to remember…"
-                value={activeNote.body}
-                onChange={(event) => updateActive({ body: event.target.value })}
-              />
-
-              <div className="notes-editor-footer">
-                <span className="notes-save-status" aria-live="polite">
-                  {status || `Updated ${formatUpdatedAt(activeNote.updatedAt)}`}
-                </span>
-                <button className="notes-delete-button" type="button" onClick={deleteActive}>Delete note</button>
-              </div>
-            </>
-          ) : (
-            <div className="notes-editor-empty">
-              <span aria-hidden="true">✎</span>
-              <strong>No note selected</strong>
-              <p>Create a note to start writing.</p>
-              <button type="button" onClick={addNote}>Create note</button>
-            </div>
-          )}
-        </section>
-      </div>
-
-      <p className="notes-storage-note">Notes are private to your signed-in Ekklesia profile on this device.</p>
+      <footer className="notes-editor-toolbar">
+        <div className="notes-toolbar-tools" aria-label="Note tools">
+          <button type="button" onClick={() => insertBodyText('☐ ')} disabled={!activeNote} aria-label="Insert checklist item" title="Checklist">☐</button>
+          <button type="button" onClick={() => insertBodyText('• ')} disabled={!activeNote} aria-label="Insert bullet" title="Bullet list">•</button>
+          <button type="button" onClick={() => insertBodyText(formatInsertDate())} disabled={!activeNote} aria-label="Insert today's date" title="Insert date">Date</button>
+        </div>
+        <span className="notes-save-status" aria-live="polite">
+          {status || (activeNote ? `Saved · ${formatUpdatedAt(activeNote.updatedAt)}` : '')}
+        </span>
+      </footer>
     </AccessibleDialog>
   );
 }
