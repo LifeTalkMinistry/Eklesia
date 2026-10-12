@@ -44,6 +44,9 @@
     .bar { display:block; height:10px; width:100%; border-radius:20px; overflow:hidden; background:#304463; }
     .bar-fill { display:block; height:100%; border-radius:20px; background:linear-gradient(90deg,#7bb4ff,#c7b7ff); }
     .live-note { margin:16px 0; font-size:.78rem; color:#9eb6d6; line-height:1.65; }
+    .compare-line { display:grid;grid-template-columns:1fr auto auto; gap:13px;align-items:center;margin:14px 0;padding:10px 0;border-bottom:1px solid #334863;font-size:.82rem; }
+    .compare-line strong { font-variant-numeric:tabular-nums;white-space:nowrap;color:#d0e2ff; }
+    .compare-caption { display:grid;grid-template-columns:1fr auto auto;gap:13px;color:#aabede;font-size:.73rem; }
     @media(max-width:350px){.result-row{grid-template-columns:75px 1fr 46px;gap:7px;}}
     .privacy { text-align:center; color:#8da4c2; font-size:.73rem; line-height:1.6; margin:18px 8px 0; }
     @media (min-width:620px) { .page { padding:28px 30px 45px; } }
@@ -69,6 +72,11 @@
     <section id="liveDashboard" hidden aria-label="Grouped survey results">
       <div class="live-summary"><strong id="responseCount">—</strong><span>Survey responses</span></div>
       <p class="live-note">These findings describe participants' reports. They do not independently prove that ministry overlap causes missed objectives.</p>
+      <section class="live-panel" id="comparisonPanel" hidden>
+        <h2>One ministry vs multiple ministries</h2>
+        <p class="live-note">Percentage of respondents in each group reporting these experiences. These are associations, not proof of cause.</p>
+        <div id="comparisonData"></div>
+      </section>
       <div class="live-panel"><h2>Number of ministries served</h2><div id="ministries"></div></div>
       <div class="live-panel"><h2>Two ministries needing someone at once</h2><div id="conflictingRequests"></div></div>
       <div class="live-panel"><h2>Declining a responsibility to serve elsewhere</h2><div id="declinedResponsibility"></div></div>
@@ -138,6 +146,29 @@
       if(!Number.isSafeInteger(total)||total<10||!data.distributions||keys.some(key=>!Array.isArray(data.distributions[key])))throw Error("Unexpected data");
       document.getElementById("responseCount").textContent=total.toLocaleString();
       keys.forEach(key=>renderRows(key,data.distributions[key],total));
+      if(Array.isArray(data.comparison) && data.comparison.length===2){
+        const single=data.comparison.find(g=>g.group==="single");
+        const multiple=data.comparison.find(g=>g.group==="multiple");
+        if(single&&multiple){
+          const root=document.getElementById("comparisonData");
+          const caption=document.createElement("div");caption.className="compare-caption";
+          for(const value of ["","1 ministry (n="+single.respondents+")","2+ ministries (n="+multiple.respondents+")"]){
+            const x=document.createElement("span");x.textContent=value;caption.appendChild(x);
+          }
+          root.appendChild(caption);
+          for(const [field,name] of [["overlapping","Competing requests"],["delayed","Delayed duties"],["impact","Reported impact on plans"]]){
+            const row=document.createElement("div");row.className="compare-line";
+            const label=document.createElement("span");label.textContent=name;row.appendChild(label);
+            for(const item of [single,multiple]){
+              const value=document.createElement("strong");
+              value.textContent=item[field]===null?"—":item[field]+"%";
+              row.appendChild(value);
+            }
+            root.appendChild(row);
+          }
+          document.getElementById("comparisonPanel").hidden=false;
+        }
+      }
       empty.hidden=true;document.getElementById("upcoming").hidden=true;
       document.getElementById("liveDashboard").hidden=false;
     }catch(error){
