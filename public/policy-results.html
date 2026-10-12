@@ -1,97 +1,167 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#09172a"><title>Ministry Policy Reflection | Results</title>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09172a">
+<title>Ministry Policy | Results</title>
 <style>
 :root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#f3f7ff;background:#081527}
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 90% 0,#20385e,transparent 43%),linear-gradient(#0b1c31,#081326)}
-a{color:inherit}a:focus-visible{outline:3px solid #a6baff}
-main{width:min(100%,610px);min-height:100dvh;margin:0 auto;padding:24px 17px 36px}
-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:37px}
-.brand{font-family:Georgia,serif;font-size:1.15rem;font-weight:700;display:flex;gap:10px;align-items:center}
-.emblem{display:grid;place-items:center;width:35px;height:35px;border:1px solid #687296;border-radius:12px;background:#292843;color:#e9cdff;font-size:1.25rem}
-.caption{font-size:.7rem;color:#a5c0e9;text-transform:uppercase;letter-spacing:.1em;font-weight:800}
-h1,h2{font-family:Georgia,serif;font-weight:400;letter-spacing:-.018em;color:#fff;line-height:1.2}
-h1{font-size:clamp(2rem,8vw,2.9rem);margin:0}h2{font-size:1.45rem;margin:0 0 15px}
-.sub{color:#c8d7ed;line-height:1.7;font-size:.96rem;margin:15px 0 26px}
-.card{border:1px solid #405775;background:linear-gradient(160deg,#1a3051,#0e203a);padding:25px 21px;border-radius:23px;margin:18px 0}
-.empty{text-align:center;padding:31px 23px}.empty p,.note{font-size:.84rem;color:#b7c8e2;line-height:1.65}
-.big{font-size:2.2rem;font-weight:800;line-height:1.12;color:#fff}
-.metric{display:grid;grid-template-columns:130px 1fr 35px;align-items:center;gap:9px;padding:9px 0;font-size:.79rem}
-.metric span:first-child{overflow-wrap:anywhere}.metric strong{text-align:right;font-variant-numeric:tabular-nums;color:#d9e5f7}
-.track{height:9px;background:#314564;border-radius:9px;overflow:hidden}.bar{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#83bbff,#c8b5fb)}
-.footer-link{display:block;text-align:center;text-decoration:none;background:#c3d4ff;color:#13233e;border-radius:14px;padding:15px 20px;font-size:.92rem;font-weight:800;margin:23px 0 0}
-@media(max-width:355px){.metric{grid-template-columns:108px 1fr 33px;gap:7px}}
+a{color:inherit}a:focus-visible,summary:focus-visible{outline:3px solid #b7cdff;outline-offset:3px}
+main{width:min(100%,610px);min-height:100dvh;margin:auto;padding:23px 17px 36px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:32px}
+.brand{font-family:Georgia,serif;font-size:1.13rem;font-weight:700;display:flex;gap:9px;align-items:center}
+.emblem{display:grid;place-items:center;width:35px;height:35px;border:1px solid #687296;border-radius:12px;background:#292843;color:#e9cdff;font-size:1.23rem}
+.caption{font-size:.7rem;color:#9ebff2;text-transform:uppercase;letter-spacing:.1em;font-weight:800}
+h1,h2,h3{font-family:Georgia,serif;font-weight:400;letter-spacing:-.018em;color:#fff}
+h1{font-size:clamp(2rem,8vw,2.9rem);line-height:1.2;margin:15px 0 25px}
+h2{font-size:1.4rem;line-height:1.2;margin:0 0 17px}
+h3{font-size:1.15rem}
+.card{border:1px solid #405775;background:linear-gradient(160deg,#1a3051,#0e203a);padding:23px 20px;border-radius:22px;margin:15px 0}
+.counter{text-align:center;padding:33px 21px 27px}
+.big{font-size:4.4rem;font-weight:750;line-height:1;font-variant-numeric:tabular-nums}
+.counter-name{margin-top:8px;color:#c5d9f6;font-size:.95rem}
+.meter{height:9px;border-radius:20px;background:#344863;overflow:hidden;margin:23px 0 11px}
+.fill{display:block;height:100%;width:0;background:#96b8ff;border-radius:20px}
+.muted{color:#b6c9e6;font-size:.82rem;line-height:1.55;margin:8px 0 0}
+.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.vote{padding:17px 13px;border-radius:17px;background:#1c3658;border:1px solid #456588;min-width:0}
+.vote.no{background:#252d50}
+.vote small{color:#b3cae7;font-size:.82rem;display:block}
+.vote strong{display:block;font-size:2rem;font-variant-numeric:tabular-nums;margin:4px 0}
+.vote .share{font-size:.77rem;color:#c0d3ee}
+.vote .track{height:9px;background:#344763;border-radius:20px;overflow:hidden;margin-top:12px}
+.vote .bar{display:block;height:100%;border-radius:20px;background:#88baff}
+.vote.no .bar{background:#bea7f4}
+.section-label{font-size:.71rem;letter-spacing:.1em;text-transform:uppercase;color:#99bbef;font-weight:800;margin:0 0 14px}
+.more{border:1px solid #405775;background:#10243e;border-radius:18px;overflow:hidden;margin-top:18px}
+.more summary{cursor:pointer;padding:16px 18px;font-size:.88rem;font-weight:750}
+.more-body{padding:0 15px 15px}
+.more-body .card{padding:18px 15px;margin:12px 0}
+.metric{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;font-size:.8rem}
+.metric strong{font-variant-numeric:tabular-nums}
+.metric-name{color:#d6e4fa}
+.metric-name,.metric strong{overflow-wrap:anywhere}
+.note{font-size:.75rem;color:#9db5d5;line-height:1.55;margin:16px 1px 0}
+.link{display:block;text-align:center;text-decoration:none;background:#c4d5ff;color:#112441;border-radius:14px;padding:15px 17px;font-size:.9rem;font-weight:800;margin:19px 0 0}
+.link.secondary{background:#233b5e;color:#e1edff}
+@media(min-width:620px){main{padding:30px}}
 </style>
 </head>
 <body>
 <main>
-<header><div class="brand"><span class="emblem" aria-hidden="true">✧</span> Ministry Policy Reflection</div><span class="caption">Results</span></header>
-<p class="caption">Optional research</p><h1>Policy Reflection Results</h1>
-<p class="sub">What respondents think about one-ministry focus, primary ministry with exceptions, and coordinated service across multiple ministries.</p>
-<div class="card empty" id="empty" role="status"><h2 id="emptyTitle">Checking responses…</h2><p id="emptyInfo">Connecting to the research database.</p></div>
-<section id="dashboard" hidden aria-label="Aggregated policy responses">
-<div class="card"><div class="big" id="total">—</div><p class="note">Anonymous policy reflections recorded</p></div>
-<div class="card"><h2>Initial position on one primary ministry</h2><div id="initialSupport"></div></div>
-<div class="card"><h2>Reasons behind the initial position</h2><p class="note">Reasons from both supporters and opponents are shown together.</p><div id="initialReason"></div></div>
-<div class="card"><h2>Responses to the counter-scenario</h2><p class="note">Different questions were presented according to the initial position.</p><div id="challengeResponse"></div></div>
-<div class="card"><h2>Does more ministries necessarily mean more effectiveness?</h2><div id="productivityBelief"></div></div>
-<div class="card"><h2>Preferred church ministry policy</h2><div id="preferredModel"></div></div>
-<div class="card"><h2>Position after reflection</h2><div id="finalSupport"></div></div>
-<div class="card"><h2>Did they reconsider?</h2><div id="reconsideration"></div></div>
-<div class="card"><h2>Clarifying a different policy preference</h2><p class="note">Only some policy combinations trigger this follow-up. These categories also include participants who did not need it.</p><div id="consistencyDecision"></div></div>
-<p class="note">These results reflect the views of participants, not necessarily the entire church. A majority preference does not establish which policy would be most effective. Rare categories are hidden, and individual comments are never published.</p>
+<header><div class="brand"><span class="emblem" aria-hidden="true">✧</span> Ministry Policy</div><span class="caption">Results</span></header>
+<h1>Policy Results</h1>
+<section class="card counter" aria-label="Total policy survey participants">
+  <div class="big" id="total" aria-live="polite">—</div>
+  <div class="counter-name" id="totalLabel">Responses</div>
+  <div id="pending" hidden>
+    <div class="meter" aria-hidden="true"><span class="fill" id="progressFill"></span></div>
+    <p class="muted" id="pendingInfo"></p>
+  </div>
+  <p class="muted" id="loadStatus" role="status">Loading responses…</p>
 </section>
-<a href="./policy.html" class="footer-link">Back to policy reflection →</a>
-<a href="./results.html" class="footer-link" style="background:#243b5e;color:#e2edff">Main survey results</a>
+<section class="card" id="votes" hidden aria-labelledby="votesHeading">
+  <p class="section-label">Initial policy position</p>
+  <h2 id="votesHeading">Agree or disagree?</h2>
+  <div class="split">
+    <div class="vote"><small>Yes, support</small><strong id="yesCount">—</strong><span class="share" id="yesShare"></span><div class="track"><span class="bar" id="yesBar"></span></div></div>
+    <div class="vote no"><small>No, oppose</small><strong id="noCount">—</strong><span class="share" id="noShare"></span><div class="track"><span class="bar" id="noBar"></span></div></div>
+  </div>
+</section>
+<details class="more" id="more" hidden>
+  <summary>Explore more findings</summary>
+  <div class="more-body">
+    <section class="card"><h3>Reasons for the initial position</h3><div id="initialReason"></div></section>
+    <section class="card"><h3>Responses to the challenge</h3><div id="challengeResponse"></div></section>
+    <section class="card"><h3>Does more ministries mean more effectiveness?</h3><div id="productivityBelief"></div></section>
+    <section class="card"><h3>Preferred ministry arrangement</h3><div id="preferredModel"></div></section>
+    <section class="card"><h3>Position after reflection</h3><div id="finalSupport"></div></section>
+    <section class="card"><h3>Changed position?</h3><div id="reconsideration"></div></section>
+    <section class="card"><h3>Explained a different preference?</h3><div id="consistencyDecision"></div></section>
+  </div>
+</details>
+<p class="note" id="privacy" hidden>Only grouped anonymous results are shown. Individual written responses are private.</p>
+<a class="link" href="./policy.html">Back to policy survey →</a>
+<a class="link secondary" href="./results.html">Main survey results</a>
 </main>
 <script>
 (function(){
 "use strict";
+const endpoint="https://api.clarapmc.com/api/ekklesia/surveys/ministry-policy/results";
+const el=id=>document.getElementById(id);
 const labels={
- initialSupport:{yes:"Support",no:"Oppose"},
- initialReason:{"skill-focus":"Skill development","reduce-conflicts":"Reduce conflicts",accountability:"Clear accountability",capacity:"Individual capability",staffing:"Staffing needs","better-coordination":"Better coordination",other:"Other reason"},
+ initialReason:{"skill-focus":"Skill development","reduce-conflicts":"Fewer role conflicts",accountability:"Clear accountability",capacity:"Individual capability",staffing:"Church staffing needs","better-coordination":"Better coordination",other:"Other"},
  challengeResponse:{exceptions:"Temporary exceptions","train-volunteers":"Recruit and train","reconsider-policy":"Reconsider policy",coordinate:"Improve coordination","limit-conflicts":"Limit repeated conflicts","consider-primary":"Consider primary ministry",unsure:"Not sure"},
  productivityBelief:{yes:"Yes",no:"No",depends:"Depends",unsure:"Not sure"},
- preferredModel:{strict:"Strictly one ministry",primary:"One primary ministry",coordinated:"Coordinated multiple ministries",flexible:"Flexible individual capacity",unsure:"Not sure"},
+ preferredModel:{strict:"Strictly one ministry",primary:"One primary ministry",coordinated:"Coordinated multiple",flexible:"Flexible capacity",unsure:"Not sure"},
  finalSupport:{yes:"Support",no:"Oppose",unsure:"Not sure"},
- reconsideration:{maintained:"Maintained position",changed:"Changed position",uncertain:"Uncertain after reflection"},
- consistencyDecision:{changed:"Revised position",clarified:"Explained the distinction",unsure:"Unsure after follow-up","not-needed":"No follow-up needed"}
+ reconsideration:{maintained:"Maintained",changed:"Changed",uncertain:"Uncertain"},
+ consistencyDecision:{changed:"Changed",clarified:"Explained the distinction",unsure:"Unsure","not-needed":"Not needed"}
 };
+function setVote(side,count,total){
+ const safe=Number.isSafeInteger(count)&&count>=0;
+ const pct=safe?count/total*100:0;
+ el(side+"Count").textContent=safe?String(count):"—";
+ el(side+"Share").textContent=safe?Math.round(pct)+"%":"Withheld for privacy";
+ el(side+"Bar").style.width=Math.min(100,pct)+"%";
+}
+function renderBreakdown(key,rows){
+ const root=el(key);
+ root.replaceChildren();
+ for(const item of rows){
+  const row=document.createElement("div");row.className="metric";
+  const title=document.createElement("span");title.className="metric-name";
+  title.textContent=labels[key][item.label]||item.label;
+  const count=document.createElement("strong");
+  count.textContent=Number.isSafeInteger(item.count)&&item.count>=0?String(item.count):"Withheld";
+  row.append(title,count);root.append(row);
+ }
+}
 async function load(){
- const empty=document.getElementById("empty"),heading=document.getElementById("emptyTitle"),message=document.getElementById("emptyInfo");
  try{
-  const response=await fetch("https://api.clarapmc.com/api/ekklesia/surveys/ministry-policy/results",{cache:"no-store",headers:{Accept:"application/json"}});
-  if(!response.ok)throw new Error("Server not available");
+  const response=await fetch(endpoint,{cache:"no-store",headers:{Accept:"application/json"}});
+  if(!response.ok)throw new Error("Cannot load results");
   const data=await response.json();
-  if(!data.ready){
-   heading.textContent="Findings are gathering";
-   message.textContent=String(data.responses||0)+" revised reflections submitted. Grouped findings appear after at least "+String(data.minimumResponses||10)+" responses."
-   return;
+  const total=Number(data.responses),min=Number(data.minimumResponses);
+  if(!Number.isSafeInteger(total)||total<0||!Number.isSafeInteger(min)||min<1)throw Error("Invalid totals");
+  el("total").textContent=String(total);
+  el("totalLabel").textContent=total===1?"Response received":"Responses received";
+  el("loadStatus").hidden=true;
+  if(data.ready===false){
+    // Show the genuine participant count immediately without revealing an identifiable individual vote.
+    el("pendingInfo").textContent="Yes/No totals available after "+min+" responses";
+    el("progressFill").style.width=Math.min(100,total/min*100)+"%";
+    el("pending").hidden=false;
+    return;
   }
-  const count=Number(data.responses);
-  if(!Number.isSafeInteger(count)||count<10||!data.breakdown)throw new Error("Invalid results");
-  for(const [key,map] of Object.entries(labels)){
-   const rows=data.breakdown[key];
-   if(!Array.isArray(rows))throw new Error("Missing metric");
-   const root=document.getElementById(key);
-   for(const item of rows){
-    const row=document.createElement("div");row.className="metric";
-    const name=document.createElement("span");name.textContent=map[item.label]||item.label;
-    const bar=document.createElement("div");bar.className="track";
-    const fill=document.createElement("span");fill.className="bar";
-    fill.style.width=typeof item.count==="number"&&item.count>=0?Math.min(100,item.count/count*100)+"%":"0%";
-    bar.appendChild(fill);
-    const num=document.createElement("strong");num.textContent=item.count===null?"< 3":String(item.count);
-    row.append(name,bar,num);root.appendChild(row);
-   }
+  if(data.ready!==true||total<min||!data.breakdown||!Array.isArray(data.breakdown.initialSupport))throw Error("Invalid breakdown");
+  const positions=data.breakdown.initialSupport;
+  const yes=positions.find(x=>x.label==="yes");
+  const no=positions.find(x=>x.label==="no");
+  if(!yes||!no)throw Error("Missing positions");
+  setVote("yes",yes.count,total);setVote("no",no.count,total);
+  for(const key of Object.keys(labels)){
+    if(!Array.isArray(data.breakdown[key]))throw Error("Missing breakdown");
+    renderBreakdown(key,data.breakdown[key]);
   }
-  document.getElementById("total").textContent=count.toLocaleString();
-  empty.hidden=true;document.getElementById("dashboard").hidden=false;
- }catch(error){heading.textContent="Results temporarily unavailable";message.textContent="Please try again later.";}
+  el("votes").hidden=false;
+  el("more").hidden=false;
+  el("privacy").hidden=false;
+ }catch(error){
+  el("total").textContent="—";
+  el("totalLabel").textContent="Responses";
+  el("pending").hidden=true;
+  el("votes").hidden=true;
+  el("more").hidden=true;
+  el("loadStatus").hidden=false;
+  el("loadStatus").textContent="Unable to load the count. Please try again.";
+ }
 }
 load();
 })();
 </script>
-</body></html>
+</body>
+</html>
