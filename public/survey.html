@@ -120,7 +120,7 @@
       <p class="eyebrow">Thank you for reflecting</p><h2 tabindex="-1">Your experience matters.</h2>
       <div class="success"><strong id="doneHeading">Survey preview complete</strong><span id="doneMessage">This was a preview. No answers were transmitted or saved.</span></div>
       <p class="quiet">A strong church community should be willing to listen to the people who serve.</p>
-      <a class="primary" id="returnToApp" hidden style="display:block;text-align:center;text-decoration:none;margin-top:22px" href="./">Return to app</a>
+      <a class="primary" id="viewResults" style="display:block;text-align:center;text-decoration:none;margin-top:22px" href="./results.html">View survey results →</a>
     </section>
   </main>
   <div class="actions" id="actions">
@@ -141,8 +141,6 @@
     ["pressure","I feel pressured to accept or maintain ministry responsibilities."],
     ["meaning","I find my ministry involvement personally meaningful."]
   ];
-  var returnToApp=document.getElementById("returnToApp");
-  returnToApp.hidden = new URLSearchParams(window.location.search).get("from") !== "app";
   var form = document.getElementById("survey");
   if (COLLECTION_ENDPOINT) {
     var consentLabel = document.createElement("label");
