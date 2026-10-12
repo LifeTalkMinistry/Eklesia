@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#09172a">
+<title>Ministry Policy Reflection</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#f4f8ff;background:#081527}
+*{box-sizing:border-box} [hidden]{display:none!important}
+html{scroll-behavior:smooth}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 95% 5%,#21395f 0,transparent 42%),linear-gradient(180deg,#0b1b31,#081326)}
+button,input,select,textarea{font:inherit}a{color:inherit}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #b7caff;outline-offset:3px}
+.shell{width:min(100%,580px);min-height:100dvh;margin:auto;display:flex;flex-direction:column}
+header{padding:23px 19px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-family:Georgia,serif;font-weight:bold;font-size:1.13rem;display:flex;align-items:center;gap:9px}
+.emblem{display:grid;place-items:center;width:35px;height:35px;border:1px solid #627197;border-radius:12px;background:#262844;color:#eacfff;font-size:1.3rem}
+.subtle-link{font-size:.76rem;color:#a9c4eb;text-decoration:none}
+.progress{padding:0 19px 22px}.progress-label{font-size:.77rem;color:#c1cfe1;margin-bottom:10px}.track{height:5px;border-radius:20px;background:#283956;overflow:hidden}.fill{width:0;height:100%;border-radius:20px;background:linear-gradient(90deg,#83bbff,#d0b4fd);transition:width .2s}
+main{flex:1;padding:0 16px 22px}.panel{padding:clamp(22px,5vw,32px);border:1px solid #364969;border-radius:25px;background:linear-gradient(150deg,#1a3051,#10213a);box-shadow:0 16px 40px #0003}
+.eyebrow{color:#95bafe;text-transform:uppercase;font-size:.71rem;letter-spacing:.13em;font-weight:800;margin:0 0 14px}
+h1,h2{font-family:Georgia,serif;font-weight:400;letter-spacing:-.02em;line-height:1.14;margin:0;color:#fff}
+h1{font-size:clamp(2rem,8vw,3rem)}h2{font-size:clamp(1.85rem,7vw,2.45rem)}
+.lead{color:#d5e2f5;font-size:1rem;line-height:1.7;margin:18px 0 0}
+.hint{font-size:.79rem;color:#afc0dc;line-height:1.65;margin:12px 0}
+.question{margin-top:28px}.question label.prompt{display:block;font-size:.94rem;font-weight:750;line-height:1.5;margin-bottom:12px}
+.select{border:1px solid #5a6e8e;border-radius:13px;background:#152d4b;color:#fff;padding:13px 14px;min-height:50px;width:100%}
+.choice-set{display:grid;gap:9px}.choice{display:flex;gap:11px;align-items:flex-start;border:1px solid #485d7e;border-radius:14px;padding:13px;background:#152b47;cursor:pointer;font-size:.87rem;line-height:1.53}
+.choice:has(input:checked){border-color:#b6cdff;background:#243d62}
+.choice input{margin-top:3px;accent-color:#b1c9ff;flex:none;width:17px;height:17px}
+textarea{min-height:110px;resize:vertical}
+.warning{font-size:.79rem;color:#d9e4f5;line-height:1.5;margin-top:13px}
+.consent{margin-top:25px}.consent .choice{font-size:.82rem}
+.footer{position:sticky;bottom:0;display:flex;gap:10px;padding:14px 17px max(18px,env(safe-area-inset-bottom));background:linear-gradient(0deg,#091629 72%,#091629f0);z-index:3}
+button.primary,button.secondary,.cta{border:0;border-radius:14px;min-height:51px;padding:13px 17px;font-weight:800;cursor:pointer}
+button.primary,.cta{flex:1;background:#c4d5ff;color:#122441}button.secondary{color:#e4edff;border:1px solid #465d7c;background:#203651}
+button:disabled{opacity:.62;cursor:wait}
+.error{color:#ffc5c5;font-size:.84rem;line-height:1.5}
+.finished{margin-top:18px;border:1px solid #4e847e;background:#153c3a;border-radius:15px;padding:17px;color:#e6f7f4}
+.finished strong{display:block;margin-bottom:7px}
+.review{display:grid;gap:8px;margin-top:19px}.review-line{padding:11px 13px;border:1px solid #354e70;background:#152d4d;border-radius:12px}.review-line small{display:block;color:#a7c0df}.review-line strong{display:block;margin-top:5px;line-height:1.4}
+.cta{display:block;text-align:center;text-decoration:none;margin-top:17px}
+.is-intro{justify-content:center;gap:12px;padding-bottom:32px}.is-intro header{justify-content:center;padding-bottom:0}.is-intro main{flex:0 0 auto}.is-intro .panel{text-align:center}.is-intro .footer{position:static;background:none;padding-top:0}.is-intro .footer .primary{width:100%}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell" id="shell">
+<header><div class="brand"><span class="emblem" aria-hidden="true">✧</span><span>Ministry Policy Reflection</span></div><a class="subtle-link" href="./results.html">Exit</a></header>
+<div class="progress" id="progress" hidden><div class="progress-label" id="stepLabel">Step 1 of 3</div><div class="track" aria-label="Progress"><div class="fill" id="progressFill"></div></div></div>
+<main>
+<form id="survey" novalidate>
+<section class="panel" data-step="0" aria-labelledby="startTitle">
+<p class="eyebrow">Optional extended survey</p>
+<h1 id="startTitle" tabindex="-1">One ministry or multiple ministries?</h1>
+<p class="lead">Which church policy makes the most sense: one ministry only, one primary ministry with occasional help elsewhere, or coordinated service across several ministries?</p>
+<p class="hint">Choose a position, explain why, and consider a challenge to your own view. This is a research discussion—not a vote on an existing church rule.</p>
+</section>
+<section class="panel" data-step="1" aria-labelledby="stanceTitle" hidden>
+<p class="eyebrow">01 / Your position</p><h2 id="stanceTitle" tabindex="-1">What do you believe?</h2>
+<div class="question"><label class="prompt" for="initialSupport">Would you support making one primary ministry the default responsibility for volunteers, while allowing limited help elsewhere?</label>
+<select class="select" id="initialSupport" name="initialSupport" required>
+<option value="">Choose your answer</option><option value="yes">Yes, I support it</option><option value="no">No, I oppose it</option>
+</select></div>
+<div class="question" id="reasonWrap" hidden><label class="prompt" for="initialReason">What is your strongest reason?</label>
+<select class="select" id="initialReason" name="initialReason" required disabled>
+<option value="">Choose a reason</option>
+</select></div>
+<div class="question" id="otherWrap" hidden><label class="prompt" for="otherReason">Explain your reason</label><textarea class="select" id="otherReason" name="otherReason" maxlength="350" placeholder="In your own words…" disabled></textarea></div>
+<p class="hint">There are no right or wrong answers. Choose the reason that best reflects your view.</p>
+</section>
+<section class="panel" data-step="2" aria-labelledby="challengeTitle" hidden>
+<p class="eyebrow">02 / Examine your position</p>
+<h2 id="challengeTitle" tabindex="-1">Consider the trade-off</h2>
+<p class="lead" id="challengePrompt">Select a position in the previous step first.</p>
+<div class="question"><label class="prompt" for="challengeResponse">What should the church do in this situation?</label>
+<select class="select" id="challengeResponse" name="challengeResponse" required>
+<option value="">Choose an answer</option></select></div>
+<div class="question"><label class="prompt" for="productivityBelief">Does serving in more ministries necessarily mean a member is more productive or effective?</label>
+<select class="select" id="productivityBelief" name="productivityBelief" required>
+<option value="">Choose an answer</option>
+<option value="yes">Yes</option><option value="no">No</option><option value="depends">It depends on the situation</option><option value="unsure">Not sure</option></select></div>
+<p class="hint">The scenario asks you to consider a possible weakness in your initial position—not to change your mind.</p>
+</section>
+<section class="panel" data-step="3" aria-labelledby="finalTitle" hidden>
+<p class="eyebrow">03 / Your recommendation</p>
+<h2 id="finalTitle" tabindex="-1">What would work best?</h2>
+<div class="question"><label class="prompt" for="preferredModel">Which ministry structure would you recommend?</label>
+<select class="select" id="preferredModel" name="preferredModel" required>
+<option value="">Choose an answer</option>
+<option value="strict">One ministry only—no ongoing additional roles</option>
+<option value="primary">One primary ministry, with limited help elsewhere</option>
+<option value="coordinated">Multiple ministries, with coordinated assignments</option>
+<option value="flexible">No fixed limit; assess each member's capacity</option>
+<option value="unsure">Not sure</option></select></div>
+<div class="question"><label class="prompt" for="finalSupport">After considering the trade-offs, do you still support one primary ministry as the default?</label>
+<select class="select" id="finalSupport" name="finalSupport" required>
+<option value="">Choose an answer</option>
+<option value="yes">Yes</option><option value="no">No</option><option value="unsure">I'm not sure anymore</option></select></div>
+<div class="question"><label class="prompt" for="recommendation">What should leaders consider before choosing a policy? <small>(Optional)</small></label>
+<textarea class="select" id="recommendation" name="recommendation" maxlength="700" placeholder="Your thoughts or proposal…"></textarea></div>
+<div class="consent"><label class="choice"><input type="checkbox" name="consent" required><span>I voluntarily agree to submit this reflection for ministry research. My Ekklesia account is not attached to these answers; only anonymous grouped results will be made public. I will avoid names and identifying details.</span></label></div>
+<p class="error" id="submitError" role="alert" hidden></p>
+</section>
+</form>
+<section class="panel" id="done" hidden aria-live="polite">
+<p class="eyebrow">Thank you for sharing</p><h2 tabindex="-1">Your perspective matters.</h2>
+<div class="finished"><strong>Response received</strong>Your reflection was saved for this research.</div>
+<div class="review" id="personalRecap"></div>
+<a class="cta" href="./policy-results.html">View policy reflection results →</a>
+<a class="cta" href="./results.html" style="background:#233b60;color:#e0eaff">Main survey results</a>
+</section>
+</main>
+<div class="footer" id="actions"><button class="secondary" type="button" id="back" hidden>Back</button><button class="primary" type="button" id="next">Start reflection →</button></div>
+</div>
+<script>
+(function(){
+"use strict";
+const URL="https://api.clarapmc.com/api/ekklesia/surveys/ministry-policy";
+const form=document.getElementById("survey"),panels=Array.from(form.querySelectorAll("[data-step]"));
+const stance=document.getElementById("initialSupport"),reason=document.getElementById("initialReason");
+const other=document.getElementById("otherReason"),challenge=document.getElementById("challengeResponse");
+const reasons={
+ yes:[["skill-focus","Focusing on one ministry develops skills and consistent service"],["reduce-conflicts","One main assignment could reduce scheduling conflicts"],["accountability","One responsibility makes ownership and accountability clearer"],["other","Another reason (explain)"]],
+ no:[["capacity","Some people can serve effectively in multiple ministries"],["staffing","The church may need volunteers in more than one role"],["better-coordination","Better coordination may solve conflicts without restrictions"],["other","Another reason (explain)"]]
+};
+const challenges={
+ yes:{prompt:"Imagine one-primary-ministry assignments leave a church activity understaffed because too few volunteers are available. How should leaders respond?",
+ options:[["exceptions","Allow temporary exceptions for essential needs"],["train-volunteers","Recruit and train additional volunteers"],["reconsider-policy","Reconsider the policy if it prevents important activities"],["unsure","Not sure"]]},
+ no:{prompt:"Imagine members serving across ministries repeatedly face clashes, and essential duties are left unfinished. How should leaders respond?",
+ options:[["coordinate","Keep multiple roles but strengthen coordination"],["limit-conflicts","Limit additional roles for those with repeated conflicts"],["consider-primary","Consider one primary ministry as the default"],["unsure","Not sure"]]}
+};
+const next=document.getElementById("next"),back=document.getElementById("back");
+let step=0,busy=false;
+function options(select,items,placeholder){
+ select.replaceChildren();
+ const first=new Option(placeholder,"");select.add(first);
+ items.forEach(item=>select.add(new Option(item[1],item[0])));
+ select.value="";
+}
+function refreshReason(){
+ const state=stance.value;
+ document.getElementById("reasonWrap").hidden=!state;
+ reason.disabled=!state;
+ options(reason,state?reasons[state]:[],"Choose a reason");
+ updateOther();
+ options(challenge,state?challenges[state].options:[],"Choose an answer");
+ document.getElementById("challengePrompt").textContent=state?challenges[state].prompt:"Select a position in the previous step first.";
+}
+function updateOther(){
+ const visible=reason.value==="other";
+ document.getElementById("otherWrap").hidden=!visible;
+ other.disabled=!visible;other.required=visible;
+ if(!visible)other.value="";
+}
+stance.addEventListener("change",refreshReason);
+reason.addEventListener("change",updateOther);
+function show(){
+ document.getElementById("shell").classList.toggle("is-intro",step===0);
+ panels.forEach((p,i)=>p.hidden=i!==step);
+ document.getElementById("progress").hidden=step===0;
+ document.getElementById("stepLabel").textContent="Step "+step+" of 3";
+ document.getElementById("progressFill").style.width=Math.round(step/3*100)+"%";
+ back.hidden=step===0;
+ next.textContent=step===0?"Start reflection →":step===3?"Submit reflection →":"Continue →";
+ window.scrollTo({top:0,behavior:"instant"});
+ panels[step].querySelector("h1,h2")?.focus({preventScroll:true});
+}
+function validCurrent(){
+ const inputs=panels[step].querySelectorAll("input,select,textarea");
+ for(const input of inputs)if(!input.disabled&&!input.checkValidity()){input.reportValidity();return false;}
+ return true;
+}
+back.addEventListener("click",()=>{if(step>0&&!busy){step--;show();}});
+function labelFor(id){
+ const node=form.elements.namedItem(id);
+ return node && node.tagName==="SELECT" && node.selectedIndex>=0?node.options[node.selectedIndex].textContent.trim():node?.value||"";
+}
+function recap(){
+ const root=document.getElementById("personalRecap");
+ root.replaceChildren();
+ for(const [name,key] of [["Your initial position","initialSupport"],["Your main reason","initialReason"],["Your preferred model","preferredModel"],["Your position after reflection","finalSupport"]]){
+   const row=document.createElement("div");row.className="review-line";
+   const label=document.createElement("small");label.textContent=name;
+   const value=document.createElement("strong");value.textContent=labelFor(key);
+   row.append(label,value);root.appendChild(row);
+ }
+}
+next.addEventListener("click",async()=>{
+ if(busy||!validCurrent())return;
+ if(step<3){step++;show();return;}
+ const error=document.getElementById("submitError");error.hidden=true;error.textContent="";
+ const raw=Object.fromEntries(new FormData(form).entries());
+ const keys=["initialSupport","initialReason","otherReason","challengeResponse","productivityBelief","preferredModel","finalSupport","recommendation"];
+ const answers={};keys.forEach(k=>answers[k]=raw[k]||"");
+ busy=true;next.disabled=true;
+ try{
+  const response=await fetch(URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({survey:"ministry-policy-v1",consent:raw.consent==="on",answers})});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||!data.received)throw new Error(response.status===429?"Too many attempts. Please try later.":data.message||"We couldn't save your response. Please try again.");
+  recap();
+  document.getElementById("shell").classList.remove("is-intro");
+  form.hidden=true;document.getElementById("progress").hidden=true;
+  document.getElementById("actions").hidden=true;document.getElementById("done").hidden=false;
+  document.getElementById("done").querySelector("h2").focus();
+  window.scrollTo({top:0,behavior:"instant"});
+ }catch(e){error.textContent=e instanceof TypeError?"Cannot reach the server. Your answers are still here.":e.message;error.hidden=false;}
+ finally{busy=false;next.disabled=false;}
+});
+refreshReason();show();
+})();
+</script>
+</body>
+</html>
