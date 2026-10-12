@@ -169,19 +169,6 @@
     ["meaning","I find my ministry involvement personally meaningful."]
   ];
   var form = document.getElementById("survey");
-  if (COLLECTION_ENDPOINT) {
-    var consentLabel = document.createElement("label");
-    consentLabel.className = "consent";
-    var consentInput = document.createElement("input");
-    consentInput.type = "checkbox";
-    consentInput.name = "consent";
-    consentInput.required = true;
-    var consentText = document.createElement("span");
-    consentText.textContent = "I am 18 or older and voluntarily agree to submit my answers. My Ekklesia account will not be linked to this survey.";
-    consentLabel.appendChild(consentInput);
-    consentLabel.appendChild(consentText);
-    form.querySelector('[data-step="3"]').insertBefore(consentLabel, document.getElementById("submitError"));
-  }
   var sections = Array.prototype.slice.call(form.querySelectorAll("[data-step]"));
   var questionsRoot = document.getElementById("scaleQuestions");
   var step = 0, busy = false;
@@ -232,13 +219,13 @@
     try{
       var data=Object.fromEntries(new FormData(form).entries());
       var answers={};
-      ["ministries","hours","days","rest","family","growth","pressure","meaning","finalThoughts"].forEach(function(key){
+      ["ageGroup","lifeStage","ministries","hours","days","rest","family","growth","pressure","meaning","finalThoughts"].forEach(function(key){
         answers[key]=data[key]||"";
       });
       var response=await fetch(COLLECTION_ENDPOINT,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({survey:"ministry-load-v1",consent:true,answers:answers})
+        body:JSON.stringify({survey:"ministry-load-v2",consent:data.consent==="on",answers:answers})
       });
       var result=await response.json().catch(function(){return {};});
       if(!response.ok || !result.received){
