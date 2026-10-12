@@ -36,6 +36,11 @@ button.primary,button.secondary,.cta{border:0;border-radius:14px;min-height:51px
 button.primary,.cta{flex:1;background:#c4d5ff;color:#122441}button.secondary{color:#e4edff;border:1px solid #465d7c;background:#203651}
 button:disabled{opacity:.62;cursor:wait}
 .error{color:#ffc5c5;font-size:.84rem;line-height:1.5}
+.consistency{margin-top:23px;padding:18px;border:1px solid #657c9f;border-radius:15px;background:#213957}
+.consistency h3{font-size:1.01rem;margin:0 0 10px;color:#e0eaff}
+.consistency p{font-size:.85rem;line-height:1.6;color:#d1dff1;margin:0}
+.consistency .question{margin-top:15px}
+.consistency .summary{font-size:.8rem;color:#bfd4f5;margin-top:12px}
 .finished{margin-top:18px;border:1px solid #4e847e;background:#153c3a;border-radius:15px;padding:17px;color:#e6f7f4}
 .finished strong{display:block;margin-bottom:7px}
 .review{display:grid;gap:8px;margin-top:19px}.review-line{padding:11px 13px;border:1px solid #354e70;background:#152d4d;border-radius:12px}.review-line small{display:block;color:#a7c0df}.review-line strong{display:block;margin-top:5px;line-height:1.4}
@@ -90,7 +95,23 @@ button:disabled{opacity:.62;cursor:wait}
 <option value="coordinated">Multiple ministries, with coordinated assignments</option>
 <option value="flexible">No fixed limit; assess each member's capacity</option>
 <option value="unsure">Not sure</option></select></div>
-<div class="question"><label class="prompt" for="finalSupport">After considering the trade-offs, do you still support one primary ministry as the default?</label>
+<section class="consistency" id="consistencyWrap" hidden aria-labelledby="consistencyHeading">
+<h3 id="consistencyHeading">A quick follow-up</h3>
+<p id="consistencyPrompt"></p>
+<div class="question"><label class="prompt" for="consistencyDecision">Has your view changed, or is there a distinction?</label>
+<select class="select" id="consistencyDecision" name="consistencyDecision" required disabled>
+<option value="">Choose an answer</option>
+<option value="changed">I've changed my position</option>
+<option value="clarified">I still hold my original position — let me explain</option>
+<option value="unsure">I'm unsure now</option>
+</select></div>
+<div class="question" id="explanationWrap" hidden>
+<label class="prompt" for="consistencyExplanation">Why do these answers fit together for you?</label>
+<textarea class="select" id="consistencyExplanation" name="consistencyExplanation" maxlength="700" minlength="15" placeholder="Please explain the distinction…" disabled></textarea>
+</div>
+<p class="summary" id="resolvedPosition" aria-live="polite"></p>
+</section>
+<div class="question" id="finalSupportWrap"><label class="prompt" for="finalSupport">After considering the trade-offs, do you still support one primary ministry as the default?</label>
 <select class="select" id="finalSupport" name="finalSupport" required>
 <option value="">Choose an answer</option>
 <option value="yes">Yes</option><option value="no">No</option><option value="unsure">I'm not sure anymore</option></select></div>
@@ -117,6 +138,8 @@ const URL="https://api.clarapmc.com/api/ekklesia/surveys/ministry-policy";
 const form=document.getElementById("survey"),panels=Array.from(form.querySelectorAll("[data-step]"));
 const stance=document.getElementById("initialSupport"),reason=document.getElementById("initialReason");
 const other=document.getElementById("otherReason"),challenge=document.getElementById("challengeResponse");
+const preferred=document.getElementById("preferredModel"),finalSupport=document.getElementById("finalSupport");
+const consistency=document.getElementById("consistencyDecision"),explanation=document.getElementById("consistencyExplanation");
 const reasons={
  yes:[["skill-focus","Focusing on one ministry develops skills and consistent service"],["reduce-conflicts","One main assignment could reduce scheduling conflicts"],["accountability","One responsibility makes ownership and accountability clearer"],["other","Another reason (explain)"]],
  no:[["capacity","Some people can serve effectively in multiple ministries"],["staffing","The church may need volunteers in more than one role"],["better-coordination","Better coordination may solve conflicts without restrictions"],["other","Another reason (explain)"]]
@@ -143,6 +166,7 @@ function refreshReason(){
  updateOther();
  options(challenge,state?challenges[state].options:[],"Choose an answer");
  document.getElementById("challengePrompt").textContent=state?challenges[state].prompt:"Select a position in the previous step first.";
+ refreshConsistency();
 }
 function updateOther(){
  const visible=reason.value==="other";
@@ -152,6 +176,44 @@ function updateOther(){
 }
 stance.addEventListener("change",refreshReason);
 reason.addEventListener("change",updateOther);
+function needsReflection(){
+ const first=stance.value,model=preferred.value;
+ return (first==="no" && ["primary","strict"].includes(model)) ||
+        (first==="yes" && ["coordinated","flexible"].includes(model));
+}
+function refreshConsistency(){
+ const required=needsReflection();
+ const box=document.getElementById("consistencyWrap");
+ box.hidden=!required;consistency.disabled=!required;
+ document.getElementById("finalSupportWrap").hidden=required;
+ finalSupport.disabled=required;
+ consistency.value="";explanation.value="";explanation.disabled=true;explanation.required=false;
+ document.getElementById("explanationWrap").hidden=true;
+ finalSupport.value="";
+ document.getElementById("resolvedPosition").textContent="";
+ if(required){
+   const initial=stance.value==="yes"?"supported":"opposed";
+   const chosen=preferred.options[preferred.selectedIndex].textContent;
+   document.getElementById("consistencyPrompt").textContent=
+    "You initially "+initial+" one primary ministry as the default, but later preferred: “"+chosen+".” These may reflect different conditions. Would you change your position, or explain the distinction?";
+ }
+}
+function updateConsistencyDecision(){
+ const answer=consistency.value,first=stance.value;
+ const clarify=answer==="clarified";
+ const wrap=document.getElementById("explanationWrap");
+ wrap.hidden=!clarify;explanation.disabled=!clarify;explanation.required=clarify;
+ if(!clarify)explanation.value="";
+ finalSupport.value=answer==="changed"?(first==="yes"?"no":"yes"):
+                    answer==="clarified"?first:
+                    answer==="unsure"?"unsure":"";
+ const finalText=finalSupport.value==="yes"?"Support one primary ministry":
+                 finalSupport.value==="no"?"Oppose one primary ministry":
+                 finalSupport.value==="unsure"?"Unsure":"";
+ document.getElementById("resolvedPosition").textContent=finalText?"Your position now: "+finalText:"";
+}
+preferred.addEventListener("change",refreshConsistency);
+consistency.addEventListener("change",updateConsistencyDecision);
 function show(){
  document.getElementById("shell").classList.toggle("is-intro",step===0);
  panels.forEach((p,i)=>p.hidden=i!==step);
@@ -176,7 +238,7 @@ function labelFor(id){
 function recap(){
  const root=document.getElementById("personalRecap");
  root.replaceChildren();
- for(const [name,key] of [["Your initial position","initialSupport"],["Your main reason","initialReason"],["Your preferred model","preferredModel"],["Your position after reflection","finalSupport"]]){
+ for(const [name,key] of [["Your initial position","initialSupport"],["Your main reason","initialReason"],["Your preferred model","preferredModel"],["Your position after reflection","finalSupport"],["Your follow-up","consistencyDecision"]]){
    const row=document.createElement("div");row.className="review-line";
    const label=document.createElement("small");label.textContent=name;
    const value=document.createElement("strong");value.textContent=labelFor(key);
@@ -188,11 +250,14 @@ next.addEventListener("click",async()=>{
  if(step<3){step++;show();return;}
  const error=document.getElementById("submitError");error.hidden=true;error.textContent="";
  const raw=Object.fromEntries(new FormData(form).entries());
- const keys=["initialSupport","initialReason","otherReason","challengeResponse","productivityBelief","preferredModel","finalSupport","recommendation"];
+ const keys=["initialSupport","initialReason","otherReason","challengeResponse","productivityBelief","preferredModel","finalSupport","recommendation","consistencyDecision","consistencyExplanation"];
  const answers={};keys.forEach(k=>answers[k]=raw[k]||"");
+ answers.finalSupport=finalSupport.value;
+ answers.consistencyDecision=needsReflection()?consistency.value:"not-needed";
+ answers.consistencyExplanation=needsReflection()&&consistency.value==="clarified"?explanation.value:"";
  busy=true;next.disabled=true;
  try{
-  const response=await fetch(URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({survey:"ministry-policy-v1",consent:raw.consent==="on",answers})});
+  const response=await fetch(URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({survey:"ministry-policy-v2",consent:raw.consent==="on",answers})});
   const data=await response.json().catch(()=>({}));
   if(!response.ok||!data.received)throw new Error(response.status===429?"Too many attempts. Please try later.":data.message||"We couldn't save your response. Please try again.");
   recap();
