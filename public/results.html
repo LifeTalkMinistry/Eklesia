@@ -67,6 +67,31 @@ h2{font-size:1.38rem;margin:0 0 15px}
 .compare-panel h3{font-size:.9rem;font-weight:750;margin:0 0 7px}
 .note{color:#91a9c8;font-size:.74rem;line-height:1.6;margin:19px 3px 0}
 .back{display:block;text-align:center;text-decoration:none;background:#c1d3ff;color:#102039;border-radius:15px;padding:15px 18px;margin-top:28px;font-size:.94rem;font-weight:800}
+
+.policy-card{background:#172c49;border:1px solid #3a5475;border-radius:19px;padding:20px 18px;margin:20px 0 0}
+.policy-card h2{font-size:1.4rem;margin:3px 0 15px}
+.policy-kicker{color:#92b8f7;font-size:.7rem;letter-spacing:.1em;font-weight:800;text-transform:uppercase;margin:0}
+.policy-muted{color:#b5cbe5;font-size:.81rem;line-height:1.5;margin:0}
+.policy-progress{height:8px;background:#324968;border-radius:20px;overflow:hidden;margin:15px 0 10px}
+.policy-progress-fill{display:block;height:100%;width:0;background:#a7bfff;border-radius:20px}
+.policy-vote-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0}
+.policy-vote{font:inherit;text-align:left;cursor:pointer;background:#20395a;border:1px solid #51719a;color:#eef5ff;border-radius:14px;padding:13px 12px;min-width:0}
+.policy-vote[aria-expanded="true"]{border-color:#aacaff;background:#294775}
+.policy-vote:focus-visible{outline:3px solid #b6cbff;outline-offset:3px}
+.policy-vote span{display:block;font-size:.83rem;color:#c4d9f4}
+.policy-vote strong{display:block;font-size:1.5rem;margin:4px 0;font-variant-numeric:tabular-nums}
+.policy-vote small{color:#bdcfee;font-size:.7rem}
+.policy-vote .vote-track{display:block;margin:10px 0 0;height:7px;background:#334b6b;border-radius:10px;overflow:hidden}
+.policy-vote .vote-fill{display:block;height:100%;border-radius:10px;background:#85b5ff}
+.policy-vote.vote-no .vote-fill{background:#bdadfc}
+.policy-reasons{border-top:1px solid #3b5675;margin-top:17px;padding-top:17px}
+.policy-reasons h3{margin:0 0 13px;font-size:.93rem}
+.policy-reasons .reason-row{display:flex;justify-content:space-between;gap:10px;font-size:.79rem;margin:14px 0 6px}
+.policy-reasons .reason-row strong{color:#f4f8ff;white-space:nowrap}
+.policy-reasons .reason-track{height:9px;border-radius:10px;background:#354d6e;overflow:hidden}
+.policy-reasons .reason-fill{display:block;background:#8db9ff;height:100%;border-radius:10px}
+.policy-reasons p{font-size:.78rem;color:#b1c7e2;line-height:1.5}
+.policy-link{display:inline-block;margin-top:14px;color:#b9d0ff;font-size:.82rem;font-weight:750;text-underline-offset:3px}
 @media(min-width:620px){.page{padding:29px 30px 44px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 </style>
@@ -112,6 +137,31 @@ h2{font-size:1.38rem;margin:0 0 15px}
       </div>
     </details>
     <p class="note">Reported experiences, not proof of causation. Small groups are withheld to protect participants. No individual answers are shown.</p>
+  </section>
+
+  <section class="policy-card" aria-labelledby="policyResultsTitle">
+    <p class="policy-kicker">Separate policy reflection survey</p>
+    <h2 id="policyResultsTitle">One primary ministry?</h2>
+    <div id="policyWaiting" role="status">
+      <p class="policy-muted" id="policyStatus">Loading policy opinions…</p>
+      <div id="policyProgress" hidden>
+        <div class="policy-progress" aria-hidden="true"><span class="policy-progress-fill" id="policyProgressFill"></span></div>
+        <p class="policy-muted" id="policyRemaining"></p>
+      </div>
+    </div>
+    <div id="policyVotes" hidden>
+      <div class="policy-vote-grid">
+        <button type="button" class="policy-vote" id="voteYes" aria-expanded="false" aria-controls="policyReasons"><span>Yes, support</span><strong id="policyYes">—</strong><small>Tap for reasons</small><span class="vote-track"><span class="vote-fill" id="policyYesBar"></span></span></button>
+        <button type="button" class="policy-vote vote-no" id="voteNo" aria-expanded="false" aria-controls="policyReasons"><span>No, oppose</span><strong id="policyNo">—</strong><small>Tap for reasons</small><span class="vote-track"><span class="vote-fill" id="policyNoBar"></span></span></button>
+      </div>
+      <p class="policy-muted" id="policyVoteNote" style="margin-top:12px">Initial policy positions · Anonymous grouped responses</p>
+      <div class="policy-reasons" id="policyReasons" hidden aria-live="polite">
+        <h3 id="policyReasonTitle"></h3>
+        <div id="policyReasonRows"></div>
+        <p id="policyReasonPrivacy"></p>
+      </div>
+    </div>
+    <a class="policy-link" href="./policy-results.html">Explore all policy findings →</a>
   </section>
   <a class="back" href="./survey.html">Back to survey →</a>
 </main>
@@ -222,7 +272,91 @@ async function load(){
   $("pendingCaption").textContent="Please try again later.";
  }
 }
+
+const policyEndpoint="https://api.clarapmc.com/api/ekklesia/surveys/ministry-policy/results";
+const reasonKeys={
+ yes:[["skill-focus","Skill development"],["reduce-conflicts","Fewer scheduling conflicts"],["accountability","Clear accountability"]],
+ no:[["capacity","Ability to serve in several ministries"],["staffing","Church staffing needs"],["better-coordination","Better coordination instead of restrictions"]]
+};
+let publicPolicyData=null;
+let selectedPolicySide=null;
+function updatePolicySelection(){
+ const area=$("policyReasons");
+ const yes=$("voteYes"),no=$("voteNo");
+ const show=selectedPolicySide!==null;
+ area.hidden=!show;
+ yes.setAttribute("aria-expanded",String(selectedPolicySide==="yes"));
+ no.setAttribute("aria-expanded",String(selectedPolicySide==="no"));
+ if(!show)return;
+ const side=selectedPolicySide;
+ const rows=publicPolicyData.breakdown.initialSupport;
+ const group=rows.find(x=>x.label===side);
+ const title=side==="yes"?"Reasons from supporters":"Reasons from opponents";
+ $("policyReasonTitle").textContent=title;
+ const container=$("policyReasonRows");
+ container.replaceChildren();
+ if(!group || !Number.isSafeInteger(group.count) || group.count<10){
+   $("policyReasonPrivacy").textContent="More responses from this side are needed before showing grouped reasons.";
+   return;
+ }
+ const reasons=publicPolicyData.breakdown.initialReason;
+ for(const [key,label] of reasonKeys[side]){
+   const item=reasons.find(x=>x.label===key);
+   if(!item)continue;
+   const count=item.count;
+   const safe=Number.isSafeInteger(count)&&count>=0;
+   const row=element("div","reason-row");
+   row.append(element("span","",label));
+   row.append(element("strong","",safe?String(count):"Withheld"));
+   const track=element("div","reason-track");
+   const fill=element("span","reason-fill");
+   fill.style.width=safe?Math.max(0,Math.min(100,count/group.count*100))+"%":"0%";
+   track.append(fill);container.append(row,track);
+ }
+ $("policyReasonPrivacy").textContent="Grouped selections only. Individual explanations and custom-written answers remain private.";
+}
+for(const side of ["yes","no"]){
+ $("vote"+(side==="yes"?"Yes":"No")).addEventListener("click",function(){
+   selectedPolicySide=selectedPolicySide===side?null:side;
+   updatePolicySelection();
+ });
+}
+async function loadPolicy(){
+ try{
+   const response=await fetch(policyEndpoint,{cache:"no-store",headers:{"Accept":"application/json"}});
+   if(!response.ok)throw Error("Policy results unavailable");
+   const data=await response.json();
+   const total=Number(data.responses),minimum=Number(data.minimumResponses);
+   if(!Number.isSafeInteger(total)||total<0||!Number.isSafeInteger(minimum)||minimum<1)throw Error("Invalid policy results");
+   if(data.ready===false){
+     $("policyStatus").textContent="Policy opinions unlock at "+minimum+" responses";
+     $("policyRemaining").textContent=total+" of "+minimum+" responses collected";
+     $("policyProgressFill").style.width=Math.max(0,Math.min(100,total/minimum*100))+"%";
+     $("policyProgress").hidden=false;
+     return;
+   }
+   const support=data.breakdown?.initialSupport;
+   const reasons=data.breakdown?.initialReason;
+   if(data.ready!==true||total<minimum||!Array.isArray(support)||!Array.isArray(reasons))throw Error("Missing policy results");
+   // The separate policy survey asks supporters and opponents distinct reasons.
+   // Only grouped counts are displayed. Small categories may be withheld by the API.
+   publicPolicyData=data;
+   for(const [side,key] of [["yes","Yes"],["no","No"]]){
+     const item=support.find(x=>x.label===side);
+     if(!item)throw Error("Missing position");
+     const safe=Number.isSafeInteger(item.count)&&item.count>=0;
+     $(side==="yes"?"policyYes":"policyNo").textContent=safe?item.count+" · "+Math.round(item.count/total*100)+"%":"Withheld";
+     $("policy"+key+"Bar").style.width=safe?Math.max(0,Math.min(100,item.count/total*100))+"%":"0%";
+   }
+   $("policyWaiting").hidden=true;
+   $("policyVotes").hidden=false;
+ }catch(err){
+   $("policyStatus").textContent="Policy results temporarily unavailable";
+ }
+}
+
 load();
+loadPolicy();
 })();
 </script>
 </body>
