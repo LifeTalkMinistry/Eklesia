@@ -39,7 +39,7 @@
     .live-summary span { color:#c1d0e8; font-size:.82rem; }
     .live-panel { margin-top:17px; border:1px solid #304460; border-radius:20px; padding:20px 17px; background:rgba(23,44,74,.7); }
     .live-panel h2 { font-size:1.3rem; margin-bottom:16px; }
-    .result-row { display:grid; grid-template-columns:90px 1fr 50px; align-items:center; gap:11px; margin:12px 0; color:#dce7f9; font-size:.84rem; }
+    .result-row { display:grid; grid-template-columns:106px 1fr 45px; align-items:center; gap:11px; margin:12px 0; color:#dce7f9; font-size:.84rem; }
     .result-row .value { text-align:right; color:#cbdaf1; font-variant-numeric:tabular-nums; }
     .bar { display:block; height:10px; width:100%; border-radius:20px; overflow:hidden; background:#304463; }
     .bar-fill { display:block; height:100%; border-radius:20px; background:linear-gradient(90deg,#7bb4ff,#c7b7ff); }
@@ -56,9 +56,9 @@
       <div class="brand"><span class="brand-mark" aria-hidden="true">✧</span> Ministry Survey</div>
       <span class="header-label">Results</span>
     </header>
-    <p class="eyebrow">Community insights</p>
+    <p class="eyebrow">Ministry coordination study</p>
     <h1>Survey Results</h1>
-    <p class="intro">Understanding how multiple ministry responsibilities affect church volunteers.</p>
+    <p class="intro">How overlapping ministry responsibilities relate to team coordination and the completion of planned activities.</p>
 
     <section class="empty-state" id="emptyState" aria-labelledby="empty-heading" aria-live="polite">
       <div class="empty-icon" aria-hidden="true">▥</div>
@@ -66,29 +66,30 @@
       <p id="emptyText">Connecting to the survey database.</p>
     </section>
 
-    <section id="liveDashboard" hidden aria-label="Anonymous community survey results">
-      <div class="live-summary"><strong id="responseCount">—</strong><span>Anonymous survey responses</span></div>
-      <div class="live-panel"><h2>Number of ministries</h2><div id="ministryCounts"></div></div>
-      <div class="live-panel"><h2>Hours serving each week</h2><div id="weeklyHours"></div></div>
-      <div class="live-panel"><h2>Days serving each week</h2><div id="weeklyDays"></div></div>
-      <div id="demographicCharts" hidden>
-        <div class="live-panel"><h2>Age brackets</h2><div id="ageGroups"></div></div>
-        <div class="live-panel"><h2>Current life stages</h2><div id="lifeStages"></div></div>
-      </div>
-      <div class="live-panel"><h2>Volunteers' experiences</h2><div id="averages"></div><p class="live-note">Average agreement on a 1–5 scale (1 = strongly disagree, 5 = strongly agree). Higher numbers are not necessarily better for all questions.</p></div>
-      <p class="live-note">Only aggregated statistics are public. Categories with fewer than three replies are suppressed; individual comments are never shown.</p>
+    <section id="liveDashboard" hidden aria-label="Grouped survey results">
+      <div class="live-summary"><strong id="responseCount">—</strong><span>Survey responses</span></div>
+      <p class="live-note">These findings describe participants' reports. They do not independently prove that ministry overlap causes missed objectives.</p>
+      <div class="live-panel"><h2>Number of ministries served</h2><div id="ministries"></div></div>
+      <div class="live-panel"><h2>Two ministries needing someone at once</h2><div id="conflictingRequests"></div></div>
+      <div class="live-panel"><h2>Declining a responsibility to serve elsewhere</h2><div id="declinedResponsibility"></div></div>
+      <div class="live-panel"><h2>Tasks missed or delayed</h2><div id="delayedResponsibility"></div></div>
+      <div class="live-panel"><h2>Observed staffing gaps</h2><div id="observedStaffingGap"></div></div>
+      <div class="live-panel"><h2>Coordination between leaders</h2><div id="schedulingCoordination"></div></div>
+      <div class="live-panel"><h2>Clear priority when roles conflict</h2><div id="conflictPriority"></div></div>
+      <div class="live-panel"><h2>Reported impact on planned activities</h2><div id="objectiveImpact"></div></div>
+      <p class="live-note">All results are grouped. Rare categories are hidden to protect respondents. Individual written responses are not published.</p>
     </section>
 
-    <div id="upcoming"><p class="section-heading">What the results will explore</p>
-    <div class="topics">
-      <section class="topic"><span class="topic-icon" aria-hidden="true">◎</span><div><strong>Ministry involvement</strong><small>How many ministries volunteers serve in</small></div></section>
-      <section class="topic"><span class="topic-icon" aria-hidden="true">◷</span><div><strong>Time commitment</strong><small>Weekly hours and days spent serving</small></div></section>
-      <section class="topic"><span class="topic-icon" aria-hidden="true">♡</span><div><strong>Rest and relationships</strong><small>How volunteers experience balance and recovery</small></div></section>
-      <section class="topic"><span class="topic-icon" aria-hidden="true">✦</span><div><strong>Spiritual experience</strong><small>Meaning, growth, and perceived pressure</small></div></section>
-    </div>
+    <div id="upcoming">
+      <p class="section-heading">What this study measures</p>
+      <div class="topics">
+        <section class="topic"><span class="topic-icon" aria-hidden="true">◎</span><div><strong>Competing ministry assignments</strong><small>When multiple teams need the same volunteer</small></div></section>
+        <section class="topic"><span class="topic-icon" aria-hidden="true">◷</span><div><strong>Interrupted responsibilities</strong><small>Declined duties, missed work, and staffing gaps</small></div></section>
+        <section class="topic"><span class="topic-icon" aria-hidden="true">✦</span><div><strong>Coordination and objectives</strong><small>Role priorities, scheduling, and reported consequences</small></div></section>
+      </div>
     </div>
     <a class="return" href="./survey.html">Back to survey →</a>
-    <p class="privacy">Individual responses and written reflections are not published.</p>
+    <p class="privacy">Only grouped results are shown; individual comments are not published.</p>
   </main>
 
 <script>
