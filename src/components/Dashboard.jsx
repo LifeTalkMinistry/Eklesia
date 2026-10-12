@@ -39,6 +39,32 @@ function consumePendingAppTab() {
   }
 }
 
+function MinistrySurveyInvite() {
+  const [dismissed, setDismissed] = useState(() => {
+    try { return window.sessionStorage.getItem('ekklesia-ministry-survey-dismissed') === '1'; }
+    catch { return false; }
+  });
+
+  if (dismissed) return null;
+
+  function dismiss() {
+    try { window.sessionStorage.setItem('ekklesia-ministry-survey-dismissed', '1'); }
+    catch { /* Browsers may block session storage; dismiss for this render anyway. */ }
+    setDismissed(true);
+  }
+
+  return (
+    <aside className="ministry-survey-invite" aria-label="Ministry involvement research invitation">
+      <a className="ministry-survey-invite-link" href={`${import.meta.env.BASE_URL}survey.html`}>
+        <span className="ministry-survey-invite-icon" aria-hidden="true">♡</span>
+        <span><strong>Take the survey now!</strong><small>Share your ministry experience · Research preview</small></span>
+        <span aria-hidden="true">↗</span>
+      </a>
+      <button className="ministry-survey-invite-dismiss" type="button" aria-label="Dismiss ministry survey invitation" onClick={dismiss}>×</button>
+    </aside>
+  );
+}
+
 function HomeDashboard({
   profile,
   dailyVerse,
@@ -76,6 +102,7 @@ function HomeDashboard({
         onReview={onReviewDaily}
         onSpendMore={onSpendMore}
       />
+      <MinistrySurveyInvite />
       <section className="section-block">
         <div className="section-heading">
           <div><p className="dashboard-eyebrow">Your rhythm</p><h3>This week</h3></div>
