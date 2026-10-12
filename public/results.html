@@ -1,185 +1,228 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#09172a">
-  <meta name="description" content="Survey results about serving in multiple church ministries, weekly commitments, rest, and spiritual life.">
-  <title>Ministry Survey | Results</title>
-  <style>
-    :root { color-scheme:dark; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#f6f7fb; background:#09172a; }
-    * { box-sizing:border-box; }
-    html { min-width:320px; }
-    body { margin:0; min-height:100dvh; background:radial-gradient(ellipse at 85% 0%,#1b3054 0,transparent 45%),linear-gradient(180deg,#0b1b31,#081326); line-height:1.5; }
-    a { color:inherit; -webkit-tap-highlight-color:transparent; }
-    a:focus-visible { outline:3px solid #a6baff; outline-offset:4px; }
-    .page { width:min(100%,610px); min-height:100dvh; margin:auto; padding:24px 17px max(35px,env(safe-area-inset-bottom)); }
-    .header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:44px; }
-    .brand { display:flex; align-items:center; gap:10px; min-width:0; font-family:Georgia,"Times New Roman",serif; font-size:1.16rem; font-weight:700; white-space:nowrap; }
-    .brand-mark { flex:none; width:36px; height:36px; display:grid; place-items:center; border:1px solid #58638a; border-radius:12px; background:#292741; color:#f0d1ff; font-size:1.25rem; }
-    .header-label { font-size:.67rem; font-weight:800; color:#b8cae7; text-transform:uppercase; letter-spacing:.1em; }
-    .eyebrow { margin:0 0 12px; color:#91baf9; text-transform:uppercase; font-size:.72rem; font-weight:800; letter-spacing:.12em; }
-    h1,h2 { font-family:Georgia,"Times New Roman",serif; font-weight:400; letter-spacing:-.02em; line-height:1.16; color:#fff; }
-    h1 { margin:0; font-size:clamp(2.05rem,8vw,3rem); }
-    h2 { margin:0; font-size:1.45rem; }
-    .intro { margin:14px 0 0; color:#cad6e8; font-size:.99rem; line-height:1.7; }
-    .empty-state { margin-top:30px; padding:28px 23px; border:1px solid #425978; border-radius:24px; background:linear-gradient(155deg,rgba(25,45,77,.98),rgba(13,28,50,.99)); text-align:center; }
-    .empty-icon { width:54px; height:54px; margin:0 auto 16px; display:grid; place-items:center; border:1px solid #5f7798; border-radius:17px; background:#223b61; font-size:1.55rem; color:#c1d3ff; }
-    .empty-state h2 { margin:0; }
-    .empty-state p { margin:13px 0 0; color:#bacbe0; font-size:.91rem; line-height:1.7; }
-    .section-heading { margin:30px 0 13px; font-size:.73rem; font-weight:800; text-transform:uppercase; letter-spacing:.11em; color:#a5bee2; }
-    .topics { display:grid; gap:10px; }
-    .topic { display:flex; gap:14px; align-items:center; padding:16px; border:1px solid #304460; border-radius:16px; background:rgba(23,44,74,.7); }
-    .topic-icon { flex:none; width:38px; height:38px; display:grid; place-items:center; border-radius:12px; background:#273d61; color:#d0dfff; font-size:1.15rem; }
-    .topic strong { display:block; color:#f6f8ff; font-size:.92rem; line-height:1.35; }
-    .topic small { display:block; color:#9eb2d0; font-size:.76rem; margin-top:4px; line-height:1.4; }
-    .return { display:block; padding:15px 18px; margin-top:29px; border-radius:15px; background:#c1d3ff; color:#102039; font-size:.95rem; font-weight:800; text-align:center; text-decoration:none; }
-    .live-summary { margin:27px 0 18px; border:1px solid #455d7f; border-radius:22px; background:#1b3152; padding:20px 23px; }
-    .live-summary strong { display:block; font-size:2.1rem; line-height:1.15; font-weight:750; color:#f8faff; }
-    .live-summary span { color:#c1d0e8; font-size:.82rem; }
-    .live-panel { margin-top:17px; border:1px solid #304460; border-radius:20px; padding:20px 17px; background:rgba(23,44,74,.7); }
-    .live-panel h2 { font-size:1.3rem; margin-bottom:16px; }
-    .result-row { display:grid; grid-template-columns:106px 1fr 45px; align-items:center; gap:11px; margin:12px 0; color:#dce7f9; font-size:.84rem; }
-    .result-row .value { text-align:right; color:#cbdaf1; font-variant-numeric:tabular-nums; }
-    .bar { display:block; height:10px; width:100%; border-radius:20px; overflow:hidden; background:#304463; }
-    .bar-fill { display:block; height:100%; border-radius:20px; background:linear-gradient(90deg,#7bb4ff,#c7b7ff); }
-    .live-note { margin:16px 0; font-size:.78rem; color:#9eb6d6; line-height:1.65; }
-    .compare-line { display:grid;grid-template-columns:1fr auto auto; gap:13px;align-items:center;margin:14px 0;padding:10px 0;border-bottom:1px solid #334863;font-size:.82rem; }
-    .compare-line strong { font-variant-numeric:tabular-nums;white-space:nowrap;color:#d0e2ff; }
-    .compare-caption { display:grid;grid-template-columns:1fr auto auto;gap:13px;color:#aabede;font-size:.73rem; }
-    @media(max-width:350px){.result-row{grid-template-columns:75px 1fr 46px;gap:7px;}}
-    .privacy { text-align:center; color:#8da4c2; font-size:.73rem; line-height:1.6; margin:18px 8px 0; }
-    @media (min-width:620px) { .page { padding:28px 30px 45px; } }
-    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; } }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#09172a">
+<meta name="description" content="Live graphical results of the ministry coordination study, using anonymous grouped survey data.">
+<title>Ministry Survey | Results</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:#09172a;color:#f7f9ff}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 90% 0,#20385e,transparent 43%),linear-gradient(180deg,#0b1b31,#081326);line-height:1.45}
+a{color:inherit;-webkit-tap-highlight-color:transparent}
+a:focus-visible,summary:focus-visible{outline:3px solid #b3caff;outline-offset:4px}
+.page{width:min(100%,610px);min-height:100dvh;margin:auto;padding:23px 17px max(36px,env(safe-area-inset-bottom))}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:32px}
+.brand{display:flex;align-items:center;gap:10px;font-family:Georgia,serif;font-size:1.17rem;font-weight:bold;white-space:nowrap}
+.brand-mark{display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid #66709b;border-radius:12px;background:#282a49;color:#e6c8ff;font-size:1.2rem}
+.header-label{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#a9bee0;font-weight:800}
+.eyebrow{font-size:.71rem;color:#8fbbff;letter-spacing:.12em;text-transform:uppercase;font-weight:800;margin:0 0 8px}
+h1,h2{font-family:Georgia,"Times New Roman",serif;letter-spacing:-.018em;font-weight:400;line-height:1.18;color:white}
+h1{margin:0;font-size:clamp(2rem,8vw,2.8rem)}
+h2{font-size:1.38rem;margin:0 0 15px}
+.headline{margin-bottom:22px}
+.state-panel{border:1px solid #3b5375;background:linear-gradient(150deg,#1b3254,#11213b);border-radius:25px;padding:26px 20px;text-align:center}
+.progress-ring{width:207px;height:207px;max-width:70vw;aspect-ratio:1;border-radius:50%;margin:8px auto 25px;background:conic-gradient(#92bcff 0 var(--progress,0%),#314462 var(--progress,0%) 100%);padding:14px;display:grid;place-items:center;box-shadow:0 0 0 1px #506b8d}
+.progress-center{height:100%;width:100%;border-radius:50%;background:#142743;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.progress-center strong{font-weight:800;font-size:3.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.progress-center span{color:#b7c9e5;font-size:.95rem;margin-top:7px}
+.state-title{font-family:Georgia,serif;font-weight:400;font-size:1.45rem;line-height:1.2;margin:0}
+.state-sub{font-size:.85rem;color:#aec4e1;margin:9px 0 0}
+.state-sub strong{color:#e7f0ff}
+.response-total{display:flex;align-items:baseline;gap:11px;border:1px solid #395474;background:#1a3150;padding:15px 19px;border-radius:18px;margin-bottom:22px}
+.response-total strong{font-size:2.4rem;font-weight:800;line-height:1;color:#f9fbff;font-variant-numeric:tabular-nums}
+.response-total span{font-size:.85rem;color:#bdcee7}
+.section-label{font-size:.71rem;letter-spacing:.11em;text-transform:uppercase;color:#9cbdec;font-weight:800;margin:21px 0 12px}
+.chart-card{background:#172c49;border:1px solid #334b6d;border-radius:19px;padding:19px 18px;margin-bottom:12px}
+.chart-card h2{font-size:1.3rem;margin-bottom:16px}
+.chart-row{margin:0 0 17px}
+.chart-row:last-child{margin-bottom:0}
+.row-top{display:flex;align-items:center;justify-content:space-between;gap:11px;margin-bottom:8px;font-size:.81rem}
+.row-name{color:#dbe8fb;line-height:1.25}
+.row-value{color:#e8f0ff;font-weight:750;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chart-track{background:#344764;height:13px;border-radius:20px;overflow:hidden;position:relative}
+.chart-fill{height:100%;display:block;background:linear-gradient(90deg,#78adff,#b6b5ff);width:0;border-radius:20px}
+.chart-card.secondary .chart-fill{background:linear-gradient(90deg,#6cbeda,#86a7ff)}
+.chart-card.tertiary .chart-fill{background:linear-gradient(90deg,#93a3f7,#c2a8ff)}
+.redacted .chart-track{background:repeating-linear-gradient(135deg,#314665,#314665 6px,#3c5270 6px,#3c5270 12px)}
+.redacted .row-value{color:#aebed7}
+.more{margin-top:20px;border:1px solid #3b526f;border-radius:17px;background:#11243d;overflow:hidden}
+.more summary{list-style:none;cursor:pointer;padding:17px 18px;color:#dce8ff;font-size:.91rem;font-weight:800;display:flex;align-items:center;justify-content:space-between}
+.more summary::-webkit-details-marker{display:none}
+.more summary::after{content:"＋";font-size:1.25rem}
+.more[open] summary::after{content:"−"}
+.more-body{padding:0 13px 13px}
+.more-body .chart-card{margin-bottom:10px;padding:16px 15px}
+.compare-card{margin:18px 0 4px;border:1px solid #435b7b;border-radius:20px;background:#1a3051;padding:19px 17px}
+.compare-key{font-size:.76rem;color:#afc4e2;margin:-6px 0 15px}
+.compare-group{margin:15px 0}
+.compare-group-name{display:flex;justify-content:space-between;gap:9px;font-size:.79rem;color:#dae7fa;margin-bottom:6px}
+.compare-group-name strong{color:#eef4ff}
+.compare-track{height:12px;overflow:hidden;background:#334966;border-radius:20px}
+.compare-fill{display:block;height:100%;border-radius:20px;background:#84b8ff}
+.compare-group.multiple .compare-fill{background:#c0a7fa}
+.compare-panel{padding:12px 0;border-top:1px solid #405678}
+.compare-panel h3{font-size:.9rem;font-weight:750;margin:0 0 7px}
+.note{color:#91a9c8;font-size:.74rem;line-height:1.6;margin:19px 3px 0}
+.back{display:block;text-align:center;text-decoration:none;background:#c1d3ff;color:#102039;border-radius:15px;padding:15px 18px;margin-top:28px;font-size:.94rem;font-weight:800}
+@media(min-width:620px){.page{padding:29px 30px 44px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+</style>
 </head>
 <body>
-  <main class="page">
-    <header class="header">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">✧</span> Ministry Survey</div>
-      <span class="header-label">Results</span>
-    </header>
-    <p class="eyebrow">Ministry coordination study</p>
-    <h1>Survey Results</h1>
-    <p class="intro">How ministry responsibilities, scheduling coordination, and replacement arrangements relate to completion of planned activities.</p>
+<main class="page">
+  <header class="header"><div class="brand"><span class="brand-mark" aria-hidden="true">✧</span> Ministry Survey</div><span class="header-label">Results</span></header>
+  <div class="headline"><p class="eyebrow">Ministry coordination</p><h1>Survey Results</h1></div>
 
-    <section class="empty-state" id="emptyState" aria-labelledby="empty-heading" aria-live="polite">
-      <div class="empty-icon" aria-hidden="true">▥</div>
-      <h2 id="empty-heading">Checking results…</h2>
-      <p id="emptyText">Connecting to the survey database.</p>
-    </section>
-
-    <section id="liveDashboard" hidden aria-label="Grouped survey results">
-      <div class="live-summary"><strong id="responseCount">—</strong><span>Survey responses</span></div>
-      <p class="live-note">Results from the refined questionnaire only. These findings reflect participants’ reports, not independent proof of cause.</p>
-      <section class="live-panel" id="comparisonPanel" hidden>
-        <h2>One ministry vs multiple ministries</h2>
-        <p class="live-note">Percentage of respondents in each group reporting these experiences. These are associations, not proof of cause.</p>
-        <div id="comparisonData"></div>
-      </section>
-      <div class="live-panel"><h2>Number of ministries served</h2><div id="ministries"></div></div>
-      <div class="live-panel"><h2>Two ministries needing someone at once</h2><div id="conflictingRequests"></div></div>
-      <div class="live-panel"><h2>Declining a responsibility to serve elsewhere</h2><div id="declinedResponsibility"></div></div>
-      <div class="live-panel"><h2>Tasks missed or delayed</h2><div id="delayedResponsibility"></div></div>
-      <div class="live-panel"><h2>Observed staffing gaps</h2><div id="observedStaffingGap"></div></div>
-      <div class="live-panel"><h2>Activities postponed, shortened or canceled</h2><div id="observedActivityDisruption"></div></div>
-      <div class="live-panel"><h2>Coordination between leaders</h2><div id="schedulingCoordination"></div></div>
-      <div class="live-panel"><h2>Clear priority when roles conflict</h2><div id="conflictPriority"></div></div>
-      <div class="live-panel"><h2>Replacement arrangements available</h2><div id="replacementAvailable"></div></div>
-      <div class="live-panel"><h2>Reported impact on planned activities</h2><div id="objectiveImpact"></div></div>
-      <p class="live-note">All results are grouped. Rare categories are hidden to protect respondents. Individual written responses are not published.</p>
-    </section>
-
-    <div id="upcoming">
-      <p class="section-heading">What this study measures</p>
-      <div class="topics">
-        <section class="topic"><span class="topic-icon" aria-hidden="true">◎</span><div><strong>Competing ministry assignments</strong><small>When multiple teams need the same volunteer</small></div></section>
-        <section class="topic"><span class="topic-icon" aria-hidden="true">◷</span><div><strong>Interrupted responsibilities</strong><small>Declined duties, missed work, and postponed or canceled activities</small></div></section>
-        <section class="topic"><span class="topic-icon" aria-hidden="true">✦</span><div><strong>Coordination and objectives</strong><small>Role priorities, scheduling, and reported consequences</small></div></section>
+  <section class="state-panel" id="pending" aria-live="polite">
+    <div id="progressVisual" hidden>
+      <div class="progress-ring" id="responseRing" role="progressbar" aria-label="Responses collected toward public results" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+        <div class="progress-center"><strong id="currentResponses">0</strong><span id="progressOf">of 10 responses</span></div>
       </div>
     </div>
-    <a class="return" href="./survey.html">Back to survey →</a>
-    <p class="privacy">Only grouped results are shown; individual comments are not published.</p>
-  </main>
+    <h2 class="state-title" id="pendingHeading">Loading results…</h2>
+    <p class="state-sub" id="pendingCaption">Checking the survey database.</p>
+  </section>
 
+  <section id="dashboard" hidden aria-label="Anonymous grouped ministry survey results">
+    <div class="response-total"><strong id="responseCount">—</strong><span>responses collected</span></div>
+    <p class="section-label">Key findings</p>
+    <section class="chart-card" aria-labelledby="ministriesTitle"><h2 id="ministriesTitle">Ministries served</h2><div id="ministries"></div></section>
+    <section class="chart-card secondary" aria-labelledby="requestsTitle"><h2 id="requestsTitle">Competing ministry requests</h2><div id="conflictingRequests"></div></section>
+    <section class="chart-card tertiary" aria-labelledby="disruptionTitle"><h2 id="disruptionTitle">Disrupted activities</h2><div id="observedActivityDisruption"></div></section>
+
+    <section class="compare-card" id="comparisonPanel" hidden aria-labelledby="compareTitle">
+      <h2 id="compareTitle">One ministry vs multiple</h2>
+      <p class="compare-key">Approximate share reporting each experience</p>
+      <div id="comparisonData"></div>
+    </section>
+
+    <details class="more" id="moreFindings">
+      <summary>Explore 7 more charts</summary>
+      <div class="more-body">
+        <section class="chart-card"><h2>Declined responsibilities</h2><div id="declinedResponsibility"></div></section>
+        <section class="chart-card"><h2>Tasks missed or delayed</h2><div id="delayedResponsibility"></div></section>
+        <section class="chart-card"><h2>Staffing shortages</h2><div id="observedStaffingGap"></div></section>
+        <section class="chart-card"><h2>Leader coordination</h2><div id="schedulingCoordination"></div></section>
+        <section class="chart-card"><h2>Clear priority for conflicts</h2><div id="conflictPriority"></div></section>
+        <section class="chart-card"><h2>Replacement arrangements</h2><div id="replacementAvailable"></div></section>
+        <section class="chart-card"><h2>Reported impact on plans</h2><div id="objectiveImpact"></div></section>
+      </div>
+    </details>
+    <p class="note">Reported experiences, not proof of causation. Small groups are withheld to protect participants. No individual answers are shown.</p>
+  </section>
+  <a class="back" href="./survey.html">Back to survey →</a>
+</main>
 <script>
 (function(){
-  "use strict";
-  const endpoint="https://api.clarapmc.com/api/ekklesia/surveys/ministry-coordination/results";
-  const empty=document.getElementById("emptyState");
-  const heading=document.getElementById("empty-heading");
-  const detail=document.getElementById("emptyText");
-  const labels={
-    ministries:{"0":"None","1":"1","2":"2","3":"3","4+":"4+"},
-    frequency:{"never":"Never","once":"Once","2-3":"2–3 times","4+":"4+ times","unsure":"Not sure","na":"Not applicable"},
-    schedulingCoordination:{"always":"Always","often":"Often","sometimes":"Sometimes","rarely":"Rarely","never":"Never","unsure":"Not sure"},
-    conflictPriority:{"yes":"Yes","sometimes":"Sometimes","no":"No","unsure":"Not sure","na":"Not applicable"},
-    replacementAvailable:{"always":"Always","often":"Often","sometimes":"Sometimes","rarely":"Rarely","never":"Never","unsure":"Not sure","na":"Not applicable"},
-    objectiveImpact:{"not-at-all":"Not at all","slightly":"Slightly","moderately":"Moderately","significantly":"Significantly","unsure":"Not sure"}
-  };
-  function renderRows(key,rows,total){
-    const element=document.getElementById(key);
-    const map=key==="ministries"?labels.ministries:
-      labels[key]||labels.frequency;
-    rows.forEach(function(entry){
-      const row=document.createElement("div");row.className="result-row";
-      const name=document.createElement("span");name.textContent=map[entry.label]||entry.label;
-      const bar=document.createElement("span");bar.className="bar";
-      const fill=document.createElement("span");fill.className="bar-fill";
-      const count=entry.count;
-      fill.style.width=typeof count==="number"?Math.max(0,Math.min(100,count/total*100))+"%":"0%";
-      bar.appendChild(fill);
-      const value=document.createElement("span");value.className="value";
-      value.textContent=count===null?"< 3":String(count);
-      row.append(name,bar,value);element.appendChild(row);
-    });
+"use strict";
+const endpoint="https://api.clarapmc.com/api/ekklesia/surveys/ministry-coordination/results";
+const $=id=>document.getElementById(id);
+const labels={
+ ministries:{"0":"None","1":"1","2":"2","3":"3","4+":"4+"},
+ frequency:{never:"Never",once:"Once","2-3":"2–3 times","4+":"4+ times",unsure:"Not sure",na:"N/A"},
+ schedulingCoordination:{always:"Always",often:"Often",sometimes:"Sometimes",rarely:"Rarely",never:"Never",unsure:"Not sure"},
+ conflictPriority:{yes:"Yes",sometimes:"Sometimes",no:"No",unsure:"Not sure",na:"N/A"},
+ replacementAvailable:{always:"Always",often:"Often",sometimes:"Sometimes",rarely:"Rarely",never:"Never",unsure:"Not sure",na:"N/A"},
+ objectiveImpact:{"not-at-all":"Not at all",slightly:"Slightly",moderately:"Moderately",significantly:"Significantly",unsure:"Not sure"}
+};
+const keys=["ministries","conflictingRequests","declinedResponsibility","delayedResponsibility","observedStaffingGap","observedActivityDisruption","schedulingCoordination","conflictPriority","replacementAvailable","objectiveImpact"];
+function element(tag,className,text){
+ const n=document.createElement(tag);
+ if(className)n.className=className;
+ if(text!==undefined)n.textContent=text;
+ return n;
+}
+function renderRows(key,rows,total){
+ const node=$(key);
+ const lookup=labels[key]||labels.frequency;
+ node.replaceChildren();
+ for(const item of rows){
+  const count=item.count;
+  const visible=Number.isSafeInteger(count)&&count>=0;
+  const pct=visible?count/total*100:0;
+  const row=element("div","chart-row"+(!visible?" redacted":""));
+  const head=element("div","row-top");
+  head.append(element("span","row-name",lookup[item.label]||item.label));
+  head.append(element("span","row-value",visible?count+" · "+Math.round(pct)+"%":"Withheld"));
+  const track=element("div","chart-track");
+  const fill=element("span","chart-fill");
+  fill.style.width=Math.max(0,Math.min(100,pct))+"%";
+  track.append(fill);row.append(head,track);node.append(row);
+ }
+}
+function addComparison(group,parent,name,value){
+ const row=element("div","compare-group "+group);
+ const label=element("div","compare-group-name");
+ const approximate=typeof value==="number" && value>=0 && value<=100;
+ label.append(element("span","",name),element("strong","",approximate?"~"+value+"%":"Withheld"));
+ const track=element("div","compare-track");
+ const bar=element("span","compare-fill");
+ bar.style.width=approximate?value+"%":"0%";
+ track.append(bar);row.append(label,track);parent.append(row);
+}
+function renderComparison(comparison){
+ if(!Array.isArray(comparison)||comparison.length!==2)return;
+ const single=comparison.find(x=>x.group==="single");
+ const multiple=comparison.find(x=>x.group==="multiple");
+ if(!single||!multiple||single.respondents<10||multiple.respondents<10)return;
+ const metrics=[
+  ["overlapping","Competing requests"],
+  ["delayed","Delayed responsibilities"],
+  ["disrupted","Disrupted activities"],
+  ["impact","Affected plans"]
+ ];
+ const root=$("comparisonData");
+ root.replaceChildren();
+ let shown=0;
+ for(const [field,label] of metrics){
+  const a=single[field],b=multiple[field];
+  // Do not fabricate values for privacy-suppressed group statistics.
+  if(a===null&&b===null)continue;
+  const block=element("section","compare-panel");
+  block.append(element("h3","",label));
+  addComparison("single",block,"1 ministry (n="+single.respondents+")",a);
+  addComparison("multiple",block,"2+ ministries (n="+multiple.respondents+")",b);
+  root.append(block);shown++;
+ }
+ $("comparisonPanel").hidden=shown===0;
+}
+async function load(){
+ try{
+  const response=await fetch(endpoint,{cache:"no-store",headers:{"Accept":"application/json"}});
+  if(!response.ok)throw Error("HTTP "+response.status);
+  const data=await response.json();
+  const total=Number(data.responses);
+  const min=Number(data.minimumResponses);
+  if(!Number.isSafeInteger(total)||total<0||!Number.isSafeInteger(min)||min<=0)throw Error("Invalid response counts");
+  if(data.ready===false){
+   const clamped=Math.min(min,total);
+   $("progressVisual").hidden=false;
+   $("responseRing").style.setProperty("--progress",(clamped/min*100)+"%");
+   $("responseRing").setAttribute("aria-valuemax",String(min));
+   $("responseRing").setAttribute("aria-valuenow",String(clamped));
+   $("currentResponses").textContent=String(total);
+   $("progressOf").textContent="of "+min+" responses";
+   const remaining=Math.max(0,min-total);
+   $("pendingHeading").textContent="Results unlock at "+min;
+   $("pendingCaption").textContent=remaining+" more "+(remaining===1?"response":"responses")+" needed";
+   return;
   }
-  async function load(){
-    try{
-      const response=await fetch(endpoint,{cache:"no-store",headers:{"Accept":"application/json"}});
-      if(!response.ok)throw Error("Server unavailable");
-      const data=await response.json();
-      if(!data.ready){
-        heading.textContent="Findings are gathering";
-        detail.textContent="There are "+Number(data.responses||0)+" responses to the refined survey so far. Grouped results appear after "+Number(data.minimumResponses||10)+" submissions."
-        return;
-      }
-      const keys=["ministries","conflictingRequests","declinedResponsibility","delayedResponsibility","observedStaffingGap","observedActivityDisruption","schedulingCoordination","conflictPriority","replacementAvailable","objectiveImpact"];
-      const total=Number(data.responses);
-      if(!Number.isSafeInteger(total)||total<10||!data.distributions||keys.some(key=>!Array.isArray(data.distributions[key])))throw Error("Unexpected data");
-      document.getElementById("responseCount").textContent=total.toLocaleString();
-      keys.forEach(key=>renderRows(key,data.distributions[key],total));
-      if(Array.isArray(data.comparison) && data.comparison.length===2){
-        const single=data.comparison.find(g=>g.group==="single");
-        const multiple=data.comparison.find(g=>g.group==="multiple");
-        if(single&&multiple){
-          const root=document.getElementById("comparisonData");
-          const caption=document.createElement("div");caption.className="compare-caption";
-          for(const value of ["","1 ministry (n="+single.respondents+")","2+ ministries (n="+multiple.respondents+")"]){
-            const x=document.createElement("span");x.textContent=value;caption.appendChild(x);
-          }
-          root.appendChild(caption);
-          for(const [field,name] of [["overlapping","Competing requests"],["delayed","Delayed duties"],["disrupted","Disrupted activities"],["impact","Reported impact on plans"]]){
-            const row=document.createElement("div");row.className="compare-line";
-            const label=document.createElement("span");label.textContent=name;row.appendChild(label);
-            for(const item of [single,multiple]){
-              const value=document.createElement("strong");
-              value.textContent=item[field]===null?"—":item[field]+"%";
-              row.appendChild(value);
-            }
-            root.appendChild(row);
-          }
-          document.getElementById("comparisonPanel").hidden=false;
-        }
-      }
-      empty.hidden=true;document.getElementById("upcoming").hidden=true;
-      document.getElementById("liveDashboard").hidden=false;
-    }catch(error){
-      heading.textContent="Results unavailable";
-      detail.textContent="We couldn't load the results right now. Please try again later.";
-    }
-  }
-  load();
+  if(data.ready!==true||total<min||!data.distributions||keys.some(k=>!Array.isArray(data.distributions[k])))throw Error("Invalid results");
+  $("responseCount").textContent=total.toLocaleString();
+  for(const key of keys)renderRows(key,data.distributions[key],total);
+  renderComparison(data.comparison);
+  $("pending").hidden=true;
+  $("dashboard").hidden=false;
+ }catch(err){
+  $("progressVisual").hidden=true;
+  $("pendingHeading").textContent="Results unavailable";
+  $("pendingCaption").textContent="Please try again later.";
+ }
+}
+load();
 })();
 </script>
 </body>
