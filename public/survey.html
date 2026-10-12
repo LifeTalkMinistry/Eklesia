@@ -65,6 +65,23 @@
     .secondary{background:#1b2e48;border-color:#3e5273;color:#e8f0ff}
     .success{margin-top:20px;padding:19px;border:1px solid #4a7f78;border-radius:18px;background:#133c3b;color:#e2f9ef}
     .success strong{display:block;font-size:1.1rem;margin-bottom:8px}
+    .response-summary{margin-top:25px;padding-top:22px;border-top:1px solid #344a68}
+    .response-summary h3{font-size:1.04rem;margin:0 0 14px;font-weight:750;letter-spacing:-.01em}
+    .summary-highlights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .summary-highlight{padding:12px;background:#162d4b;border:1px solid #344f71;border-radius:12px;min-width:0}
+    .summary-highlight small{display:block;color:#abc2e4;font-size:.72rem;line-height:1.3}
+    .summary-highlight strong{display:block;margin-top:7px;color:#fff;font-size:.91rem;line-height:1.35;overflow-wrap:anywhere}
+    .summary-details{margin-top:17px;border:1px solid #445a78;border-radius:14px;overflow:hidden}
+    .summary-details summary{cursor:pointer;padding:13px 14px;color:#d8e5fa;font-size:.84rem;font-weight:750}
+    .summary-details[open] summary{border-bottom:1px solid #445a78}
+    .summary-group{padding:14px}
+    .summary-group + .summary-group{border-top:1px solid #334967}
+    .summary-group h4{margin:0 0 11px;color:#91baf9;font-size:.7rem;text-transform:uppercase;letter-spacing:.09em}
+    .summary-answer{padding:9px 0}
+    .summary-answer + .summary-answer{border-top:1px solid rgba(142,166,201,.13)}
+    .summary-answer small{display:block;color:#abc0de;line-height:1.4;font-size:.77rem}
+    .summary-answer strong{display:block;color:#fff;margin-top:5px;font-size:.86rem;font-weight:600;line-height:1.5;overflow-wrap:anywhere}
+    .summary-note{color:#96afcf;font-size:.74rem;line-height:1.5;margin:12px 0 0}
     .error{color:#ffc8c8;margin-top:14px}
     @media (max-width:390px){.study-tag{font-size:.6rem}.top{padding-inline:16px}.progress-wrap{padding-inline:16px}.actions{padding-inline:16px}}
     @media (prefers-reduced-motion:reduce){.progress-bar{transition:none}html{scroll-behavior:auto}}
@@ -82,8 +99,8 @@
   <main>
     <form id="survey" novalidate>
       <section class="panel" data-step="0" aria-labelledby="introTitle">
-        <h1 id="introTitle" tabindex="-1">When ministries need you at once</h1>
-        <p class="lead">How do overlapping ministry roles affect church coordination and the ability of teams to fulfill their responsibilities?</p>
+        <h1 id="introTitle" tabindex="-1">When Ministry Responsibilities Overlap</h1>
+        <p class="lead">How are people and responsibilities coordinated across ministries—and what happens when assignments conflict?</p>
       </section>
       <section class="panel" data-step="1" aria-labelledby="serviceTitle" hidden>
         <p class="eyebrow">01 / Your role</p>
@@ -134,7 +151,7 @@
         <p class="eyebrow">02 / Role conflicts</p>
         <h2 id="experienceTitle" tabindex="-1">When responsibilities overlap</h2>
         <p class="quiet">Thinking about the past 3 months, answer based on what you personally experienced or observed.</p>
-        <div class="field"><label for="conflictingRequests">How often did two ministries need you at the same time?</label>
+        <div class="field"><label for="conflictingRequests">How often have you been expected to fulfill responsibilities in two ministries at the same time?</label>
           <select id="conflictingRequests" name="conflictingRequests" required>
             <option value="">Choose an answer</option>
             <option value="never">Never</option>
@@ -145,7 +162,7 @@
             <option value="na">Not applicable</option>
           </select>
         </div>
-        <div class="field"><label for="declinedResponsibility">How often did you decline a responsibility because another ministry needed you?</label>
+        <div class="field"><label for="declinedResponsibility">How often have you declined a ministry responsibility because you were already committed to another ministry?</label>
           <select id="declinedResponsibility" name="declinedResponsibility" required>
             <option value="">Choose an answer</option>
             <option value="never">Never</option>
@@ -156,7 +173,7 @@
             <option value="na">Not applicable</option>
           </select>
         </div>
-        <div class="field"><label for="delayedResponsibility">How often was one of your duties delayed or missed because you had to serve elsewhere?</label>
+        <div class="field"><label for="delayedResponsibility">How often has an assigned task been delayed or left unfinished because you needed to serve in another ministry?</label>
           <select id="delayedResponsibility" name="delayedResponsibility" required>
             <option value="">Choose an answer</option>
             <option value="never">Never</option>
@@ -167,8 +184,20 @@
             <option value="na">Not applicable</option>
           </select>
         </div>
-        <div class="field"><label for="observedStaffingGap">How often did you notice a ministry short of volunteers because members were needed elsewhere?</label>
+        <div class="field"><label for="observedStaffingGap">How often have you observed a ministry short of volunteers because members were needed elsewhere?</label>
           <select id="observedStaffingGap" name="observedStaffingGap" required>
+            <option value="">Choose an answer</option>
+            <option value="never">Never</option>
+            <option value="once">Once</option>
+            <option value="2-3">2–3 times</option>
+            <option value="4+">4 or more times</option>
+            <option value="unsure">Not sure</option>
+            <option value="na">Not applicable</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="observedActivityDisruption">How often have you observed a planned ministry activity postponed, shortened, or canceled because essential volunteers had conflicting ministry assignments?</label>
+          <select id="observedActivityDisruption" name="observedActivityDisruption" required>
             <option value="">Choose an answer</option>
             <option value="never">Never</option>
             <option value="once">Once</option>
@@ -182,7 +211,7 @@
       <section class="panel" data-step="3" aria-labelledby="voiceTitle" hidden>
         <p class="eyebrow">03 / Church coordination</p>
         <h2 id="voiceTitle" tabindex="-1">Is the ministry structure working?</h2>
-        <div class="field"><label for="schedulingCoordination">How often do ministry leaders coordinate schedules and assignments?</label>
+        <div class="field"><label for="schedulingCoordination">How often do leaders from different ministries coordinate schedules and responsibilities to prevent conflicts?</label>
           <select id="schedulingCoordination" name="schedulingCoordination" required>
             <option value="">Choose an answer</option>
             <option value="always">Always</option>
@@ -193,16 +222,30 @@
             <option value="unsure">Not sure</option>
           </select>
         </div>
-        <div class="field"><label for="conflictPriority">When two responsibilities conflict, is it clear which one takes priority?</label>
+        <div class="field"><label for="conflictPriority">When two ministry responsibilities conflict, is there a clear process for deciding which takes priority?</label>
           <select id="conflictPriority" name="conflictPriority" required>
             <option value="">Choose an answer</option>
             <option value="yes">Yes</option>
             <option value="sometimes">Sometimes</option>
             <option value="no">No</option>
-            <option value="unsure">Not sure</option>
+            <option value="unsure">Don't know</option>
+            <option value="na">Not applicable</option>
           </select>
         </div>
-        <div class="field"><label for="objectiveImpact">To what extent have overlapping ministry assignments affected your team's ability to carry out planned activities?</label>
+        <div class="field">
+          <label for="replacementAvailable">When a volunteer cannot fulfill an assigned responsibility, how often is a replacement or alternative arrangement available?</label>
+          <select id="replacementAvailable" name="replacementAvailable" required>
+            <option value="">Choose an answer</option>
+            <option value="always">Always</option>
+            <option value="often">Often</option>
+            <option value="sometimes">Sometimes</option>
+            <option value="rarely">Rarely</option>
+            <option value="never">Never</option>
+            <option value="unsure">Don't know</option>
+            <option value="na">Not applicable</option>
+          </select>
+        </div>
+        <div class="field"><label for="objectiveImpact">Based on your observations, to what extent have competing ministry responsibilities affected completion of planned church activities?</label>
           <select id="objectiveImpact" name="objectiveImpact" required>
             <option value="">Choose an answer</option>
             <option value="not-at-all">Not at all</option>
@@ -213,8 +256,8 @@
           </select>
         </div>
         <div class="field">
-          <label for="finalThoughts">An example or suggestion <small>(Optional)</small></label>
-          <textarea id="finalThoughts" name="finalThoughts" maxlength="700" placeholder="What works well, or what could be improved?"></textarea>
+          <label for="finalThoughts">Can you share an example or suggestion? <small>(Optional)</small></label>
+          <textarea id="finalThoughts" name="finalThoughts" maxlength="700" placeholder="How have ministry assignments affected an activity—positively or negatively?"></textarea>
         </div>
         <p class="quiet">Please avoid names or identifying details.</p>
         <label class="consent">
@@ -227,6 +270,15 @@
     <section class="panel" id="done" hidden aria-live="polite">
       <p class="eyebrow">Thank you for reflecting</p><h2 tabindex="-1">Your experience matters.</h2>
       <div class="success"><strong id="doneHeading">Thank you</strong><span id="doneMessage">Your response has been recorded.</span></div>
+      <section id="responseSummary" class="response-summary" aria-labelledby="responseSummaryHeading" hidden>
+        <h3 id="responseSummaryHeading">Your answers at a glance</h3>
+        <div id="summaryHighlights" class="summary-highlights"></div>
+        <details class="summary-details">
+          <summary>See all your answers</summary>
+          <div id="summaryAll"></div>
+        </details>
+        <p class="summary-note">This is your personal recap on this screen, not a public profile.</p>
+      </section>
       <p class="quiet">Your feedback helps us understand whether ministry assignments and schedules are working effectively.</p>
       <a class="primary" id="viewResults" style="display:block;text-align:center;text-decoration:none;margin-top:22px" href="./results.html">View survey results →</a>
     </section>
@@ -243,6 +295,53 @@
   var form = document.getElementById("survey");
   var sections = Array.prototype.slice.call(form.querySelectorAll("[data-step]"));
 
+  function buildResponseSummary(answers){
+    const groups=[
+      {title:"Your background",keys:["ageGroup","lifeStage","ministries","ministryLeader"]},
+      {title:"Role conflicts — past three months",keys:["conflictingRequests","declinedResponsibility","delayedResponsibility","observedStaffingGap","observedActivityDisruption"]},
+      {title:"Church coordination",keys:["schedulingCoordination","conflictPriority","replacementAvailable","objectiveImpact","finalThoughts"]}
+    ];
+    const shortLabels={
+      ministries:"Ministries served",
+      conflictingRequests:"Competing requests",
+      observedActivityDisruption:"Disrupted activities",
+      replacementAvailable:"Backup coverage",
+      objectiveImpact:"Impact on plans"
+    };
+    function selectedAnswer(key){
+      if(key==="finalThoughts")return String(answers[key]||"").trim();
+      const input=form.elements.namedItem(key);
+      if(input && input.tagName==="SELECT" && input.selectedIndex>=0)
+        return input.options[input.selectedIndex].textContent.trim();
+      return String(answers[key]||"");
+    }
+    const summary=document.getElementById("summaryHighlights");
+    const all=document.getElementById("summaryAll");
+    summary.replaceChildren();all.replaceChildren();
+    for(const key of Object.keys(shortLabels)){
+      const card=document.createElement("div");card.className="summary-highlight";
+      const caption=document.createElement("small");caption.textContent=shortLabels[key];
+      const value=document.createElement("strong");value.textContent=selectedAnswer(key);
+      card.append(caption,value);summary.appendChild(card);
+    }
+    groups.forEach(group=>{
+      const section=document.createElement("section");section.className="summary-group";
+      const heading=document.createElement("h4");heading.textContent=group.title;
+      section.appendChild(heading);
+      for(const key of group.keys){
+        const value=selectedAnswer(key);
+        if(key==="finalThoughts"&&!value)continue;
+        const row=document.createElement("div");row.className="summary-answer";
+        const question=document.createElement("small");
+        const label=form.querySelector('label[for="'+key+'"]');
+        question.textContent=label ? label.textContent.trim().replace(/\s*\(Optional\)\s*$/,"") : key;
+        const answer=document.createElement("strong");answer.textContent=value;
+        row.append(question,answer);section.appendChild(row);
+      }
+      all.appendChild(section);
+    });
+    document.getElementById("responseSummary").hidden=false;
+  }
   var step = 0, busy = false;
   var back=document.getElementById("back"),next=document.getElementById("next");
   function show(){
@@ -275,13 +374,13 @@
     try{
       var data=Object.fromEntries(new FormData(form).entries());
       var answers={};
-      ["ageGroup","lifeStage","ministries","ministryLeader","conflictingRequests","declinedResponsibility","delayedResponsibility","observedStaffingGap","schedulingCoordination","conflictPriority","objectiveImpact","finalThoughts"].forEach(function(key){
+      ["ageGroup","lifeStage","ministries","ministryLeader","conflictingRequests","declinedResponsibility","delayedResponsibility","observedStaffingGap","observedActivityDisruption","schedulingCoordination","conflictPriority","replacementAvailable","objectiveImpact","finalThoughts"].forEach(function(key){
         answers[key]=data[key]||"";
       });
       var response=await fetch(COLLECTION_ENDPOINT,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({survey:"ministry-coordination-v1",consent:data.consent==="on",answers:answers})
+        body:JSON.stringify({survey:"ministry-coordination-v2",consent:data.consent==="on",answers:answers})
       });
       var result=await response.json().catch(function(){return {};});
       if(!response.ok || !result.received){
@@ -291,6 +390,7 @@
       }
       document.getElementById("doneHeading").textContent="Response received";
       document.getElementById("doneMessage").textContent="Thank you. Your answers have been saved for this research.";
+      buildResponseSummary(answers);
       document.querySelector(".layout").classList.remove("is-intro");
       form.hidden=true;document.getElementById("actions").hidden=true;
       document.getElementById("progressArea").hidden=true;

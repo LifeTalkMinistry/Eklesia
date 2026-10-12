@@ -61,7 +61,7 @@
     </header>
     <p class="eyebrow">Ministry coordination study</p>
     <h1>Survey Results</h1>
-    <p class="intro">How overlapping ministry responsibilities relate to team coordination and the completion of planned activities.</p>
+    <p class="intro">How ministry responsibilities, scheduling coordination, and replacement arrangements relate to completion of planned activities.</p>
 
     <section class="empty-state" id="emptyState" aria-labelledby="empty-heading" aria-live="polite">
       <div class="empty-icon" aria-hidden="true">▥</div>
@@ -71,7 +71,7 @@
 
     <section id="liveDashboard" hidden aria-label="Grouped survey results">
       <div class="live-summary"><strong id="responseCount">—</strong><span>Survey responses</span></div>
-      <p class="live-note">These findings describe participants' reports. They do not independently prove that ministry overlap causes missed objectives.</p>
+      <p class="live-note">Results from the refined questionnaire only. These findings reflect participants’ reports, not independent proof of cause.</p>
       <section class="live-panel" id="comparisonPanel" hidden>
         <h2>One ministry vs multiple ministries</h2>
         <p class="live-note">Percentage of respondents in each group reporting these experiences. These are associations, not proof of cause.</p>
@@ -82,8 +82,10 @@
       <div class="live-panel"><h2>Declining a responsibility to serve elsewhere</h2><div id="declinedResponsibility"></div></div>
       <div class="live-panel"><h2>Tasks missed or delayed</h2><div id="delayedResponsibility"></div></div>
       <div class="live-panel"><h2>Observed staffing gaps</h2><div id="observedStaffingGap"></div></div>
+      <div class="live-panel"><h2>Activities postponed, shortened or canceled</h2><div id="observedActivityDisruption"></div></div>
       <div class="live-panel"><h2>Coordination between leaders</h2><div id="schedulingCoordination"></div></div>
       <div class="live-panel"><h2>Clear priority when roles conflict</h2><div id="conflictPriority"></div></div>
+      <div class="live-panel"><h2>Replacement arrangements available</h2><div id="replacementAvailable"></div></div>
       <div class="live-panel"><h2>Reported impact on planned activities</h2><div id="objectiveImpact"></div></div>
       <p class="live-note">All results are grouped. Rare categories are hidden to protect respondents. Individual written responses are not published.</p>
     </section>
@@ -92,7 +94,7 @@
       <p class="section-heading">What this study measures</p>
       <div class="topics">
         <section class="topic"><span class="topic-icon" aria-hidden="true">◎</span><div><strong>Competing ministry assignments</strong><small>When multiple teams need the same volunteer</small></div></section>
-        <section class="topic"><span class="topic-icon" aria-hidden="true">◷</span><div><strong>Interrupted responsibilities</strong><small>Declined duties, missed work, and staffing gaps</small></div></section>
+        <section class="topic"><span class="topic-icon" aria-hidden="true">◷</span><div><strong>Interrupted responsibilities</strong><small>Declined duties, missed work, and postponed or canceled activities</small></div></section>
         <section class="topic"><span class="topic-icon" aria-hidden="true">✦</span><div><strong>Coordination and objectives</strong><small>Role priorities, scheduling, and reported consequences</small></div></section>
       </div>
     </div>
@@ -111,7 +113,8 @@
     ministries:{"0":"None","1":"1","2":"2","3":"3","4+":"4+"},
     frequency:{"never":"Never","once":"Once","2-3":"2–3 times","4+":"4+ times","unsure":"Not sure","na":"Not applicable"},
     schedulingCoordination:{"always":"Always","often":"Often","sometimes":"Sometimes","rarely":"Rarely","never":"Never","unsure":"Not sure"},
-    conflictPriority:{"yes":"Yes","sometimes":"Sometimes","no":"No","unsure":"Not sure"},
+    conflictPriority:{"yes":"Yes","sometimes":"Sometimes","no":"No","unsure":"Not sure","na":"Not applicable"},
+    replacementAvailable:{"always":"Always","often":"Often","sometimes":"Sometimes","rarely":"Rarely","never":"Never","unsure":"Not sure","na":"Not applicable"},
     objectiveImpact:{"not-at-all":"Not at all","slightly":"Slightly","moderately":"Moderately","significantly":"Significantly","unsure":"Not sure"}
   };
   function renderRows(key,rows,total){
@@ -138,10 +141,10 @@
       const data=await response.json();
       if(!data.ready){
         heading.textContent="Findings are gathering";
-        detail.textContent="There are "+Number(data.responses||0)+" responses so far. Grouped results appear after "+Number(data.minimumResponses||10)+" submissions.";
+        detail.textContent="There are "+Number(data.responses||0)+" responses to the refined survey so far. Grouped results appear after "+Number(data.minimumResponses||10)+" submissions."
         return;
       }
-      const keys=["ministries","conflictingRequests","declinedResponsibility","delayedResponsibility","observedStaffingGap","schedulingCoordination","conflictPriority","objectiveImpact"];
+      const keys=["ministries","conflictingRequests","declinedResponsibility","delayedResponsibility","observedStaffingGap","observedActivityDisruption","schedulingCoordination","conflictPriority","replacementAvailable","objectiveImpact"];
       const total=Number(data.responses);
       if(!Number.isSafeInteger(total)||total<10||!data.distributions||keys.some(key=>!Array.isArray(data.distributions[key])))throw Error("Unexpected data");
       document.getElementById("responseCount").textContent=total.toLocaleString();
@@ -156,7 +159,7 @@
             const x=document.createElement("span");x.textContent=value;caption.appendChild(x);
           }
           root.appendChild(caption);
-          for(const [field,name] of [["overlapping","Competing requests"],["delayed","Delayed duties"],["impact","Reported impact on plans"]]){
+          for(const [field,name] of [["overlapping","Competing requests"],["delayed","Delayed duties"],["disrupted","Disrupted activities"],["impact","Reported impact on plans"]]){
             const row=document.createElement("div");row.className="compare-line";
             const label=document.createElement("span");label.textContent=name;row.appendChild(label);
             for(const item of [single,multiple]){
