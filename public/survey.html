@@ -87,8 +87,34 @@
       </section>
       <section class="panel" data-step="1" aria-labelledby="serviceTitle" hidden>
         <p class="eyebrow">01 / Your involvement</p>
-        <h2 id="serviceTitle" tabindex="-1">Tell us about your ministry commitments.</h2>
-        <p class="quiet">Include rehearsals, preparation, services, meetings, and other ministry duties. Estimates are fine.</p>
+        <h2 id="serviceTitle" tabindex="-1">About you and your service</h2>
+        <div class="field"><label for="ageGroup">Age bracket</label>
+          <select id="ageGroup" name="ageGroup" required>
+            <option value="">Choose your age range</option>
+            <option value="18-24">18–24</option>
+            <option value="25-34">25–34</option>
+            <option value="35-44">35–44</option>
+            <option value="45-54">45–54</option>
+            <option value="55+">55 and above</option>
+          </select>
+          <small>For participants aged 18 and above.</small>
+        </div>
+        <div class="field"><label for="lifeStage">Current life stage</label>
+          <select id="lifeStage" name="lifeStage" required>
+            <option value="">Choose what best describes you</option>
+            <option value="student">Student</option>
+            <option value="working-student">Working student</option>
+            <option value="working">Working adult</option>
+            <option value="working-parent">Working parent</option>
+            <option value="single-parent">Single parent</option>
+            <option value="caregiver">Full-time parent or caregiver</option>
+            <option value="not-working">Not currently working</option>
+            <option value="retired">Retired</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <p class="eyebrow" style="margin-top:28px">Ministry commitments</p>
+        <p class="quiet">Include preparation, rehearsals, services, and meetings.</p>
         <div class="field"><label for="ministries">How many church ministries do you currently serve in?</label>
           <select id="ministries" name="ministries" required><option value="">Choose an answer</option><option value="0">None right now</option><option value="1">1 ministry</option><option value="2">2 ministries</option><option value="3">3 ministries</option><option value="4+">4 or more ministries</option></select>
         </div>
@@ -112,7 +138,11 @@
           <label for="finalThoughts">Your ministry experience <small>(Optional)</small></label>
           <textarea name="finalThoughts" id="finalThoughts" maxlength="700" placeholder="Share your thoughts, suggestions, or concerns…"></textarea>
         </div>
-        <p class="quiet">Responses are not linked to Ekklesia accounts. Do not include names or identifying details.</p>
+        <p class="quiet">Please avoid including names or identifying details in your comment.</p>
+        <label class="consent">
+          <input type="checkbox" name="consent" required>
+          <span>I understand my answers will be used only for this ministry research and shared publicly only as anonymous, grouped results. My Ekklesia account will not be linked. I agree to submit.</span>
+        </label>
         <p class="error" id="submitError" role="alert" hidden></p>
       </section>
     </form>
@@ -140,19 +170,6 @@
     ["meaning","I find my ministry involvement personally meaningful."]
   ];
   var form = document.getElementById("survey");
-  if (COLLECTION_ENDPOINT) {
-    var consentLabel = document.createElement("label");
-    consentLabel.className = "consent";
-    var consentInput = document.createElement("input");
-    consentInput.type = "checkbox";
-    consentInput.name = "consent";
-    consentInput.required = true;
-    var consentText = document.createElement("span");
-    consentText.textContent = "I am 18 or older and voluntarily agree to submit my answers. My Ekklesia account will not be linked to this survey.";
-    consentLabel.appendChild(consentInput);
-    consentLabel.appendChild(consentText);
-    form.querySelector('[data-step="3"]').insertBefore(consentLabel, document.getElementById("submitError"));
-  }
   var sections = Array.prototype.slice.call(form.querySelectorAll("[data-step]"));
   var questionsRoot = document.getElementById("scaleQuestions");
   var step = 0, busy = false;
@@ -203,13 +220,13 @@
     try{
       var data=Object.fromEntries(new FormData(form).entries());
       var answers={};
-      ["ministries","hours","days","rest","family","growth","pressure","meaning","finalThoughts"].forEach(function(key){
+      ["ageGroup","lifeStage","ministries","hours","days","rest","family","growth","pressure","meaning","finalThoughts"].forEach(function(key){
         answers[key]=data[key]||"";
       });
       var response=await fetch(COLLECTION_ENDPOINT,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({survey:"ministry-load-v1",consent:true,answers:answers})
+        body:JSON.stringify({survey:"ministry-load-v2",consent:data.consent==="on",answers:answers})
       });
       var result=await response.json().catch(function(){return {};});
       if(!response.ok || !result.received){
