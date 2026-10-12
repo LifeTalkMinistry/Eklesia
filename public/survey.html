@@ -82,12 +82,12 @@
   <main>
     <form id="survey" novalidate>
       <section class="panel" data-step="0" aria-labelledby="introTitle">
-        <h1 id="introTitle" tabindex="-1">Serving in multiple ministries?</h1>
-        <p class="lead">How does serving in several ministries affect your time for rest, family, work, and spiritual life?</p>
+        <h1 id="introTitle" tabindex="-1">When ministries need you at once</h1>
+        <p class="lead">How do overlapping ministry roles affect church coordination and the ability of teams to fulfill their responsibilities?</p>
       </section>
       <section class="panel" data-step="1" aria-labelledby="serviceTitle" hidden>
-        <p class="eyebrow">01 / Your involvement</p>
-        <h2 id="serviceTitle" tabindex="-1">About you and your service</h2>
+        <p class="eyebrow">01 / Your role</p>
+        <h2 id="serviceTitle" tabindex="-1">Your role in the church</h2>
         <div class="field"><label for="ageGroup">Age bracket</label>
           <select id="ageGroup" name="ageGroup" required>
             <option value="">Choose your age range</option>
@@ -112,16 +112,22 @@
             <option value="other">Other</option>
           </select>
         </div>
-        <p class="eyebrow" style="margin-top:28px">Ministry commitments</p>
-        <p class="quiet">Include preparation, rehearsals, services, and meetings.</p>
-        <div class="field"><label for="ministries">How many church ministries do you currently serve in?</label>
-          <select id="ministries" name="ministries" required><option value="">Choose an answer</option><option value="0">None right now</option><option value="1">1 ministry</option><option value="2">2 ministries</option><option value="3">3 ministries</option><option value="4+">4 or more ministries</option></select>
+        <p class="eyebrow" style="margin-top:28px">Ministry involvement</p>
+        <div class="field">
+          <label for="ministries">How many ministries do you currently serve in?</label>
+          <select id="ministries" name="ministries" required>
+            <option value="">Choose an answer</option>
+            <option value="0">None</option><option value="1">1 ministry</option>
+            <option value="2">2 ministries</option><option value="3">3 ministries</option>
+            <option value="4+">4 or more ministries</option>
+          </select>
         </div>
-        <div class="field"><label for="hours">About how many hours per week do you spend on ministry activities?</label>
-          <select id="hours" name="hours" required><option value="">Choose an answer</option><option value="0">0 hours</option><option value="1-2">1–2 hours</option><option value="3-5">3–5 hours</option><option value="6-10">6–10 hours</option><option value="11-15">11–15 hours</option><option value="16-20">16–20 hours</option><option value="21+">More than 20 hours</option></select>
-        </div>
-        <div class="field"><label for="days">On how many days in a typical week do you have ministry commitments?</label>
-          <select id="days" name="days" required><option value="">Choose an answer</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select>
+        <div class="field">
+          <label for="ministryLeader">Do you lead or coordinate any ministry?</label>
+          <select id="ministryLeader" name="ministryLeader" required>
+            <option value="">Choose an answer</option>
+            <option value="yes">Yes</option><option value="no">No</option>
+          </select>
         </div>
       </section>
       <section class="panel" data-step="2" aria-labelledby="experienceTitle" hidden>
