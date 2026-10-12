@@ -55,7 +55,7 @@ function MinistrySurveyInvite() {
 
   return (
     <aside className="ministry-survey-invite" aria-label="Ministry involvement research invitation">
-      <a className="ministry-survey-invite-link" href={`${import.meta.env.BASE_URL}survey.html`}>
+      <a className="ministry-survey-invite-link" href={`${import.meta.env.BASE_URL}survey.html?from=app`}>
         <span className="ministry-survey-invite-icon" aria-hidden="true">♡</span>
         <span><strong>Take the survey now!</strong><small>Share your ministry experience · Research preview</small></span>
         <span aria-hidden="true">↗</span>
