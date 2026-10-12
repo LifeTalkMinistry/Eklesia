@@ -76,12 +76,11 @@
   <main>
     <form id="survey" novalidate>
       <section class="panel" data-step="0" aria-labelledby="introTitle">
-        <p class="eyebrow">An invitation to reflect</p>
-        <h1 id="introTitle" tabindex="-1">What is it like to serve in church today?</h1>
-        <p class="lead">We are exploring how serving in one or multiple ministries relates to personal well-being, relationships, and spiritual experience.</p>
-        <p class="quiet">This is a voluntary research questionnaire for adults (18+). You can stop at any time. No name, email address, church affiliation, or Ekklesia Pulse sign-in is requested. Please answer from your own experience; there are no right or wrong answers.</p>
-        <div class="note" id="collectionNote">Research preview: responses are not being collected yet. The questionnaire and collection process must be approved before launch.</div>
-        <label class="consent"><input type="checkbox" name="consent" required><span>I am at least 18 years old, have read the information above, and voluntarily agree to take part.</span></label>
+        <p class="eyebrow">Ministry involvement survey</p>
+        <h1 id="introTitle" tabindex="-1">Serving in multiple ministries?</h1>
+        <p class="lead">Tell us how church service affects your time, rest, relationships, and spiritual life.</p>
+        <p class="quiet">A short, voluntary survey for church members.</p>
+        <p class="quiet" id="collectionNote">Preview only — responses are not collected yet.</p>
       </section>
       <section class="panel" data-step="1" aria-labelledby="serviceTitle" hidden>
         <p class="eyebrow">01 / Your involvement</p>
@@ -142,6 +141,19 @@
   var returnToApp=document.getElementById("returnToApp");
   returnToApp.hidden = new URLSearchParams(window.location.search).get("from") !== "app";
   var form = document.getElementById("survey");
+  if (COLLECTION_ENDPOINT) {
+    var consentLabel = document.createElement("label");
+    consentLabel.className = "consent";
+    var consentInput = document.createElement("input");
+    consentInput.type = "checkbox";
+    consentInput.name = "consent";
+    consentInput.required = true;
+    var consentText = document.createElement("span");
+    consentText.textContent = "I am at least 18 and freely agree to submit my responses to the research team.";
+    consentLabel.appendChild(consentInput);
+    consentLabel.appendChild(consentText);
+    form.querySelector('[data-step="3"]').insertBefore(consentLabel, document.getElementById("submitError"));
+  }
   var sections = Array.prototype.slice.call(form.querySelectorAll("[data-step]"));
   var questionsRoot = document.getElementById("scaleQuestions");
   var step = 0, busy = false;
@@ -169,7 +181,7 @@
     document.getElementById("progressBar").style.width=progress+"%";
     document.getElementById("progressTrack").setAttribute("aria-valuenow",String(progress));
     back.hidden=step===0;
-    next.textContent=step===0?"Begin survey →":step===3?(COLLECTION_ENDPOINT?"Submit responses":"Finish preview"):"Continue →";
+    next.textContent=step===0?"Start survey →":step===3?(COLLECTION_ENDPOINT?"Submit responses":"Finish preview"):"Continue →";
     window.scrollTo({top:0,behavior:"instant"});
     var heading=sections[step].querySelector("h1,h2");
     if(heading) heading.focus({preventScroll:true});
@@ -205,8 +217,8 @@
     }finally{busy=false;next.disabled=false;}
   });
   document.getElementById("collectionNote").textContent = COLLECTION_ENDPOINT
-    ? "Your answers will be sent to the research collection service after you submit. The survey does not access your devotional history or app profile."
-    : "Research preview: responses are not being collected yet. The questionnaire and collection process must be approved before launch.";
+    ? "Voluntary participation. Responses will be submitted to the research team."
+    : "Preview only — responses are not collected yet.";
   show();
 })();
 </script>
