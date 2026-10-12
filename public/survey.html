@@ -66,7 +66,7 @@
 <body>
 <div class="layout">
   <header class="top">
-    <a class="brand" href="./"><span class="brand-logo" aria-hidden="true">✧</span><span>Ministry Load</span></a>
+    <div class="brand"><span class="brand-logo" aria-hidden="true">✧</span><span>Ministry Load</span></div>
     <span class="study-tag">Volunteer study</span>
   </header>
   <div class="progress-wrap" id="progressArea">
@@ -117,7 +117,7 @@
       <p class="eyebrow">Thank you for reflecting</p><h2 tabindex="-1">Your experience matters.</h2>
       <div class="success"><strong id="doneHeading">Survey preview complete</strong><span id="doneMessage">This was a preview. No answers were transmitted or saved.</span></div>
       <p class="quiet">A strong church community should be willing to listen to the people who serve.</p>
-      <a class="primary" style="display:block;text-align:center;text-decoration:none;margin-top:22px" href="./">Return to Ekklesia Pulse</a>
+      <a class="primary" id="returnToApp" hidden style="display:block;text-align:center;text-decoration:none;margin-top:22px" href="./">Return to app</a>
     </section>
   </main>
   <div class="actions" id="actions">
@@ -139,6 +139,8 @@
     ["pressure","I feel pressured to accept or maintain ministry responsibilities."],
     ["meaning","I find my ministry involvement personally meaningful."]
   ];
+  var returnToApp=document.getElementById("returnToApp");
+  returnToApp.hidden = new URLSearchParams(window.location.search).get("from") !== "app";
   var form = document.getElementById("survey");
   var sections = Array.prototype.slice.call(form.querySelectorAll("[data-step]"));
   var questionsRoot = document.getElementById("scaleQuestions");
