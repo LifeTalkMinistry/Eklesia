@@ -226,8 +226,8 @@
     </form>
     <section class="panel" id="done" hidden aria-live="polite">
       <p class="eyebrow">Thank you for reflecting</p><h2 tabindex="-1">Your experience matters.</h2>
-      <div class="success"><strong id="doneHeading">Survey preview complete</strong><span id="doneMessage">This was a preview. No answers were transmitted or saved.</span></div>
-      <p class="quiet">A strong church community should be willing to listen to the people who serve.</p>
+      <div class="success"><strong id="doneHeading">Thank you</strong><span id="doneMessage">Your response has been recorded.</span></div>
+      <p class="quiet">Your feedback helps us understand whether ministry assignments and schedules are working effectively.</p>
       <a class="primary" id="viewResults" style="display:block;text-align:center;text-decoration:none;margin-top:22px" href="./results.html">View survey results →</a>
     </section>
   </main>
@@ -239,34 +239,11 @@
 <script>
 (function(){
   "use strict";
-  const COLLECTION_ENDPOINT = "https://api.clarapmc.com/api/ekklesia/surveys/ministry-load";
-  var questions = [
-    ["rest","I have enough time for rest and recovery."],
-    ["family","I have enough time to fulfill my family and personal responsibilities."],
-    ["growth","My ministry involvement supports my spiritual growth."],
-    ["pressure","I feel pressured to accept or maintain ministry responsibilities."],
-    ["meaning","I find my ministry involvement personally meaningful."]
-  ];
+  const COLLECTION_ENDPOINT = "https://api.clarapmc.com/api/ekklesia/surveys/ministry-coordination";
   var form = document.getElementById("survey");
   var sections = Array.prototype.slice.call(form.querySelectorAll("[data-step]"));
-  var questionsRoot = document.getElementById("scaleQuestions");
+
   var step = 0, busy = false;
-  questions.forEach(function(pair){
-    var field = document.createElement("fieldset");
-    field.className = "scale-field";
-    var legend = document.createElement("legend");
-    legend.textContent = pair[1]; field.appendChild(legend);
-    var scale = document.createElement("div"); scale.className = "scale";
-    for(var i=1;i<=5;i++){
-      var label=document.createElement("label"),input=document.createElement("input"),span=document.createElement("span");
-      input.type="radio";input.name=pair[0];input.value=String(i);input.required=true;input.setAttribute("aria-label",String(i)+" of 5");
-      span.textContent=String(i);label.appendChild(input);label.appendChild(span);scale.appendChild(label);
-    }
-    field.appendChild(scale);
-    var hints=document.createElement("div");hints.className="scale-hints";
-    hints.innerHTML="<span>1 · Strongly disagree</span><span>5 · Strongly agree</span>";
-    field.appendChild(hints);questionsRoot.appendChild(field);
-  });
   var back=document.getElementById("back"),next=document.getElementById("next");
   function show(){
     document.querySelector(".layout").classList.toggle("is-intro",step===0);
@@ -298,13 +275,13 @@
     try{
       var data=Object.fromEntries(new FormData(form).entries());
       var answers={};
-      ["ageGroup","lifeStage","ministries","hours","days","rest","family","growth","pressure","meaning","finalThoughts"].forEach(function(key){
+      ["ageGroup","lifeStage","ministries","ministryLeader","conflictingRequests","declinedResponsibility","delayedResponsibility","observedStaffingGap","schedulingCoordination","conflictPriority","objectiveImpact","finalThoughts"].forEach(function(key){
         answers[key]=data[key]||"";
       });
       var response=await fetch(COLLECTION_ENDPOINT,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({survey:"ministry-load-v2",consent:data.consent==="on",answers:answers})
+        body:JSON.stringify({survey:"ministry-coordination-v1",consent:data.consent==="on",answers:answers})
       });
       var result=await response.json().catch(function(){return {};});
       if(!response.ok || !result.received){
