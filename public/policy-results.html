@@ -40,6 +40,7 @@ h1{font-size:clamp(2rem,8vw,2.9rem);margin:0}h2{font-size:1.45rem;margin:0 0 15p
 <div class="card"><h2>Preferred church ministry policy</h2><div id="preferredModel"></div></div>
 <div class="card"><h2>Position after reflection</h2><div id="finalSupport"></div></div>
 <div class="card"><h2>Did they reconsider?</h2><div id="reconsideration"></div></div>
+<div class="card"><h2>Clarifying a different policy preference</h2><p class="note">Only some policy combinations trigger this follow-up. These categories also include participants who did not need it.</p><div id="consistencyDecision"></div></div>
 <p class="note">These results reflect the views of participants, not necessarily the entire church. A majority preference does not establish which policy would be most effective. Rare categories are hidden, and individual comments are never published.</p>
 </section>
 <a href="./policy.html" class="footer-link">Back to policy reflection →</a>
@@ -55,7 +56,8 @@ const labels={
  productivityBelief:{yes:"Yes",no:"No",depends:"Depends",unsure:"Not sure"},
  preferredModel:{strict:"Strictly one ministry",primary:"One primary ministry",coordinated:"Coordinated multiple ministries",flexible:"Flexible individual capacity",unsure:"Not sure"},
  finalSupport:{yes:"Support",no:"Oppose",unsure:"Not sure"},
- reconsideration:{maintained:"Maintained position",changed:"Changed position",uncertain:"Uncertain after reflection"}
+ reconsideration:{maintained:"Maintained position",changed:"Changed position",uncertain:"Uncertain after reflection"},
+ consistencyDecision:{changed:"Revised position",clarified:"Explained the distinction",unsure:"Unsure after follow-up","not-needed":"No follow-up needed"}
 };
 async function load(){
  const empty=document.getElementById("empty"),heading=document.getElementById("emptyTitle"),message=document.getElementById("emptyInfo");
@@ -65,7 +67,7 @@ async function load(){
   const data=await response.json();
   if(!data.ready){
    heading.textContent="Findings are gathering";
-   message.textContent=String(data.responses||0)+" reflections submitted. Grouped findings appear after at least "+String(data.minimumResponses||10)+" responses.";
+   message.textContent=String(data.responses||0)+" revised reflections submitted. Grouped findings appear after at least "+String(data.minimumResponses||10)+" responses."
    return;
   }
   const count=Number(data.responses);
