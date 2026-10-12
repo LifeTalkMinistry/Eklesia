@@ -239,10 +239,17 @@ function recap(){
  const root=document.getElementById("personalRecap");
  root.replaceChildren();
  for(const [name,key] of [["Your initial position","initialSupport"],["Your main reason","initialReason"],["Your preferred model","preferredModel"],["Your position after reflection","finalSupport"],["Your follow-up","consistencyDecision"]]){
+   if(key==="consistencyDecision"&&!needsReflection())continue;
    const row=document.createElement("div");row.className="review-line";
    const label=document.createElement("small");label.textContent=name;
    const value=document.createElement("strong");value.textContent=labelFor(key);
    row.append(label,value);root.appendChild(row);
+ }
+ if(needsReflection() && consistency.value==="clarified"){
+   const row=document.createElement("div");row.className="review-line";
+   const label=document.createElement("small");label.textContent="Your explanation";
+   const answer=document.createElement("strong");answer.textContent=explanation.value.trim();
+   row.append(label,answer);root.appendChild(row);
  }
 }
 next.addEventListener("click",async()=>{
