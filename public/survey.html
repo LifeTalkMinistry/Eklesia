@@ -131,10 +131,53 @@
         </div>
       </section>
       <section class="panel" data-step="2" aria-labelledby="experienceTitle" hidden>
-        <p class="eyebrow">02 / Your experience</p>
-        <h2 id="experienceTitle" tabindex="-1">How has ministry involvement felt recently?</h2>
-        <p class="quiet">Thinking about the last four weeks, how strongly do you agree with each statement?</p>
-        <div id="scaleQuestions"></div>
+        <p class="eyebrow">02 / Role conflicts</p>
+        <h2 id="experienceTitle" tabindex="-1">When responsibilities overlap</h2>
+        <p class="quiet">Thinking about the past 3 months, answer based on what you personally experienced or observed.</p>
+        <div class="field"><label for="conflictingRequests">How often did two ministries need you at the same time?</label>
+          <select id="conflictingRequests" name="conflictingRequests" required>
+            <option value="">Choose an answer</option>
+            <option value="never">Never</option>
+            <option value="once">Once</option>
+            <option value="2-3">2–3 times</option>
+            <option value="4+">4 or more times</option>
+            <option value="unsure">Not sure</option>
+            <option value="na">Not applicable</option>
+          </select>
+        </div>
+        <div class="field"><label for="declinedResponsibility">How often did you decline a responsibility because another ministry needed you?</label>
+          <select id="declinedResponsibility" name="declinedResponsibility" required>
+            <option value="">Choose an answer</option>
+            <option value="never">Never</option>
+            <option value="once">Once</option>
+            <option value="2-3">2–3 times</option>
+            <option value="4+">4 or more times</option>
+            <option value="unsure">Not sure</option>
+            <option value="na">Not applicable</option>
+          </select>
+        </div>
+        <div class="field"><label for="delayedResponsibility">How often was one of your duties delayed or missed because you had to serve elsewhere?</label>
+          <select id="delayedResponsibility" name="delayedResponsibility" required>
+            <option value="">Choose an answer</option>
+            <option value="never">Never</option>
+            <option value="once">Once</option>
+            <option value="2-3">2–3 times</option>
+            <option value="4+">4 or more times</option>
+            <option value="unsure">Not sure</option>
+            <option value="na">Not applicable</option>
+          </select>
+        </div>
+        <div class="field"><label for="observedStaffingGap">How often did you notice a ministry short of volunteers because members were needed elsewhere?</label>
+          <select id="observedStaffingGap" name="observedStaffingGap" required>
+            <option value="">Choose an answer</option>
+            <option value="never">Never</option>
+            <option value="once">Once</option>
+            <option value="2-3">2–3 times</option>
+            <option value="4+">4 or more times</option>
+            <option value="unsure">Not sure</option>
+            <option value="na">Not applicable</option>
+          </select>
+        </div>
       </section>
       <section class="panel" data-step="3" aria-labelledby="voiceTitle" hidden>
         <p class="eyebrow">03 / Final thoughts</p>
