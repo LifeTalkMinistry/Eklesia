@@ -106,12 +106,13 @@
         <div id="scaleQuestions"></div>
       </section>
       <section class="panel" data-step="3" aria-labelledby="voiceTitle" hidden>
-        <p class="eyebrow">03 / In your words</p>
-        <h2 id="voiceTitle" tabindex="-1">What would you want church leaders to understand?</h2>
-        <p class="lead">Your experiences matter, whether service has been rewarding, difficult, or a mixture of both.</p>
-        <div class="field"><label for="meaningful">What has been most meaningful about serving? <small>Optional</small></label><textarea name="meaningful" id="meaningful" maxlength="700" placeholder="Share your thoughts…"></textarea></div>
-        <div class="field"><label for="improvement">What, if anything, would improve your ministry experience? <small>Optional</small></label><textarea name="improvement" id="improvement" maxlength="700" placeholder="Share your thoughts…"></textarea></div>
-        <div class="note">This is a preview. Answers are not currently being collected or saved.</div>
+        <p class="eyebrow">03 / Final thoughts</p>
+        <h2 id="voiceTitle" tabindex="-1">Anything else you'd like to share?</h2>
+        <div class="field">
+          <label for="finalThoughts">Your ministry experience <small>(Optional)</small></label>
+          <textarea name="finalThoughts" id="finalThoughts" maxlength="700" placeholder="Share your thoughts, suggestions, or concerns…"></textarea>
+        </div>
+        <p class="quiet">Preview only — answers aren't saved yet.</p>
         <p class="error" id="submitError" role="alert" hidden></p>
       </section>
     </form>
@@ -185,7 +186,7 @@
     document.getElementById("progressBar").style.width=progress+"%";
     document.getElementById("progressTrack").setAttribute("aria-valuenow",String(progress));
     back.hidden=step===0;
-    next.textContent=step===0?"Start survey →":step===3?(COLLECTION_ENDPOINT?"Submit responses":"Finish preview"):"Continue →";
+    next.textContent=step===0?"Start survey →":step===3?(COLLECTION_ENDPOINT?"Submit responses":"Finish"):"Continue →";
     window.scrollTo({top:0,behavior:"instant"});
     var heading=sections[step].querySelector("h1,h2");
     if(heading) heading.focus({preventScroll:true});
