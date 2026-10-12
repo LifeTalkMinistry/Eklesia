@@ -34,6 +34,17 @@
     .topic strong { display:block; color:#f6f8ff; font-size:.92rem; line-height:1.35; }
     .topic small { display:block; color:#9eb2d0; font-size:.76rem; margin-top:4px; line-height:1.4; }
     .return { display:block; padding:15px 18px; margin-top:29px; border-radius:15px; background:#c1d3ff; color:#102039; font-size:.95rem; font-weight:800; text-align:center; text-decoration:none; }
+    .live-summary { margin:27px 0 18px; border:1px solid #455d7f; border-radius:22px; background:#1b3152; padding:20px 23px; }
+    .live-summary strong { display:block; font-size:2.1rem; line-height:1.15; font-weight:750; color:#f8faff; }
+    .live-summary span { color:#c1d0e8; font-size:.82rem; }
+    .live-panel { margin-top:17px; border:1px solid #304460; border-radius:20px; padding:20px 17px; background:rgba(23,44,74,.7); }
+    .live-panel h2 { font-size:1.3rem; margin-bottom:16px; }
+    .result-row { display:grid; grid-template-columns:90px 1fr 50px; align-items:center; gap:11px; margin:12px 0; color:#dce7f9; font-size:.84rem; }
+    .result-row .value { text-align:right; color:#cbdaf1; font-variant-numeric:tabular-nums; }
+    .bar { display:block; height:10px; width:100%; border-radius:20px; overflow:hidden; background:#304463; }
+    .bar-fill { display:block; height:100%; border-radius:20px; background:linear-gradient(90deg,#7bb4ff,#c7b7ff); }
+    .live-note { margin:16px 0; font-size:.78rem; color:#9eb6d6; line-height:1.65; }
+    @media(max-width:350px){.result-row{grid-template-columns:75px 1fr 46px;gap:7px;}}
     .privacy { text-align:center; color:#8da4c2; font-size:.73rem; line-height:1.6; margin:18px 8px 0; }
     @media (min-width:620px) { .page { padding:28px 30px 45px; } }
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; } }
@@ -49,21 +60,93 @@
     <h1>Survey Results</h1>
     <p class="intro">Understanding how multiple ministry responsibilities affect church volunteers.</p>
 
-    <section class="empty-state" aria-labelledby="empty-heading">
+    <section class="empty-state" id="emptyState" aria-labelledby="empty-heading" aria-live="polite">
       <div class="empty-icon" aria-hidden="true">▥</div>
-      <h2 id="empty-heading">No results available yet</h2>
-      <p>The survey is still in preview mode and isn't collecting responses. Community findings will appear here when anonymous data collection is ready.</p>
+      <h2 id="empty-heading">Checking results…</h2>
+      <p id="emptyText">Connecting to the survey database.</p>
     </section>
 
-    <p class="section-heading">What the results will explore</p>
+    <section id="liveDashboard" hidden aria-label="Anonymous community survey results">
+      <div class="live-summary"><strong id="responseCount">—</strong><span>Anonymous survey responses</span></div>
+      <div class="live-panel"><h2>Number of ministries</h2><div id="ministryCounts"></div></div>
+      <div class="live-panel"><h2>Hours serving each week</h2><div id="weeklyHours"></div></div>
+      <div class="live-panel"><h2>Days serving each week</h2><div id="weeklyDays"></div></div>
+      <div class="live-panel"><h2>Volunteers' experiences</h2><div id="averages"></div><p class="live-note">Average agreement on a 1–5 scale (1 = strongly disagree, 5 = strongly agree). Higher numbers are not necessarily better for all questions.</p></div>
+      <p class="live-note">Only aggregated statistics are public. Categories with fewer than three replies are suppressed; individual comments are never shown.</p>
+    </section>
+
+    <div id="upcoming"><p class="section-heading">What the results will explore</p>
     <div class="topics">
       <section class="topic"><span class="topic-icon" aria-hidden="true">◎</span><div><strong>Ministry involvement</strong><small>How many ministries volunteers serve in</small></div></section>
       <section class="topic"><span class="topic-icon" aria-hidden="true">◷</span><div><strong>Time commitment</strong><small>Weekly hours and days spent serving</small></div></section>
       <section class="topic"><span class="topic-icon" aria-hidden="true">♡</span><div><strong>Rest and relationships</strong><small>How volunteers experience balance and recovery</small></div></section>
       <section class="topic"><span class="topic-icon" aria-hidden="true">✦</span><div><strong>Spiritual experience</strong><small>Meaning, growth, and perceived pressure</small></div></section>
     </div>
+    </div>
     <a class="return" href="./survey.html">Back to survey →</a>
-    <p class="privacy">Future results will be presented as aggregated findings, without identifying individual respondents.</p>
+    <p class="privacy">Individual responses and written reflections are not published.</p>
   </main>
+
+<script>
+(function(){
+  "use strict";
+  const ENDPOINT="https://api.clarapmc.com/api/ekklesia/surveys/ministry-load/results";
+  const emptyState=document.getElementById("emptyState");
+  const emptyHeading=document.getElementById("empty-heading");
+  const emptyText=document.getElementById("emptyText");
+  const dashboard=document.getElementById("liveDashboard");
+  function addBar(container,label,count,total){
+    const row=document.createElement("div");row.className="result-row";
+    const name=document.createElement("span");name.textContent=label;
+    const bar=document.createElement("span");bar.className="bar";
+    const fill=document.createElement("span");fill.className="bar-fill";
+    fill.style.width=count===null?"0%":Math.max(0,Math.min(100,count/Math.max(1,total)*100))+"%";
+    bar.appendChild(fill);
+    const value=document.createElement("span");value.className="value";
+    value.textContent=count===null?"< 3":String(count);
+    row.append(name,bar,value);container.appendChild(row);
+  }
+  function addAverage(container,label,average){
+    if(typeof average!=="number" || !Number.isFinite(average))return;
+    const row=document.createElement("div");row.className="result-row";
+    const name=document.createElement("span");name.textContent=label;
+    const bar=document.createElement("span");bar.className="bar";
+    const fill=document.createElement("span");fill.className="bar-fill";
+    fill.style.width=Math.max(0,Math.min(100,average/5*100))+"%";
+    bar.appendChild(fill);
+    const value=document.createElement("span");value.className="value";
+    value.textContent=average.toFixed(1)+"/5";
+    row.append(name,bar,value);container.appendChild(row);
+  }
+  async function load(){
+    try {
+      const response=await fetch(ENDPOINT,{cache:"no-store",headers:{"Accept":"application/json"}});
+      if(!response.ok)throw Error("Backend unavailable");
+      const data=await response.json();
+      if(!data.ready){
+        emptyHeading.textContent="Results are gathering";
+        emptyText.textContent=String(data.responses||0)+" survey responses received. Grouped results will appear after "+String(data.minimumResponses||10)+" responses to protect participants' privacy.";
+        return;
+      }
+      if(!Array.isArray(data.ministryCounts)||!Array.isArray(data.weeklyHours)||!Array.isArray(data.weeklyDays)||!data.averages||!Number.isFinite(Number(data.responses)))throw Error("Invalid response");
+      const total=Number(data.responses);
+      document.getElementById("responseCount").textContent=total.toLocaleString();
+      const ministryLabels={"0":"None","1":"1 ministry","2":"2 ministries","3":"3 ministries","4+":"4+ ministries"};
+      for(const row of data.ministryCounts)addBar(document.getElementById("ministryCounts"),ministryLabels[row.label]||row.label,row.count,total);
+      for(const row of data.weeklyHours)addBar(document.getElementById("weeklyHours"),row.label==="0"?"0 hrs":row.label+" hrs",row.count,total);
+      for(const row of data.weeklyDays)addBar(document.getElementById("weeklyDays"),row.label==="1"?"1 day":row.label+" days",row.count,total);
+      const fields=[["rest","Time for rest"],["family","Family and personal time"],["growth","Spiritual growth"],["pressure","Felt pressure"],["meaning","Meaningful service"]];
+      for(const [key,label] of fields)addAverage(document.getElementById("averages"),label,data.averages[key]);
+      emptyState.hidden=true;
+      document.getElementById("upcoming").hidden=true;
+      dashboard.hidden=false;
+    }catch(e){
+      emptyHeading.textContent="Results temporarily unavailable";
+      emptyText.textContent="We couldn't reach the survey database. Please try again later.";
+    }
+  }
+  load();
+})();
+</script>
 </body>
 </html>

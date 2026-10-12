@@ -112,7 +112,7 @@
           <label for="finalThoughts">Your ministry experience <small>(Optional)</small></label>
           <textarea name="finalThoughts" id="finalThoughts" maxlength="700" placeholder="Share your thoughts, suggestions, or concerns…"></textarea>
         </div>
-        <p class="quiet">Your answers will remain anonymous. Please avoid sharing names or identifying details.</p>
+        <p class="quiet">Responses are not linked to Ekklesia accounts. Do not include names or identifying details.</p>
         <p class="error" id="submitError" role="alert" hidden></p>
       </section>
     </form>
@@ -131,9 +131,7 @@
 <script>
 (function(){
   "use strict";
-  // A collection endpoint must be approved and configured before accepting real responses.
-  // It must support CORS and accept a POST with Content-Type: application/json.
-  var COLLECTION_ENDPOINT = "";
+  const COLLECTION_ENDPOINT = "https://api.clarapmc.com/api/ekklesia/surveys/ministry-load";
   var questions = [
     ["rest","I have enough time for rest and recovery."],
     ["family","I have enough time to fulfill my family and personal responsibilities."],
@@ -150,7 +148,7 @@
     consentInput.name = "consent";
     consentInput.required = true;
     var consentText = document.createElement("span");
-    consentText.textContent = "I am at least 18 and freely agree to submit my responses to the research team.";
+    consentText.textContent = "I am 18 or older and voluntarily agree to submit my answers. My Ekklesia account will not be linked to this survey.";
     consentLabel.appendChild(consentInput);
     consentLabel.appendChild(consentText);
     form.querySelector('[data-step="3"]').insertBefore(consentLabel, document.getElementById("submitError"));
@@ -184,7 +182,7 @@
     document.getElementById("progressBar").style.width=progress+"%";
     document.getElementById("progressTrack").setAttribute("aria-valuenow",String(progress));
     back.hidden=step===0;
-    next.textContent=step===0?"Start survey →":step===3?(COLLECTION_ENDPOINT?"Submit responses":"Finish"):"Continue →";
+    next.textContent=step===0?"Start survey →":step===3?"Submit survey →":"Continue →";
     window.scrollTo({top:0,behavior:"instant"});
     var heading=sections[step].querySelector("h1,h2");
     if(heading) heading.focus({preventScroll:true});
@@ -203,20 +201,34 @@
     var error=document.getElementById("submitError");error.hidden=true;error.textContent="";
     busy=true;next.disabled=true;
     try{
-      if(COLLECTION_ENDPOINT){
-        var data=Object.fromEntries(new FormData(form).entries());
-        var response=await fetch(COLLECTION_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({survey:"ministry-load-v1",answers:data,submittedAt:new Date().toISOString()})});
-        if(!response.ok)throw new Error("Your response could not be submitted. Please try again.");
-        document.getElementById("doneHeading").textContent="Response received";
-        document.getElementById("doneMessage").textContent="Thank you for sharing your experience. Your answers were sent to the research collection service.";
+      var data=Object.fromEntries(new FormData(form).entries());
+      var answers={};
+      ["ministries","hours","days","rest","family","growth","pressure","meaning","finalThoughts"].forEach(function(key){
+        answers[key]=data[key]||"";
+      });
+      var response=await fetch(COLLECTION_ENDPOINT,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({survey:"ministry-load-v1",consent:true,answers:answers})
+      });
+      var result=await response.json().catch(function(){return {};});
+      if(!response.ok || !result.received){
+        throw new Error(response.status===429
+          ? "Too many attempts. Please try again later."
+          : result.message || "Could not submit your answers. Please try again.");
       }
+      document.getElementById("doneHeading").textContent="Response received";
+      document.getElementById("doneMessage").textContent="Thank you. Your answers have been saved for this research.";
+      document.querySelector(".layout").classList.remove("is-intro");
       form.hidden=true;document.getElementById("actions").hidden=true;
       document.getElementById("progressArea").hidden=true;
       document.getElementById("done").hidden=false;
       document.getElementById("done").querySelector("h2").focus();
       window.scrollTo({top:0,behavior:"instant"});
     }catch(e){
-      error.textContent=e.message||"Submission failed. Please try again.";error.hidden=false;
+      error.textContent=e instanceof TypeError
+        ? "The server is not reachable right now. Your answers are still here; please try again."
+        : e.message||"Submission failed. Please try again.";error.hidden=false;
     }finally{busy=false;next.disabled=false;}
   });
 
