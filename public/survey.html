@@ -50,6 +50,15 @@
     .scale-hints{display:flex;justify-content:space-between;gap:12px;color:#aabbd3;font-size:.73rem;margin-top:8px}
     .scale-hints span:last-child{text-align:right}
     .actions{position:sticky;bottom:0;padding:14px 20px max(16px,env(safe-area-inset-bottom));display:flex;gap:10px;background:linear-gradient(0deg,#081426 70%,rgba(8,20,38,.94));backdrop-filter:blur(12px);z-index:5}
+    /* Introduction only: keep the title, message, and CTA together as one centered start screen. */
+    .layout.is-intro{justify-content:center;gap:20px;padding-top:24px;padding-bottom:max(24px,env(safe-area-inset-bottom,0px))}
+    .layout.is-intro .top{justify-content:center;padding:0 20px}
+    .layout.is-intro main{flex:0 0 auto;width:100%;padding:0 16px}
+    .layout.is-intro #survey{width:100%}
+    .layout.is-intro .panel[data-step="0"]{text-align:center}
+    .layout.is-intro .panel[data-step="0"] .lead{text-align:center}
+    .layout.is-intro .actions{position:static;flex:0 0 auto;width:100%;padding:0 16px;background:transparent;backdrop-filter:none}
+    .layout.is-intro .actions .primary{width:100%}
     .primary,.secondary{min-height:52px;padding:13px 18px;border:1px solid transparent;border-radius:15px;font-weight:800;cursor:pointer}
     .primary{flex:1;background:#c1d3ff;color:#102039}
     .primary:disabled{opacity:.65;cursor:wait}
@@ -168,6 +177,7 @@
   });
   var back=document.getElementById("back"),next=document.getElementById("next");
   function show(){
+    document.querySelector(".layout").classList.toggle("is-intro",step===0);
     sections.forEach(function(section,i){section.hidden=i!==step;});
     document.getElementById("progressArea").hidden=step===0;
     document.getElementById("stepText").textContent="Step "+step+" of 3";
