@@ -276,6 +276,13 @@ next.addEventListener("click",async()=>{
  }catch(e){error.textContent=e instanceof TypeError?"Cannot reach the server. Your answers are still here.":e.message;error.hidden=false;}
  finally{busy=false;next.disabled=false;}
 });
+// Continue directly from the main survey when the respondent has already
+// selected Yes or No. The selection remains editable on this first step.
+const forwardedPosition=new URLSearchParams(window.location.search).get("position");
+if(forwardedPosition==="yes"||forwardedPosition==="no"){
+ stance.value=forwardedPosition;
+ step=1;
+}
 refreshReason();show();
 })();
 </script>
