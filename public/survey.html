@@ -82,12 +82,12 @@
   <main>
     <form id="survey" novalidate>
       <section class="panel" data-step="0" aria-labelledby="introTitle">
-        <h1 id="introTitle" tabindex="-1">Serving in multiple ministries?</h1>
-        <p class="lead">How does serving in several ministries affect your time for rest, family, work, and spiritual life?</p>
+        <h1 id="introTitle" tabindex="-1">When ministries need you at once</h1>
+        <p class="lead">How do overlapping ministry roles affect church coordination and the ability of teams to fulfill their responsibilities?</p>
       </section>
       <section class="panel" data-step="1" aria-labelledby="serviceTitle" hidden>
-        <p class="eyebrow">01 / Your involvement</p>
-        <h2 id="serviceTitle" tabindex="-1">About you and your service</h2>
+        <p class="eyebrow">01 / Your role</p>
+        <h2 id="serviceTitle" tabindex="-1">Your role in the church</h2>
         <div class="field"><label for="ageGroup">Age bracket</label>
           <select id="ageGroup" name="ageGroup" required>
             <option value="">Choose your age range</option>
@@ -112,43 +112,122 @@
             <option value="other">Other</option>
           </select>
         </div>
-        <p class="eyebrow" style="margin-top:28px">Ministry commitments</p>
-        <p class="quiet">Include preparation, rehearsals, services, and meetings.</p>
-        <div class="field"><label for="ministries">How many church ministries do you currently serve in?</label>
-          <select id="ministries" name="ministries" required><option value="">Choose an answer</option><option value="0">None right now</option><option value="1">1 ministry</option><option value="2">2 ministries</option><option value="3">3 ministries</option><option value="4+">4 or more ministries</option></select>
+        <p class="eyebrow" style="margin-top:28px">Ministry involvement</p>
+        <div class="field">
+          <label for="ministries">How many ministries do you currently serve in?</label>
+          <select id="ministries" name="ministries" required>
+            <option value="">Choose an answer</option>
+            <option value="0">None</option><option value="1">1 ministry</option>
+            <option value="2">2 ministries</option><option value="3">3 ministries</option>
+            <option value="4+">4 or more ministries</option>
+          </select>
         </div>
-        <div class="field"><label for="hours">About how many hours per week do you spend on ministry activities?</label>
-          <select id="hours" name="hours" required><option value="">Choose an answer</option><option value="0">0 hours</option><option value="1-2">1–2 hours</option><option value="3-5">3–5 hours</option><option value="6-10">6–10 hours</option><option value="11-15">11–15 hours</option><option value="16-20">16–20 hours</option><option value="21+">More than 20 hours</option></select>
-        </div>
-        <div class="field"><label for="days">On how many days in a typical week do you have ministry commitments?</label>
-          <select id="days" name="days" required><option value="">Choose an answer</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select>
+        <div class="field">
+          <label for="ministryLeader">Do you lead or coordinate any ministry?</label>
+          <select id="ministryLeader" name="ministryLeader" required>
+            <option value="">Choose an answer</option>
+            <option value="yes">Yes</option><option value="no">No</option>
+          </select>
         </div>
       </section>
       <section class="panel" data-step="2" aria-labelledby="experienceTitle" hidden>
-        <p class="eyebrow">02 / Your experience</p>
-        <h2 id="experienceTitle" tabindex="-1">How has ministry involvement felt recently?</h2>
-        <p class="quiet">Thinking about the last four weeks, how strongly do you agree with each statement?</p>
-        <div id="scaleQuestions"></div>
+        <p class="eyebrow">02 / Role conflicts</p>
+        <h2 id="experienceTitle" tabindex="-1">When responsibilities overlap</h2>
+        <p class="quiet">Thinking about the past 3 months, answer based on what you personally experienced or observed.</p>
+        <div class="field"><label for="conflictingRequests">How often did two ministries need you at the same time?</label>
+          <select id="conflictingRequests" name="conflictingRequests" required>
+            <option value="">Choose an answer</option>
+            <option value="never">Never</option>
+            <option value="once">Once</option>
+            <option value="2-3">2–3 times</option>
+            <option value="4+">4 or more times</option>
+            <option value="unsure">Not sure</option>
+            <option value="na">Not applicable</option>
+          </select>
+        </div>
+        <div class="field"><label for="declinedResponsibility">How often did you decline a responsibility because another ministry needed you?</label>
+          <select id="declinedResponsibility" name="declinedResponsibility" required>
+            <option value="">Choose an answer</option>
+            <option value="never">Never</option>
+            <option value="once">Once</option>
+            <option value="2-3">2–3 times</option>
+            <option value="4+">4 or more times</option>
+            <option value="unsure">Not sure</option>
+            <option value="na">Not applicable</option>
+          </select>
+        </div>
+        <div class="field"><label for="delayedResponsibility">How often was one of your duties delayed or missed because you had to serve elsewhere?</label>
+          <select id="delayedResponsibility" name="delayedResponsibility" required>
+            <option value="">Choose an answer</option>
+            <option value="never">Never</option>
+            <option value="once">Once</option>
+            <option value="2-3">2–3 times</option>
+            <option value="4+">4 or more times</option>
+            <option value="unsure">Not sure</option>
+            <option value="na">Not applicable</option>
+          </select>
+        </div>
+        <div class="field"><label for="observedStaffingGap">How often did you notice a ministry short of volunteers because members were needed elsewhere?</label>
+          <select id="observedStaffingGap" name="observedStaffingGap" required>
+            <option value="">Choose an answer</option>
+            <option value="never">Never</option>
+            <option value="once">Once</option>
+            <option value="2-3">2–3 times</option>
+            <option value="4+">4 or more times</option>
+            <option value="unsure">Not sure</option>
+            <option value="na">Not applicable</option>
+          </select>
+        </div>
       </section>
       <section class="panel" data-step="3" aria-labelledby="voiceTitle" hidden>
-        <p class="eyebrow">03 / Final thoughts</p>
-        <h2 id="voiceTitle" tabindex="-1">Anything else you'd like to share?</h2>
-        <div class="field">
-          <label for="finalThoughts">Your ministry experience <small>(Optional)</small></label>
-          <textarea name="finalThoughts" id="finalThoughts" maxlength="700" placeholder="Share your thoughts, suggestions, or concerns…"></textarea>
+        <p class="eyebrow">03 / Church coordination</p>
+        <h2 id="voiceTitle" tabindex="-1">Is the ministry structure working?</h2>
+        <div class="field"><label for="schedulingCoordination">How often do ministry leaders coordinate schedules and assignments?</label>
+          <select id="schedulingCoordination" name="schedulingCoordination" required>
+            <option value="">Choose an answer</option>
+            <option value="always">Always</option>
+            <option value="often">Often</option>
+            <option value="sometimes">Sometimes</option>
+            <option value="rarely">Rarely</option>
+            <option value="never">Never</option>
+            <option value="unsure">Not sure</option>
+          </select>
         </div>
-        <p class="quiet">Please avoid including names or identifying details in your comment.</p>
+        <div class="field"><label for="conflictPriority">When two responsibilities conflict, is it clear which one takes priority?</label>
+          <select id="conflictPriority" name="conflictPriority" required>
+            <option value="">Choose an answer</option>
+            <option value="yes">Yes</option>
+            <option value="sometimes">Sometimes</option>
+            <option value="no">No</option>
+            <option value="unsure">Not sure</option>
+          </select>
+        </div>
+        <div class="field"><label for="objectiveImpact">To what extent have overlapping ministry assignments affected your team's ability to carry out planned activities?</label>
+          <select id="objectiveImpact" name="objectiveImpact" required>
+            <option value="">Choose an answer</option>
+            <option value="not-at-all">Not at all</option>
+            <option value="slightly">Slightly</option>
+            <option value="moderately">Moderately</option>
+            <option value="significantly">Significantly</option>
+            <option value="unsure">Not sure</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="finalThoughts">An example or suggestion <small>(Optional)</small></label>
+          <textarea id="finalThoughts" name="finalThoughts" maxlength="700" placeholder="What works well, or what could be improved?"></textarea>
+        </div>
+        <p class="quiet">Please avoid names or identifying details.</p>
         <label class="consent">
           <input type="checkbox" name="consent" required>
-          <span>I understand my answers will be used only for this ministry research and shared publicly only as anonymous, grouped results. My Ekklesia account will not be linked. I agree to submit.</span>
+          <span>I understand my answers are for this ministry research. Only anonymous, grouped findings will be published, and my Ekklesia account will not be linked. I agree to submit.</span>
         </label>
         <p class="error" id="submitError" role="alert" hidden></p>
       </section>
     </form>
     <section class="panel" id="done" hidden aria-live="polite">
       <p class="eyebrow">Thank you for reflecting</p><h2 tabindex="-1">Your experience matters.</h2>
-      <div class="success"><strong id="doneHeading">Survey preview complete</strong><span id="doneMessage">This was a preview. No answers were transmitted or saved.</span></div>
-      <p class="quiet">A strong church community should be willing to listen to the people who serve.</p>
+      <div class="success"><strong id="doneHeading">Thank you</strong><span id="doneMessage">Your response has been recorded.</span></div>
+      <p class="quiet">Your feedback helps us understand whether ministry assignments and schedules are working effectively.</p>
       <a class="primary" id="viewResults" style="display:block;text-align:center;text-decoration:none;margin-top:22px" href="./results.html">View survey results →</a>
     </section>
   </main>
@@ -160,34 +239,11 @@
 <script>
 (function(){
   "use strict";
-  const COLLECTION_ENDPOINT = "https://api.clarapmc.com/api/ekklesia/surveys/ministry-load";
-  var questions = [
-    ["rest","I have enough time for rest and recovery."],
-    ["family","I have enough time to fulfill my family and personal responsibilities."],
-    ["growth","My ministry involvement supports my spiritual growth."],
-    ["pressure","I feel pressured to accept or maintain ministry responsibilities."],
-    ["meaning","I find my ministry involvement personally meaningful."]
-  ];
+  const COLLECTION_ENDPOINT = "https://api.clarapmc.com/api/ekklesia/surveys/ministry-coordination";
   var form = document.getElementById("survey");
   var sections = Array.prototype.slice.call(form.querySelectorAll("[data-step]"));
-  var questionsRoot = document.getElementById("scaleQuestions");
+
   var step = 0, busy = false;
-  questions.forEach(function(pair){
-    var field = document.createElement("fieldset");
-    field.className = "scale-field";
-    var legend = document.createElement("legend");
-    legend.textContent = pair[1]; field.appendChild(legend);
-    var scale = document.createElement("div"); scale.className = "scale";
-    for(var i=1;i<=5;i++){
-      var label=document.createElement("label"),input=document.createElement("input"),span=document.createElement("span");
-      input.type="radio";input.name=pair[0];input.value=String(i);input.required=true;input.setAttribute("aria-label",String(i)+" of 5");
-      span.textContent=String(i);label.appendChild(input);label.appendChild(span);scale.appendChild(label);
-    }
-    field.appendChild(scale);
-    var hints=document.createElement("div");hints.className="scale-hints";
-    hints.innerHTML="<span>1 · Strongly disagree</span><span>5 · Strongly agree</span>";
-    field.appendChild(hints);questionsRoot.appendChild(field);
-  });
   var back=document.getElementById("back"),next=document.getElementById("next");
   function show(){
     document.querySelector(".layout").classList.toggle("is-intro",step===0);
@@ -219,13 +275,13 @@
     try{
       var data=Object.fromEntries(new FormData(form).entries());
       var answers={};
-      ["ageGroup","lifeStage","ministries","hours","days","rest","family","growth","pressure","meaning","finalThoughts"].forEach(function(key){
+      ["ageGroup","lifeStage","ministries","ministryLeader","conflictingRequests","declinedResponsibility","delayedResponsibility","observedStaffingGap","schedulingCoordination","conflictPriority","objectiveImpact","finalThoughts"].forEach(function(key){
         answers[key]=data[key]||"";
       });
       var response=await fetch(COLLECTION_ENDPOINT,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({survey:"ministry-load-v2",consent:data.consent==="on",answers:answers})
+        body:JSON.stringify({survey:"ministry-coordination-v1",consent:data.consent==="on",answers:answers})
       });
       var result=await response.json().catch(function(){return {};});
       if(!response.ok || !result.received){

@@ -39,11 +39,14 @@
     .live-summary span { color:#c1d0e8; font-size:.82rem; }
     .live-panel { margin-top:17px; border:1px solid #304460; border-radius:20px; padding:20px 17px; background:rgba(23,44,74,.7); }
     .live-panel h2 { font-size:1.3rem; margin-bottom:16px; }
-    .result-row { display:grid; grid-template-columns:90px 1fr 50px; align-items:center; gap:11px; margin:12px 0; color:#dce7f9; font-size:.84rem; }
+    .result-row { display:grid; grid-template-columns:106px 1fr 45px; align-items:center; gap:11px; margin:12px 0; color:#dce7f9; font-size:.84rem; }
     .result-row .value { text-align:right; color:#cbdaf1; font-variant-numeric:tabular-nums; }
     .bar { display:block; height:10px; width:100%; border-radius:20px; overflow:hidden; background:#304463; }
     .bar-fill { display:block; height:100%; border-radius:20px; background:linear-gradient(90deg,#7bb4ff,#c7b7ff); }
     .live-note { margin:16px 0; font-size:.78rem; color:#9eb6d6; line-height:1.65; }
+    .compare-line { display:grid;grid-template-columns:1fr auto auto; gap:13px;align-items:center;margin:14px 0;padding:10px 0;border-bottom:1px solid #334863;font-size:.82rem; }
+    .compare-line strong { font-variant-numeric:tabular-nums;white-space:nowrap;color:#d0e2ff; }
+    .compare-caption { display:grid;grid-template-columns:1fr auto auto;gap:13px;color:#aabede;font-size:.73rem; }
     @media(max-width:350px){.result-row{grid-template-columns:75px 1fr 46px;gap:7px;}}
     .privacy { text-align:center; color:#8da4c2; font-size:.73rem; line-height:1.6; margin:18px 8px 0; }
     @media (min-width:620px) { .page { padding:28px 30px 45px; } }
@@ -56,9 +59,9 @@
       <div class="brand"><span class="brand-mark" aria-hidden="true">✧</span> Ministry Survey</div>
       <span class="header-label">Results</span>
     </header>
-    <p class="eyebrow">Community insights</p>
+    <p class="eyebrow">Ministry coordination study</p>
     <h1>Survey Results</h1>
-    <p class="intro">Understanding how multiple ministry responsibilities affect church volunteers.</p>
+    <p class="intro">How overlapping ministry responsibilities relate to team coordination and the completion of planned activities.</p>
 
     <section class="empty-state" id="emptyState" aria-labelledby="empty-heading" aria-live="polite">
       <div class="empty-icon" aria-hidden="true">▥</div>
@@ -66,99 +69,111 @@
       <p id="emptyText">Connecting to the survey database.</p>
     </section>
 
-    <section id="liveDashboard" hidden aria-label="Anonymous community survey results">
-      <div class="live-summary"><strong id="responseCount">—</strong><span>Anonymous survey responses</span></div>
-      <div class="live-panel"><h2>Number of ministries</h2><div id="ministryCounts"></div></div>
-      <div class="live-panel"><h2>Hours serving each week</h2><div id="weeklyHours"></div></div>
-      <div class="live-panel"><h2>Days serving each week</h2><div id="weeklyDays"></div></div>
-      <div id="demographicCharts" hidden>
-        <div class="live-panel"><h2>Age brackets</h2><div id="ageGroups"></div></div>
-        <div class="live-panel"><h2>Current life stages</h2><div id="lifeStages"></div></div>
-      </div>
-      <div class="live-panel"><h2>Volunteers' experiences</h2><div id="averages"></div><p class="live-note">Average agreement on a 1–5 scale (1 = strongly disagree, 5 = strongly agree). Higher numbers are not necessarily better for all questions.</p></div>
-      <p class="live-note">Only aggregated statistics are public. Categories with fewer than three replies are suppressed; individual comments are never shown.</p>
+    <section id="liveDashboard" hidden aria-label="Grouped survey results">
+      <div class="live-summary"><strong id="responseCount">—</strong><span>Survey responses</span></div>
+      <p class="live-note">These findings describe participants' reports. They do not independently prove that ministry overlap causes missed objectives.</p>
+      <section class="live-panel" id="comparisonPanel" hidden>
+        <h2>One ministry vs multiple ministries</h2>
+        <p class="live-note">Percentage of respondents in each group reporting these experiences. These are associations, not proof of cause.</p>
+        <div id="comparisonData"></div>
+      </section>
+      <div class="live-panel"><h2>Number of ministries served</h2><div id="ministries"></div></div>
+      <div class="live-panel"><h2>Two ministries needing someone at once</h2><div id="conflictingRequests"></div></div>
+      <div class="live-panel"><h2>Declining a responsibility to serve elsewhere</h2><div id="declinedResponsibility"></div></div>
+      <div class="live-panel"><h2>Tasks missed or delayed</h2><div id="delayedResponsibility"></div></div>
+      <div class="live-panel"><h2>Observed staffing gaps</h2><div id="observedStaffingGap"></div></div>
+      <div class="live-panel"><h2>Coordination between leaders</h2><div id="schedulingCoordination"></div></div>
+      <div class="live-panel"><h2>Clear priority when roles conflict</h2><div id="conflictPriority"></div></div>
+      <div class="live-panel"><h2>Reported impact on planned activities</h2><div id="objectiveImpact"></div></div>
+      <p class="live-note">All results are grouped. Rare categories are hidden to protect respondents. Individual written responses are not published.</p>
     </section>
 
-    <div id="upcoming"><p class="section-heading">What the results will explore</p>
-    <div class="topics">
-      <section class="topic"><span class="topic-icon" aria-hidden="true">◎</span><div><strong>Ministry involvement</strong><small>How many ministries volunteers serve in</small></div></section>
-      <section class="topic"><span class="topic-icon" aria-hidden="true">◷</span><div><strong>Time commitment</strong><small>Weekly hours and days spent serving</small></div></section>
-      <section class="topic"><span class="topic-icon" aria-hidden="true">♡</span><div><strong>Rest and relationships</strong><small>How volunteers experience balance and recovery</small></div></section>
-      <section class="topic"><span class="topic-icon" aria-hidden="true">✦</span><div><strong>Spiritual experience</strong><small>Meaning, growth, and perceived pressure</small></div></section>
-    </div>
+    <div id="upcoming">
+      <p class="section-heading">What this study measures</p>
+      <div class="topics">
+        <section class="topic"><span class="topic-icon" aria-hidden="true">◎</span><div><strong>Competing ministry assignments</strong><small>When multiple teams need the same volunteer</small></div></section>
+        <section class="topic"><span class="topic-icon" aria-hidden="true">◷</span><div><strong>Interrupted responsibilities</strong><small>Declined duties, missed work, and staffing gaps</small></div></section>
+        <section class="topic"><span class="topic-icon" aria-hidden="true">✦</span><div><strong>Coordination and objectives</strong><small>Role priorities, scheduling, and reported consequences</small></div></section>
+      </div>
     </div>
     <a class="return" href="./survey.html">Back to survey →</a>
-    <p class="privacy">Individual responses and written reflections are not published.</p>
+    <p class="privacy">Only grouped results are shown; individual comments are not published.</p>
   </main>
 
 <script>
 (function(){
   "use strict";
-  const ENDPOINT="https://api.clarapmc.com/api/ekklesia/surveys/ministry-load/results";
-  const emptyState=document.getElementById("emptyState");
-  const emptyHeading=document.getElementById("empty-heading");
-  const emptyText=document.getElementById("emptyText");
-  const dashboard=document.getElementById("liveDashboard");
-  function addBar(container,label,count,total){
-    const row=document.createElement("div");row.className="result-row";
-    const name=document.createElement("span");name.textContent=label;
-    const bar=document.createElement("span");bar.className="bar";
-    const fill=document.createElement("span");fill.className="bar-fill";
-    fill.style.width=count===null?"0%":Math.max(0,Math.min(100,count/Math.max(1,total)*100))+"%";
-    bar.appendChild(fill);
-    const value=document.createElement("span");value.className="value";
-    value.textContent=count===null?"< 3":String(count);
-    row.append(name,bar,value);container.appendChild(row);
-  }
-  function addAverage(container,label,average){
-    if(typeof average!=="number" || !Number.isFinite(average))return;
-    const row=document.createElement("div");row.className="result-row";
-    const name=document.createElement("span");name.textContent=label;
-    const bar=document.createElement("span");bar.className="bar";
-    const fill=document.createElement("span");fill.className="bar-fill";
-    fill.style.width=Math.max(0,Math.min(100,average/5*100))+"%";
-    bar.appendChild(fill);
-    const value=document.createElement("span");value.className="value";
-    value.textContent=average.toFixed(1)+"/5";
-    row.append(name,bar,value);container.appendChild(row);
+  const endpoint="https://api.clarapmc.com/api/ekklesia/surveys/ministry-coordination/results";
+  const empty=document.getElementById("emptyState");
+  const heading=document.getElementById("empty-heading");
+  const detail=document.getElementById("emptyText");
+  const labels={
+    ministries:{"0":"None","1":"1","2":"2","3":"3","4+":"4+"},
+    frequency:{"never":"Never","once":"Once","2-3":"2–3 times","4+":"4+ times","unsure":"Not sure","na":"Not applicable"},
+    schedulingCoordination:{"always":"Always","often":"Often","sometimes":"Sometimes","rarely":"Rarely","never":"Never","unsure":"Not sure"},
+    conflictPriority:{"yes":"Yes","sometimes":"Sometimes","no":"No","unsure":"Not sure"},
+    objectiveImpact:{"not-at-all":"Not at all","slightly":"Slightly","moderately":"Moderately","significantly":"Significantly","unsure":"Not sure"}
+  };
+  function renderRows(key,rows,total){
+    const element=document.getElementById(key);
+    const map=key==="ministries"?labels.ministries:
+      labels[key]||labels.frequency;
+    rows.forEach(function(entry){
+      const row=document.createElement("div");row.className="result-row";
+      const name=document.createElement("span");name.textContent=map[entry.label]||entry.label;
+      const bar=document.createElement("span");bar.className="bar";
+      const fill=document.createElement("span");fill.className="bar-fill";
+      const count=entry.count;
+      fill.style.width=typeof count==="number"?Math.max(0,Math.min(100,count/total*100))+"%":"0%";
+      bar.appendChild(fill);
+      const value=document.createElement("span");value.className="value";
+      value.textContent=count===null?"< 3":String(count);
+      row.append(name,bar,value);element.appendChild(row);
+    });
   }
   async function load(){
-    try {
-      const response=await fetch(ENDPOINT,{cache:"no-store",headers:{"Accept":"application/json"}});
-      if(!response.ok)throw Error("Backend unavailable");
+    try{
+      const response=await fetch(endpoint,{cache:"no-store",headers:{"Accept":"application/json"}});
+      if(!response.ok)throw Error("Server unavailable");
       const data=await response.json();
       if(!data.ready){
-        emptyHeading.textContent="Results are gathering";
-        emptyText.textContent=String(data.responses||0)+" survey responses received. Grouped results will appear after "+String(data.minimumResponses||10)+" responses to protect participants' privacy.";
+        heading.textContent="Findings are gathering";
+        detail.textContent="There are "+Number(data.responses||0)+" responses so far. Grouped results appear after "+Number(data.minimumResponses||10)+" submissions.";
         return;
       }
-      if(!Array.isArray(data.ministryCounts)||!Array.isArray(data.weeklyHours)||!Array.isArray(data.weeklyDays)||!data.averages||!Number.isFinite(Number(data.responses)))throw Error("Invalid response");
+      const keys=["ministries","conflictingRequests","declinedResponsibility","delayedResponsibility","observedStaffingGap","schedulingCoordination","conflictPriority","objectiveImpact"];
       const total=Number(data.responses);
+      if(!Number.isSafeInteger(total)||total<10||!data.distributions||keys.some(key=>!Array.isArray(data.distributions[key])))throw Error("Unexpected data");
       document.getElementById("responseCount").textContent=total.toLocaleString();
-      const ministryLabels={"0":"None","1":"1 ministry","2":"2 ministries","3":"3 ministries","4+":"4+ ministries"};
-      for(const row of data.ministryCounts)addBar(document.getElementById("ministryCounts"),ministryLabels[row.label]||row.label,row.count,total);
-      for(const row of data.weeklyHours)addBar(document.getElementById("weeklyHours"),row.label==="0"?"0 hrs":row.label+" hrs",row.count,total);
-      for(const row of data.weeklyDays)addBar(document.getElementById("weeklyDays"),row.label==="1"?"1 day":row.label+" days",row.count,total);
-      if(data.demographics && data.demographics.ready){
-        const lifeLabels={
-          "student":"Student","working-student":"Working student",
-          "working":"Working adult","working-parent":"Working parent",
-          "single-parent":"Single parent","caregiver":"Parent/caregiver",
-          "not-working":"Not currently working","retired":"Retired","other":"Other"
-        };
-        const groupTotal=data.demographics.responses;
-        for(const row of data.demographics.ageGroups)addBar(document.getElementById("ageGroups"),row.label,row.count,groupTotal);
-        for(const row of data.demographics.lifeStages)addBar(document.getElementById("lifeStages"),lifeLabels[row.label]||row.label,row.count,groupTotal);
-        document.getElementById("demographicCharts").hidden=false;
+      keys.forEach(key=>renderRows(key,data.distributions[key],total));
+      if(Array.isArray(data.comparison) && data.comparison.length===2){
+        const single=data.comparison.find(g=>g.group==="single");
+        const multiple=data.comparison.find(g=>g.group==="multiple");
+        if(single&&multiple){
+          const root=document.getElementById("comparisonData");
+          const caption=document.createElement("div");caption.className="compare-caption";
+          for(const value of ["","1 ministry (n="+single.respondents+")","2+ ministries (n="+multiple.respondents+")"]){
+            const x=document.createElement("span");x.textContent=value;caption.appendChild(x);
+          }
+          root.appendChild(caption);
+          for(const [field,name] of [["overlapping","Competing requests"],["delayed","Delayed duties"],["impact","Reported impact on plans"]]){
+            const row=document.createElement("div");row.className="compare-line";
+            const label=document.createElement("span");label.textContent=name;row.appendChild(label);
+            for(const item of [single,multiple]){
+              const value=document.createElement("strong");
+              value.textContent=item[field]===null?"—":item[field]+"%";
+              row.appendChild(value);
+            }
+            root.appendChild(row);
+          }
+          document.getElementById("comparisonPanel").hidden=false;
+        }
       }
-      const fields=[["rest","Time for rest"],["family","Family and personal time"],["growth","Spiritual growth"],["pressure","Felt pressure"],["meaning","Meaningful service"]];
-      for(const [key,label] of fields)addAverage(document.getElementById("averages"),label,data.averages[key]);
-      emptyState.hidden=true;
-      document.getElementById("upcoming").hidden=true;
-      dashboard.hidden=false;
-    }catch(e){
-      emptyHeading.textContent="Results temporarily unavailable";
-      emptyText.textContent="We couldn't reach the survey database. Please try again later.";
+      empty.hidden=true;document.getElementById("upcoming").hidden=true;
+      document.getElementById("liveDashboard").hidden=false;
+    }catch(error){
+      heading.textContent="Results unavailable";
+      detail.textContent="We couldn't load the results right now. Please try again later.";
     }
   }
   load();
