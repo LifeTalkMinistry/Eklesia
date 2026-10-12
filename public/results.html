@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#09172a">
+  <meta name="description" content="Survey results about serving in multiple church ministries, weekly commitments, rest, and spiritual life.">
+  <title>Ministry Survey | Results</title>
+  <style>
+    :root { color-scheme:dark; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#f6f7fb; background:#09172a; }
+    * { box-sizing:border-box; }
+    html { min-width:320px; }
+    body { margin:0; min-height:100dvh; background:radial-gradient(ellipse at 85% 0%,#1b3054 0,transparent 45%),linear-gradient(180deg,#0b1b31,#081326); line-height:1.5; }
+    a { color:inherit; -webkit-tap-highlight-color:transparent; }
+    a:focus-visible { outline:3px solid #a6baff; outline-offset:4px; }
+    .page { width:min(100%,610px); min-height:100dvh; margin:auto; padding:24px 17px max(35px,env(safe-area-inset-bottom)); }
+    .header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:44px; }
+    .brand { display:flex; align-items:center; gap:10px; min-width:0; font-family:Georgia,"Times New Roman",serif; font-size:1.16rem; font-weight:700; white-space:nowrap; }
+    .brand-mark { flex:none; width:36px; height:36px; display:grid; place-items:center; border:1px solid #58638a; border-radius:12px; background:#292741; color:#f0d1ff; font-size:1.25rem; }
+    .header-label { font-size:.67rem; font-weight:800; color:#b8cae7; text-transform:uppercase; letter-spacing:.1em; }
+    .eyebrow { margin:0 0 12px; color:#91baf9; text-transform:uppercase; font-size:.72rem; font-weight:800; letter-spacing:.12em; }
+    h1,h2 { font-family:Georgia,"Times New Roman",serif; font-weight:400; letter-spacing:-.02em; line-height:1.16; color:#fff; }
+    h1 { margin:0; font-size:clamp(2.05rem,8vw,3rem); }
+    h2 { margin:0; font-size:1.45rem; }
+    .intro { margin:14px 0 0; color:#cad6e8; font-size:.99rem; line-height:1.7; }
+    .empty-state { margin-top:30px; padding:28px 23px; border:1px solid #425978; border-radius:24px; background:linear-gradient(155deg,rgba(25,45,77,.98),rgba(13,28,50,.99)); text-align:center; }
+    .empty-icon { width:54px; height:54px; margin:0 auto 16px; display:grid; place-items:center; border:1px solid #5f7798; border-radius:17px; background:#223b61; font-size:1.55rem; color:#c1d3ff; }
+    .empty-state h2 { margin:0; }
+    .empty-state p { margin:13px 0 0; color:#bacbe0; font-size:.91rem; line-height:1.7; }
+    .section-heading { margin:30px 0 13px; font-size:.73rem; font-weight:800; text-transform:uppercase; letter-spacing:.11em; color:#a5bee2; }
+    .topics { display:grid; gap:10px; }
+    .topic { display:flex; gap:14px; align-items:center; padding:16px; border:1px solid #304460; border-radius:16px; background:rgba(23,44,74,.7); }
+    .topic-icon { flex:none; width:38px; height:38px; display:grid; place-items:center; border-radius:12px; background:#273d61; color:#d0dfff; font-size:1.15rem; }
+    .topic strong { display:block; color:#f6f8ff; font-size:.92rem; line-height:1.35; }
+    .topic small { display:block; color:#9eb2d0; font-size:.76rem; margin-top:4px; line-height:1.4; }
+    .return { display:block; padding:15px 18px; margin-top:29px; border-radius:15px; background:#c1d3ff; color:#102039; font-size:.95rem; font-weight:800; text-align:center; text-decoration:none; }
+    .privacy { text-align:center; color:#8da4c2; font-size:.73rem; line-height:1.6; margin:18px 8px 0; }
+    @media (min-width:620px) { .page { padding:28px 30px 45px; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✧</span> Ministry Survey</div>
+      <span class="header-label">Results</span>
+    </header>
+    <p class="eyebrow">Community insights</p>
+    <h1>Survey Results</h1>
+    <p class="intro">Understanding how multiple ministry responsibilities affect church volunteers.</p>
+
+    <section class="empty-state" aria-labelledby="empty-heading">
+      <div class="empty-icon" aria-hidden="true">▥</div>
+      <h2 id="empty-heading">No results available yet</h2>
+      <p>The survey is still in preview mode and isn't collecting responses. Community findings will appear here when anonymous data collection is ready.</p>
+    </section>
+
+    <p class="section-heading">What the results will explore</p>
+    <div class="topics">
+      <section class="topic"><span class="topic-icon" aria-hidden="true">◎</span><div><strong>Ministry involvement</strong><small>How many ministries volunteers serve in</small></div></section>
+      <section class="topic"><span class="topic-icon" aria-hidden="true">◷</span><div><strong>Time commitment</strong><small>Weekly hours and days spent serving</small></div></section>
+      <section class="topic"><span class="topic-icon" aria-hidden="true">♡</span><div><strong>Rest and relationships</strong><small>How volunteers experience balance and recovery</small></div></section>
+      <section class="topic"><span class="topic-icon" aria-hidden="true">✦</span><div><strong>Spiritual experience</strong><small>Meaning, growth, and perceived pressure</small></div></section>
+    </div>
+    <a class="return" href="./survey.html">Back to survey →</a>
+    <p class="privacy">Future results will be presented as aggregated findings, without identifying individual respondents.</p>
+  </main>
+</body>
+</html>
