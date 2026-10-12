@@ -78,9 +78,7 @@
       <section class="panel" data-step="0" aria-labelledby="introTitle">
         <p class="eyebrow">Ministry involvement survey</p>
         <h1 id="introTitle" tabindex="-1">Serving in multiple ministries?</h1>
-        <p class="lead">Tell us how church service affects your time, rest, relationships, and spiritual life.</p>
-        <p class="quiet">A short, voluntary survey for church members.</p>
-        <p class="quiet" id="collectionNote">Preview only — responses are not collected yet.</p>
+        <p class="lead">How does serving in several ministries affect your time for rest, family, work, and spiritual life?</p>
       </section>
       <section class="panel" data-step="1" aria-labelledby="serviceTitle" hidden>
         <p class="eyebrow">01 / Your involvement</p>
@@ -123,7 +121,7 @@
     <button class="secondary" id="back" type="button" hidden>Back</button>
     <button class="primary" id="next" type="button">Begin survey →</button>
   </div>
-  <footer class="footer">Ministry Load · Research experience preview · Not an official church assessment</footer>
+  <footer class="footer" id="collectionNote">Preview only · Responses are not collected yet</footer>
 </div>
 <script>
 (function(){
@@ -217,8 +215,8 @@
     }finally{busy=false;next.disabled=false;}
   });
   document.getElementById("collectionNote").textContent = COLLECTION_ENDPOINT
-    ? "Voluntary participation. Responses will be submitted to the research team."
-    : "Preview only — responses are not collected yet.";
+    ? "Ministry Load · Voluntary research survey"
+    : "Preview only · Responses are not collected yet";
   show();
 })();
 </script>
