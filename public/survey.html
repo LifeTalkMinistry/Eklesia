@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#09172a">
+  <meta name="description" content="A research survey about experiences of serving in one or multiple church ministries.">
+  <title>Ministry Load | Volunteer Experience Survey</title>
+  <style>
+    :root {color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#09172a; color:#f6f7fb;}
+    *{box-sizing:border-box}
+    html{min-width:320px;scroll-behavior:smooth}
+    body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 85% 0%,#1b3054 0,transparent 45%),linear-gradient(180deg,#0b1b31,#081326);line-height:1.5}
+    button,input,select,textarea{font:inherit}
+    button,a,select,input,textarea{-webkit-tap-highlight-color:transparent}
+    button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #a6baff;outline-offset:3px}
+    [hidden]{display:none!important}
+    .layout{width:min(100%,610px);min-height:100dvh;margin:auto;display:flex;flex-direction:column}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:22px 20px 16px}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#f7f7fa;font-weight:700;font-family:Georgia,serif;font-size:1.12rem}
+    .brand-logo{display:grid;place-items:center;width:36px;height:36px;border:1px solid #58638a;border-radius:12px;background:#292741;color:#f0d1ff;font-size:1.3rem}
+    .study-tag{color:#bbcbef;font-size:.69rem;letter-spacing:.13em;font-weight:800;text-transform:uppercase}
+    .progress-wrap{padding:2px 20px 22px}
+    .progress-head{display:flex;justify-content:space-between;gap:15px;margin-bottom:10px;color:#bac7db;font-size:.76rem}
+    .progress-track{height:5px;border-radius:99px;background:#263751;overflow:hidden}
+    .progress-bar{height:100%;width:25%;background:linear-gradient(90deg,#82b9fe,#d0b5ff);border-radius:99px;transition:width .25s ease}
+    main{flex:1;padding:0 16px 12px}
+    .panel{padding:clamp(22px,5vw,36px);border:1px solid #334461;border-radius:27px;background:linear-gradient(155deg,rgba(25,45,77,.97),rgba(13,28,50,.99));box-shadow:0 20px 50px rgba(0,0,0,.2)}
+    .eyebrow{color:#91baf9;text-transform:uppercase;font-size:.71rem;font-weight:800;letter-spacing:.13em;margin:0 0 13px}
+    h1,h2{font-family:Georgia,serif;font-weight:400;letter-spacing:-.025em;line-height:1.12;color:#fff;margin:0}
+    h1{font-size:clamp(2.1rem,8.5vw,3.2rem)}
+    h2{font-size:clamp(1.8rem,7vw,2.5rem)}
+    .lead{font-size:1rem;color:#d0d9e9;line-height:1.7;margin:19px 0 0}
+    .quiet{font-size:.83rem;color:#aebed3;line-height:1.7}
+    .note{margin:22px 0 0;padding:14px 16px;border:1px solid #52637b;border-radius:14px;background:#172d47;color:#dce5f3;font-size:.81rem;line-height:1.6}
+    .consent{display:flex;align-items:flex-start;gap:12px;margin-top:25px;padding:16px;border-radius:14px;border:1px solid #566686;background:rgba(255,255,255,.035);font-size:.9rem}
+    .consent input{width:20px;height:20px;flex:none;accent-color:#a9c7ff;margin:2px 0 0}
+    .field{margin-top:25px}
+    .field label,.field legend{display:block;color:#fff;font-size:.93rem;font-weight:700;margin-bottom:9px}
+    .field small{display:block;margin:-3px 0 9px;color:#a9b9d1;line-height:1.5}
+    select,textarea{width:100%;min-height:49px;padding:12px 14px;border:1px solid #546783;border-radius:13px;background:#142945;color:#fff}
+    textarea{resize:vertical;min-height:125px}
+    .scale-field{margin:23px 0 0;border:0;padding:0;min-width:0}
+    .scale-field legend{margin-bottom:14px;font-size:.92rem;line-height:1.5}
+    .scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+    .scale label{position:relative;display:grid;place-items:center;cursor:pointer;margin:0}
+    .scale input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer}
+    .scale span{display:grid;place-items:center;width:100%;min-height:47px;border:1px solid #4b6281;border-radius:12px;background:#162e4d;color:#e0eafb;font-weight:700}
+    .scale input:checked+span{border-color:#b1c8ff;background:#b1c8ff;color:#0c1c35}
+    .scale input:focus-visible+span{outline:3px solid #a6baff;outline-offset:3px}
+    .scale-hints{display:flex;justify-content:space-between;gap:12px;color:#aabbd3;font-size:.73rem;margin-top:8px}
+    .scale-hints span:last-child{text-align:right}
+    .actions{position:sticky;bottom:0;padding:14px 20px max(16px,env(safe-area-inset-bottom));display:flex;gap:10px;background:linear-gradient(0deg,#081426 70%,rgba(8,20,38,.94));backdrop-filter:blur(12px);z-index:5}
+    .primary,.secondary{min-height:52px;padding:13px 18px;border:1px solid transparent;border-radius:15px;font-weight:800;cursor:pointer}
+    .primary{flex:1;background:#c1d3ff;color:#102039}
+    .primary:disabled{opacity:.65;cursor:wait}
+    .secondary{background:#1b2e48;border-color:#3e5273;color:#e8f0ff}
+    .footer{padding:0 24px 28px;text-align:center;color:#8396b1;font-size:.74rem}
+    .success{margin-top:20px;padding:19px;border:1px solid #4a7f78;border-radius:18px;background:#133c3b;color:#e2f9ef}
+    .success strong{display:block;font-size:1.1rem;margin-bottom:8px}
+    .error{color:#ffc8c8;margin-top:14px}
+    @media (max-width:390px){.study-tag{font-size:.6rem}.top{padding-inline:16px}.progress-wrap{padding-inline:16px}.actions{padding-inline:16px}}
+    @media (prefers-reduced-motion:reduce){.progress-bar{transition:none}html{scroll-behavior:auto}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <header class="top">
+    <div class="brand"><span class="brand-logo" aria-hidden="true">✧</span><span>Ministry Load</span></div>
+    <span class="study-tag">Volunteer study</span>
+  </header>
+  <div class="progress-wrap" id="progressArea">
+    <div class="progress-head"><span id="stepText">Step 1 of 4</span><span>About 3 minutes</span></div>
+    <div class="progress-track" role="progressbar" aria-label="Survey progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25" id="progressTrack"><div class="progress-bar" id="progressBar"></div></div>
+  </div>
+  <main>
+    <form id="survey" novalidate>
+      <section class="panel" data-step="0" aria-labelledby="introTitle">
+        <p class="eyebrow">An invitation to reflect</p>
+        <h1 id="introTitle" tabindex="-1">What is it like to serve in church today?</h1>
+        <p class="lead">We are exploring how serving in one or multiple ministries relates to personal well-being, relationships, and spiritual experience.</p>
+        <p class="quiet">This is a voluntary research questionnaire for adults (18+). You can stop at any time. No name, email address, church affiliation, or Ekklesia Pulse sign-in is requested. Please answer from your own experience; there are no right or wrong answers.</p>
+        <div class="note" id="collectionNote">Research preview: responses are not being collected yet. The questionnaire and collection process must be approved before launch.</div>
+        <label class="consent"><input type="checkbox" name="consent" required><span>I am at least 18 years old, have read the information above, and voluntarily agree to take part.</span></label>
+      </section>
+      <section class="panel" data-step="1" aria-labelledby="serviceTitle" hidden>
+        <p class="eyebrow">01 / Your involvement</p>
+        <h2 id="serviceTitle" tabindex="-1">Tell us about your ministry commitments.</h2>
+        <p class="quiet">Include rehearsals, preparation, services, meetings, and other ministry duties. Estimates are fine.</p>
+        <div class="field"><label for="ministries">How many church ministries do you currently serve in?</label>
+          <select id="ministries" name="ministries" required><option value="">Choose an answer</option><option value="0">None right now</option><option value="1">1 ministry</option><option value="2">2 ministries</option><option value="3">3 ministries</option><option value="4+">4 or more ministries</option></select>
+        </div>
+        <div class="field"><label for="hours">About how many hours per week do you spend on ministry activities?</label>
+          <select id="hours" name="hours" required><option value="">Choose an answer</option><option value="0">0 hours</option><option value="1-2">1–2 hours</option><option value="3-5">3–5 hours</option><option value="6-10">6–10 hours</option><option value="11-15">11–15 hours</option><option value="16-20">16–20 hours</option><option value="21+">More than 20 hours</option></select>
+        </div>
+        <div class="field"><label for="days">On how many days in a typical week do you have ministry commitments?</label>
+          <select id="days" name="days" required><option value="">Choose an answer</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select>
+        </div>
+      </section>
+      <section class="panel" data-step="2" aria-labelledby="experienceTitle" hidden>
+        <p class="eyebrow">02 / Your experience</p>
+        <h2 id="experienceTitle" tabindex="-1">How has ministry involvement felt recently?</h2>
+        <p class="quiet">Thinking about the last four weeks, how strongly do you agree with each statement?</p>
+        <div id="scaleQuestions"></div>
+      </section>
+      <section class="panel" data-step="3" aria-labelledby="voiceTitle" hidden>
+        <p class="eyebrow">03 / In your words</p>
+        <h2 id="voiceTitle" tabindex="-1">What would you want church leaders to understand?</h2>
+        <p class="lead">Your experiences matter, whether service has been rewarding, difficult, or a mixture of both.</p>
+        <div class="field"><label for="meaningful">What has been most meaningful about serving? <small>Optional</small></label><textarea name="meaningful" id="meaningful" maxlength="700" placeholder="Share your thoughts…"></textarea></div>
+        <div class="field"><label for="improvement">What, if anything, would improve your ministry experience? <small>Optional</small></label><textarea name="improvement" id="improvement" maxlength="700" placeholder="Share your thoughts…"></textarea></div>
+        <div class="note">Participation is voluntary. You may leave optional questions blank. Please avoid including people's names or identifying details.</div>
+        <p class="error" id="submitError" role="alert" hidden></p>
+      </section>
+    </form>
+    <section class="panel" id="done" hidden aria-live="polite">
+      <p class="eyebrow">Thank you for reflecting</p><h2 tabindex="-1">Your experience matters.</h2>
+      <div class="success"><strong id="doneHeading">Survey preview complete</strong><span id="doneMessage">This was a preview. No answers were transmitted or saved.</span></div>
+      <p class="quiet">A strong church community should be willing to listen to the people who serve.</p>
+      <a class="primary" id="returnToApp" hidden style="display:block;text-align:center;text-decoration:none;margin-top:22px" href="./">Return to app</a>
+    </section>
+  </main>
+  <div class="actions" id="actions">
+    <button class="secondary" id="back" type="button" hidden>Back</button>
+    <button class="primary" id="next" type="button">Begin survey →</button>
+  </div>
+  <footer class="footer">Ministry Load · Research experience preview · Not an official church assessment</footer>
+</div>
+<script>
+(function(){
+  "use strict";
+  // A collection endpoint must be approved and configured before accepting real responses.
+  // It must support CORS and accept a POST with Content-Type: application/json.
+  var COLLECTION_ENDPOINT = "";
+  var questions = [
+    ["rest","I have enough time for rest and recovery."],
+    ["family","I have enough time to fulfill my family and personal responsibilities."],
+    ["growth","My ministry involvement supports my spiritual growth."],
+    ["pressure","I feel pressured to accept or maintain ministry responsibilities."],
+    ["meaning","I find my ministry involvement personally meaningful."]
+  ];
+  var returnToApp=document.getElementById("returnToApp");
+  returnToApp.hidden = new URLSearchParams(window.location.search).get("from") !== "app";
+  var form = document.getElementById("survey");
+  var sections = Array.prototype.slice.call(form.querySelectorAll("[data-step]"));
+  var questionsRoot = document.getElementById("scaleQuestions");
+  var step = 0, busy = false;
+  questions.forEach(function(pair){
+    var field = document.createElement("fieldset");
+    field.className = "scale-field";
+    var legend = document.createElement("legend");
+    legend.textContent = pair[1]; field.appendChild(legend);
+    var scale = document.createElement("div"); scale.className = "scale";
+    for(var i=1;i<=5;i++){
+      var label=document.createElement("label"),input=document.createElement("input"),span=document.createElement("span");
+      input.type="radio";input.name=pair[0];input.value=String(i);input.required=true;input.setAttribute("aria-label",String(i)+" of 5");
+      span.textContent=String(i);label.appendChild(input);label.appendChild(span);scale.appendChild(label);
+    }
+    field.appendChild(scale);
+    var hints=document.createElement("div");hints.className="scale-hints";
+    hints.innerHTML="<span>1 · Strongly disagree</span><span>5 · Strongly agree</span>";
+    field.appendChild(hints);questionsRoot.appendChild(field);
+  });
+  var back=document.getElementById("back"),next=document.getElementById("next");
+  function show(){
+    sections.forEach(function(section,i){section.hidden=i!==step;});
+    document.getElementById("stepText").textContent="Step "+(step+1)+" of 4";
+    var progress=(step+1)*25;
+    document.getElementById("progressBar").style.width=progress+"%";
+    document.getElementById("progressTrack").setAttribute("aria-valuenow",String(progress));
+    back.hidden=step===0;
+    next.textContent=step===0?"Begin survey →":step===3?(COLLECTION_ENDPOINT?"Submit responses":"Finish preview"):"Continue →";
+    window.scrollTo({top:0,behavior:"instant"});
+    var heading=sections[step].querySelector("h1,h2");
+    if(heading) heading.focus({preventScroll:true});
+  }
+  function validCurrent(){
+    var inputs=Array.prototype.slice.call(sections[step].querySelectorAll("input,select,textarea"));
+    for(var i=0;i<inputs.length;i++){
+      if(!inputs[i].checkValidity()){inputs[i].reportValidity();return false;}
+    }
+    return true;
+  }
+  back.addEventListener("click",function(){if(step>0&&!busy){step--;show();}});
+  next.addEventListener("click",async function(){
+    if(busy||!validCurrent())return;
+    if(step<sections.length-1){step++;show();return;}
+    var error=document.getElementById("submitError");error.hidden=true;error.textContent="";
+    busy=true;next.disabled=true;
+    try{
+      if(COLLECTION_ENDPOINT){
+        var data=Object.fromEntries(new FormData(form).entries());
+        var response=await fetch(COLLECTION_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({survey:"ministry-load-v1",answers:data,submittedAt:new Date().toISOString()})});
+        if(!response.ok)throw new Error("Your response could not be submitted. Please try again.");
+        document.getElementById("doneHeading").textContent="Response received";
+        document.getElementById("doneMessage").textContent="Thank you for sharing your experience. Your answers were sent to the research collection service.";
+      }
+      form.hidden=true;document.getElementById("actions").hidden=true;
+      document.getElementById("progressArea").hidden=true;
+      document.getElementById("done").hidden=false;
+      document.getElementById("done").querySelector("h2").focus();
+      window.scrollTo({top:0,behavior:"instant"});
+    }catch(e){
+      error.textContent=e.message||"Submission failed. Please try again.";error.hidden=false;
+    }finally{busy=false;next.disabled=false;}
+  });
+  document.getElementById("collectionNote").textContent = COLLECTION_ENDPOINT
+    ? "Your answers will be sent to the research collection service after you submit. The survey does not access your devotional history or app profile."
+    : "Research preview: responses are not being collected yet. The questionnaire and collection process must be approved before launch.";
+  show();
+})();
+</script>
+</body>
+</html>
