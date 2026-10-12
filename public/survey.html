@@ -180,16 +180,46 @@
         </div>
       </section>
       <section class="panel" data-step="3" aria-labelledby="voiceTitle" hidden>
-        <p class="eyebrow">03 / Final thoughts</p>
-        <h2 id="voiceTitle" tabindex="-1">Anything else you'd like to share?</h2>
-        <div class="field">
-          <label for="finalThoughts">Your ministry experience <small>(Optional)</small></label>
-          <textarea name="finalThoughts" id="finalThoughts" maxlength="700" placeholder="Share your thoughts, suggestions, or concerns…"></textarea>
+        <p class="eyebrow">03 / Church coordination</p>
+        <h2 id="voiceTitle" tabindex="-1">Is the ministry structure working?</h2>
+        <div class="field"><label for="schedulingCoordination">How often do ministry leaders coordinate schedules and assignments?</label>
+          <select id="schedulingCoordination" name="schedulingCoordination" required>
+            <option value="">Choose an answer</option>
+            <option value="always">Always</option>
+            <option value="often">Often</option>
+            <option value="sometimes">Sometimes</option>
+            <option value="rarely">Rarely</option>
+            <option value="never">Never</option>
+            <option value="unsure">Not sure</option>
+          </select>
         </div>
-        <p class="quiet">Please avoid including names or identifying details in your comment.</p>
+        <div class="field"><label for="conflictPriority">When two responsibilities conflict, is it clear which one takes priority?</label>
+          <select id="conflictPriority" name="conflictPriority" required>
+            <option value="">Choose an answer</option>
+            <option value="yes">Yes</option>
+            <option value="sometimes">Sometimes</option>
+            <option value="no">No</option>
+            <option value="unsure">Not sure</option>
+          </select>
+        </div>
+        <div class="field"><label for="objectiveImpact">To what extent have overlapping ministry assignments affected your team's ability to carry out planned activities?</label>
+          <select id="objectiveImpact" name="objectiveImpact" required>
+            <option value="">Choose an answer</option>
+            <option value="not-at-all">Not at all</option>
+            <option value="slightly">Slightly</option>
+            <option value="moderately">Moderately</option>
+            <option value="significantly">Significantly</option>
+            <option value="unsure">Not sure</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="finalThoughts">An example or suggestion <small>(Optional)</small></label>
+          <textarea id="finalThoughts" name="finalThoughts" maxlength="700" placeholder="What works well, or what could be improved?"></textarea>
+        </div>
+        <p class="quiet">Please avoid names or identifying details.</p>
         <label class="consent">
           <input type="checkbox" name="consent" required>
-          <span>I understand my answers will be used only for this ministry research and shared publicly only as anonymous, grouped results. My Ekklesia account will not be linked. I agree to submit.</span>
+          <span>I understand my answers are for this ministry research. Only anonymous, grouped findings will be published, and my Ekklesia account will not be linked. I agree to submit.</span>
         </label>
         <p class="error" id="submitError" role="alert" hidden></p>
       </section>
