@@ -334,7 +334,7 @@
         const row=document.createElement("div");row.className="summary-answer";
         const question=document.createElement("small");
         const label=form.querySelector('label[for="'+key+'"]');
-        question.textContent=label ? label.textContent.trim().replace(/\\s*\\(Optional\\)\\s*$/,"") : key;
+        question.textContent=label ? label.textContent.trim().replace(/\s*\(Optional\)\s*$/,"") : key;
         const answer=document.createElement("strong");answer.textContent=value;
         row.append(question,answer);section.appendChild(row);
       }
