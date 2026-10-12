@@ -69,7 +69,8 @@
     <section id="liveDashboard" hidden aria-label="Anonymous community survey results">
       <div class="live-summary"><strong id="responseCount">—</strong><span>Anonymous survey responses</span></div>
       <div class="live-panel"><h2>Number of ministries</h2><div id="ministryCounts"></div></div>
-      <div class="live-panel"><h2>Weekly time commitment</h2><div id="weeklyHours"></div></div>
+      <div class="live-panel"><h2>Hours serving each week</h2><div id="weeklyHours"></div></div>
+      <div class="live-panel"><h2>Days serving each week</h2><div id="weeklyDays"></div></div>
       <div class="live-panel"><h2>Volunteers' experiences</h2><div id="averages"></div><p class="live-note">Average agreement on a 1–5 scale (1 = strongly disagree, 5 = strongly agree). Higher numbers are not necessarily better for all questions.</p></div>
       <p class="live-note">Only aggregated statistics are public. Categories with fewer than three replies are suppressed; individual comments are never shown.</p>
     </section>
@@ -127,12 +128,13 @@
         emptyText.textContent=String(data.responses||0)+" survey responses received. Grouped results will appear after "+String(data.minimumResponses||10)+" responses to protect participants' privacy.";
         return;
       }
-      if(!Array.isArray(data.ministryCounts)||!Array.isArray(data.weeklyHours)||!data.averages||!Number.isFinite(Number(data.responses)))throw Error("Invalid response");
+      if(!Array.isArray(data.ministryCounts)||!Array.isArray(data.weeklyHours)||!Array.isArray(data.weeklyDays)||!data.averages||!Number.isFinite(Number(data.responses)))throw Error("Invalid response");
       const total=Number(data.responses);
       document.getElementById("responseCount").textContent=total.toLocaleString();
       const ministryLabels={"0":"None","1":"1 ministry","2":"2 ministries","3":"3 ministries","4+":"4+ ministries"};
       for(const row of data.ministryCounts)addBar(document.getElementById("ministryCounts"),ministryLabels[row.label]||row.label,row.count,total);
       for(const row of data.weeklyHours)addBar(document.getElementById("weeklyHours"),row.label==="0"?"0 hrs":row.label+" hrs",row.count,total);
+      for(const row of data.weeklyDays)addBar(document.getElementById("weeklyDays"),row.label==="1"?"1 day":row.label+" days",row.count,total);
       const fields=[["rest","Time for rest"],["family","Family and personal time"],["growth","Spiritual growth"],["pressure","Felt pressure"],["meaning","Meaningful service"]];
       for(const [key,label] of fields)addAverage(document.getElementById("averages"),label,data.averages[key]);
       emptyState.hidden=true;
