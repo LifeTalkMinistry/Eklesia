@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#09172a">
   <meta name="description" content="A research survey about experiences of serving in one or multiple church ministries.">
-  <title>Ministry Load | Volunteer Experience Survey</title>
+  <title>Ministry Survey</title>
   <style>
     :root {color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#09172a; color:#f6f7fb;}
     *{box-sizing:border-box}
@@ -19,11 +19,10 @@
     .top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:22px 20px 16px}
     .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#f7f7fa;font-weight:700;font-family:Georgia,serif;font-size:1.12rem}
     .brand-logo{display:grid;place-items:center;width:36px;height:36px;border:1px solid #58638a;border-radius:12px;background:#292741;color:#f0d1ff;font-size:1.3rem}
-    .study-tag{color:#bbcbef;font-size:.69rem;letter-spacing:.13em;font-weight:800;text-transform:uppercase}
     .progress-wrap{padding:2px 20px 22px}
     .progress-head{display:flex;justify-content:space-between;gap:15px;margin-bottom:10px;color:#bac7db;font-size:.76rem}
     .progress-track{height:5px;border-radius:99px;background:#263751;overflow:hidden}
-    .progress-bar{height:100%;width:25%;background:linear-gradient(90deg,#82b9fe,#d0b5ff);border-radius:99px;transition:width .25s ease}
+    .progress-bar{height:100%;width:33%;background:linear-gradient(90deg,#82b9fe,#d0b5ff);border-radius:99px;transition:width .25s ease}
     main{flex:1;padding:0 16px 12px}
     .panel{padding:clamp(22px,5vw,36px);border:1px solid #334461;border-radius:27px;background:linear-gradient(155deg,rgba(25,45,77,.97),rgba(13,28,50,.99));box-shadow:0 20px 50px rgba(0,0,0,.2)}
     .eyebrow{color:#91baf9;text-transform:uppercase;font-size:.71rem;font-weight:800;letter-spacing:.13em;margin:0 0 13px}
@@ -55,7 +54,6 @@
     .primary{flex:1;background:#c1d3ff;color:#102039}
     .primary:disabled{opacity:.65;cursor:wait}
     .secondary{background:#1b2e48;border-color:#3e5273;color:#e8f0ff}
-    .footer{padding:0 24px 28px;text-align:center;color:#8396b1;font-size:.74rem}
     .success{margin-top:20px;padding:19px;border:1px solid #4a7f78;border-radius:18px;background:#133c3b;color:#e2f9ef}
     .success strong{display:block;font-size:1.1rem;margin-bottom:8px}
     .error{color:#ffc8c8;margin-top:14px}
@@ -66,17 +64,15 @@
 <body>
 <div class="layout">
   <header class="top">
-    <div class="brand"><span class="brand-logo" aria-hidden="true">✧</span><span>Ministry Load</span></div>
-    <span class="study-tag">Volunteer study</span>
+    <div class="brand"><span class="brand-logo" aria-hidden="true">✧</span><span>Ministry Survey</span></div>
   </header>
-  <div class="progress-wrap" id="progressArea">
-    <div class="progress-head"><span id="stepText">Step 1 of 4</span><span>About 3 minutes</span></div>
-    <div class="progress-track" role="progressbar" aria-label="Survey progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25" id="progressTrack"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="progress-wrap" id="progressArea" hidden>
+    <div class="progress-head"><span id="stepText">Step 1 of 3</span></div>
+    <div class="progress-track" role="progressbar" aria-label="Survey progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33" id="progressTrack"><div class="progress-bar" id="progressBar"></div></div>
   </div>
   <main>
     <form id="survey" novalidate>
       <section class="panel" data-step="0" aria-labelledby="introTitle">
-        <p class="eyebrow">Ministry involvement survey</p>
         <h1 id="introTitle" tabindex="-1">Serving in multiple ministries?</h1>
         <p class="lead">How does serving in several ministries affect your time for rest, family, work, and spiritual life?</p>
       </section>
@@ -106,7 +102,7 @@
         <p class="lead">Your experiences matter, whether service has been rewarding, difficult, or a mixture of both.</p>
         <div class="field"><label for="meaningful">What has been most meaningful about serving? <small>Optional</small></label><textarea name="meaningful" id="meaningful" maxlength="700" placeholder="Share your thoughts…"></textarea></div>
         <div class="field"><label for="improvement">What, if anything, would improve your ministry experience? <small>Optional</small></label><textarea name="improvement" id="improvement" maxlength="700" placeholder="Share your thoughts…"></textarea></div>
-        <div class="note">Participation is voluntary. You may leave optional questions blank. Please avoid including people's names or identifying details.</div>
+        <div class="note">This is a preview. Answers are not currently being collected or saved.</div>
         <p class="error" id="submitError" role="alert" hidden></p>
       </section>
     </form>
@@ -121,7 +117,6 @@
     <button class="secondary" id="back" type="button" hidden>Back</button>
     <button class="primary" id="next" type="button">Begin survey →</button>
   </div>
-  <footer class="footer" id="collectionNote">Preview only · Responses are not collected yet</footer>
 </div>
 <script>
 (function(){
@@ -174,8 +169,9 @@
   var back=document.getElementById("back"),next=document.getElementById("next");
   function show(){
     sections.forEach(function(section,i){section.hidden=i!==step;});
-    document.getElementById("stepText").textContent="Step "+(step+1)+" of 4";
-    var progress=(step+1)*25;
+    document.getElementById("progressArea").hidden=step===0;
+    document.getElementById("stepText").textContent="Step "+step+" of 3";
+    var progress=Math.round(step/3*100);
     document.getElementById("progressBar").style.width=progress+"%";
     document.getElementById("progressTrack").setAttribute("aria-valuenow",String(progress));
     back.hidden=step===0;
@@ -214,9 +210,7 @@
       error.textContent=e.message||"Submission failed. Please try again.";error.hidden=false;
     }finally{busy=false;next.disabled=false;}
   });
-  document.getElementById("collectionNote").textContent = COLLECTION_ENDPOINT
-    ? "Ministry Load · Voluntary research survey"
-    : "Preview only · Responses are not collected yet";
+
   show();
 })();
 </script>
